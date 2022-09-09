@@ -992,136 +992,6 @@ ___TESTS___
 scenarios:
 - name: Test default config
   code: |
-    // Test imports
-    const jsonApi = require('JSON');
-
-    // Test event
-    const testEvent = {
-      event_name: 'page_view',
-      client_id: 'd54a1904-7798-401a-be0b-1a83bea73634',
-      user_id: 'snow123',
-      language: 'en-GB',
-      page_encoding: 'UTF-8',
-      page_hostname: 'snowplowanalytics.com',
-      page_location: 'https://snowplowanalytics.com/',
-      page_path: '/',
-      page_referrer: 'referer',
-      page_title:
-        'Collect, manage and operationalize behavioral data at scale | Snowplow',
-      screen_resolution: '1920x1080',
-      viewport_size: '745x1302',
-      user_agent: 'user-agent',
-      origin: 'origin',
-      host: 'host',
-      'x-sp-app_id': 'website',
-      'x-sp-platform': 'web',
-      'x-sp-dvce_created_tstamp': '1628586512246',
-      'x-sp-event_id': '8676de79-0eba-4435-ad95-8a41a8a0129c',
-      'x-sp-name_tracker': 'sp',
-      'x-sp-v_tracker': 'js-2.18.1',
-      'x-sp-domain_sessionid': 'e7580b71-227b-4868-9ea9-322a263ce885',
-      'x-sp-domain_sessionidx': 1,
-      'x-sp-br_cookies': '1',
-      'x-sp-br_colordepth': '24',
-      'x-sp-br_viewwidth': 745,
-      'x-sp-br_viewheight': 1302,
-      'x-sp-dvce_screenwidth': 1920,
-      'x-sp-dvce_screenheight': 1080,
-      'x-sp-doc_charset': 'UTF-8',
-      'x-sp-doc_width': 730,
-      'x-sp-doc_height': 12393,
-      'x-sp-dvce_sent_tstamp': '1628586512248',
-      'x-sp-tp2': {
-        e: 'pv',
-        url: 'https://snowplowanalytics.com/',
-        page: 'Collect, manage and operationalize behavioral data at scale | Snowplow',
-        tv: 'js-2.18.1',
-        tna: 'sp',
-        aid: 'website',
-        p: 'web',
-        tz: 'Europe/London',
-        lang: 'en-GB',
-        cs: 'UTF-8',
-        res: '1920x1080',
-        cd: '24',
-        cookie: '1',
-        eid: '8676de79-0eba-4435-ad95-8a41a8a0129c',
-        dtm: '1628586512246',
-        cx: 'ewogICJzY2hlbWEiOiAiaWdsdTpjb20uc25vd3Bsb3dhbmFseXRpY3Muc25vd3Bsb3cvY29udGV4dHMvanNvbnNjaGVtYS8xLTAtMCIsCiAgImRhdGEiOiBbCiAgICB7CiAgICAgICJzY2hlbWEiOiAiaWdsdTpjb20uc25vd3Bsb3dhbmFseXRpY3Muc25vd3Bsb3cvd2ViX3BhZ2UvanNvbnNjaGVtYS8xLTAtMCIsCiAgICAgICJkYXRhIjogeyAiaWQiOiAiYTg2YzQyZTUtYjgzMS00NWM4LWI3MDYtZTIxNGMyNmI0YjNkIiB9CiAgICB9LAogICAgewogICAgICAic2NoZW1hIjogImlnbHU6b3JnLnczL1BlcmZvcm1hbmNlVGltaW5nL2pzb25zY2hlbWEvMS0wLTAiLAogICAgICAiZGF0YSI6IHsKICAgICAgICAibmF2aWdhdGlvblN0YXJ0IjogMTYyODU4NjUwODYxMCwKICAgICAgICAidW5sb2FkRXZlbnRTdGFydCI6IDAsCiAgICAgICAgInVubG9hZEV2ZW50RW5kIjogMCwKICAgICAgICAicmVkaXJlY3RTdGFydCI6IDAsCiAgICAgICAgInJlZGlyZWN0RW5kIjogMCwKICAgICAgICAiZmV0Y2hTdGFydCI6IDE2Mjg1ODY1MDg2MTAsCiAgICAgICAgImRvbWFpbkxvb2t1cFN0YXJ0IjogMTYyODU4NjUwODYzNywKICAgICAgICAiZG9tYWluTG9va3VwRW5kIjogMTYyODU4NjUwODY5MSwKICAgICAgICAiY29ubmVjdFN0YXJ0IjogMTYyODU4NjUwODY5MSwKICAgICAgICAiY29ubmVjdEVuZCI6IDE2Mjg1ODY1MDg3NjMsCiAgICAgICAgInNlY3VyZUNvbm5lY3Rpb25TdGFydCI6IDE2Mjg1ODY1MDg3MjEsCiAgICAgICAgInJlcXVlc3RTdGFydCI6IDE2Mjg1ODY1MDg3NjMsCiAgICAgICAgInJlc3BvbnNlU3RhcnQiOiAxNjI4NTg2NTA4Nzk3LAogICAgICAgICJyZXNwb25zZUVuZCI6IDE2Mjg1ODY1MDg4MjEsCiAgICAgICAgImRvbUxvYWRpbmciOiAxNjI4NTg2NTA5MDc2LAogICAgICAgICJkb21JbnRlcmFjdGl2ZSI6IDE2Mjg1ODY1MDkzODEsCiAgICAgICAgImRvbUNvbnRlbnRMb2FkZWRFdmVudFN0YXJ0IjogMTYyODU4NjUwOTQwOCwKICAgICAgICAiZG9tQ29udGVudExvYWRlZEV2ZW50RW5kIjogMTYyODU4NjUwOTQxNywKICAgICAgICAiZG9tQ29tcGxldGUiOiAxNjI4NTg2NTEwMzMyLAogICAgICAgICJsb2FkRXZlbnRTdGFydCI6IDE2Mjg1ODY1MTAzMzIsCiAgICAgICAgImxvYWRFdmVudEVuZCI6IDE2Mjg1ODY1MTAzMzQKICAgICAgfQogICAgfSwKICAgIHsKICAgICAgInNjaGVtYSI6ICJpZ2x1OmNvbS5nb29nbGUudGFnLW1hbmFnZXIuc2VydmVyLXNpZGUvdXNlcl9kYXRhL2pzb25zY2hlbWEvMS0wLTAiLAogICAgICAiZGF0YSI6IHsgCiAgICAgICAgImVtYWlsX2FkZHJlc3MiOiAiZm9vQGV4YW1wbGUuY29tIiwKICAgICAgICAicGhvbmVfbnVtYmVyIjogIisxNTU1MTIzNDU2NyIsCiAgICAgICAgImFkZHJlc3MiOiB7CiAgICAgICAgICAiZmlyc3RfbmFtZSI6ICJKYW5lIiwKICAgICAgICAgICJsYXN0X25hbWUiOiAiRG9lIiwKICAgICAgICAgICJzdHJlZXQiOiAiMTIzIEZha2UgU3QiLAogICAgICAgICAgImNpdHkiOiAiU2FuIEZyYW5jaXNjbyIsCiAgICAgICAgICAicmVnaW9uIjogIkNBIiwKICAgICAgICAgICJwb3N0YWxfY29kZSI6ICI5NDAxNiIsCiAgICAgICAgICAiY291bnRyeSI6ICJVUyIgCiAgICAgICAgfQogICAgICB9CiAgICB9CiAgXQp9Cg',
-        vp: '745x1302',
-        ds: '730x12393',
-        vid: '1',
-        sid: 'e7580b71-227b-4868-9ea9-322a263ce885',
-        duid: 'd54a1904-7798-401a-be0b-1a83bea73634',
-        stm: '1628586512248',
-        uid: 'snow123',
-      },
-      'x-sp-contexts_com_snowplowanalytics_snowplow_web_page_1': [
-        {
-          id: 'a86c42e5-b831-45c8-b706-e214c26b4b3d',
-        },
-      ],
-      'x-sp-contexts_org_w3_performance_timing_1': [
-        {
-          navigationStart: 1628586508610,
-          unloadEventStart: 0,
-          unloadEventEnd: 0,
-          redirectStart: 0,
-          redirectEnd: 0,
-          fetchStart: 1628586508610,
-          domainLookupStart: 1628586508637,
-          domainLookupEnd: 1628586508691,
-          connectStart: 1628586508691,
-          connectEnd: 1628586508763,
-          secureConnectionStart: 1628586508721,
-          requestStart: 1628586508763,
-          responseStart: 1628586508797,
-          responseEnd: 1628586508821,
-          domLoading: 1628586509076,
-          domInteractive: 1628586509381,
-          domContentLoadedEventStart: 1628586509408,
-          domContentLoadedEventEnd: 1628586509417,
-          domComplete: 1628586510332,
-          loadEventStart: 1628586510332,
-          loadEventEnd: 1628586510334,
-        },
-      ],
-      'x-sp-contexts_com_google_tag-manager_server-side_user_data_1': [
-        {
-          email_address: 'foo@example.com',
-          phone_number: '+15551234567',
-          address: {
-            first_name: 'Jane',
-            last_name: 'Doe',
-            street: '123 Fake St',
-            city: 'San Francisco',
-            region: 'CA',
-            postal_code: '94016',
-            country: 'US',
-          },
-        },
-      ],
-      user_data: {
-        email_address: 'foo@example.com',
-        phone_number: '+15551234567',
-        address: {
-          first_name: 'Jane',
-          last_name: 'Doe',
-          street: '123 Fake St',
-          city: 'San Francisco',
-          region: 'CA',
-          postal_code: '94016',
-          country: 'US',
-        },
-      },
-      ga_session_id: 'e7580b71-227b-4868-9ea9-322a263ce885',
-      ga_session_number: '1',
-      'x-ga-mp2-seg': '1',
-      'x-ga-protocol_version': '2',
-      'x-ga-page_id': 'a86c42e5-b831-45c8-b706-e214c26b4b3d',
-      ip_override: '1.2.3.4',
-    };
-
     // Tag config data
     const testMockData = {
       url: 'test',
@@ -1141,6 +1011,33 @@ scenarios:
       requestTimeout: '5000',
     };
 
+    const testEvent = mockEventObjectPageView;
+    const expectedBody = {
+      contexts_com_snowplowanalytics_snowplow_web_page_1:
+        testEvent['x-sp-contexts_com_snowplowanalytics_snowplow_web_page_1'][0],
+      contexts_org_w3_performance_timing_1:
+        testEvent['x-sp-contexts_org_w3_performance_timing_1'][0],
+      'contexts_com_google_tag-manager_server-side_user_data_1':
+        testEvent[
+          'x-sp-contexts_com_google_tag-manager_server-side_user_data_1'
+        ][0],
+      client_id: 'd54a1904-7798-401a-be0b-1a83bea73634',
+      event_name: 'page_view',
+      ip_override: '1.2.3.4',
+      language: 'en-GB',
+      page_encoding: 'UTF-8',
+      page_hostname: 'snowplow.io',
+      page_location: 'https://snowplow.io/',
+      page_path: '/',
+      page_referrer: 'referer',
+      page_title:
+        'Collect, manage and operationalize behavioral data at scale | Snowplow',
+      screen_resolution: '1920x1080',
+      user_agent: 'user-agent',
+      user_id: 'snow123',
+      viewport_size: '745x1302',
+    };
+
     // to assert on
     let argUrl, argCallback, argOptions, argBody;
 
@@ -1169,196 +1066,9 @@ scenarios:
     );
 
     const body = jsonApi.parse(argBody);
-    const expectedBody = {
-      contexts_com_snowplowanalytics_snowplow_web_page_1: {
-        id: 'a86c42e5-b831-45c8-b706-e214c26b4b3d',
-      },
-      contexts_org_w3_performance_timing_1: {
-        navigationStart: 1628586508610,
-        unloadEventStart: 0,
-        unloadEventEnd: 0,
-        redirectStart: 0,
-        redirectEnd: 0,
-        fetchStart: 1628586508610,
-        domainLookupStart: 1628586508637,
-        domainLookupEnd: 1628586508691,
-        connectStart: 1628586508691,
-        connectEnd: 1628586508763,
-        secureConnectionStart: 1628586508721,
-        requestStart: 1628586508763,
-        responseStart: 1628586508797,
-        responseEnd: 1628586508821,
-        domLoading: 1628586509076,
-        domInteractive: 1628586509381,
-        domContentLoadedEventStart: 1628586509408,
-        domContentLoadedEventEnd: 1628586509417,
-        domComplete: 1628586510332,
-        loadEventStart: 1628586510332,
-        loadEventEnd: 1628586510334,
-      },
-      'contexts_com_google_tag-manager_server-side_user_data_1': {
-        email_address: 'foo@example.com',
-        phone_number: '+15551234567',
-        address: {
-          first_name: 'Jane',
-          last_name: 'Doe',
-          street: '123 Fake St',
-          city: 'San Francisco',
-          region: 'CA',
-          postal_code: '94016',
-          country: 'US',
-        },
-      },
-      client_id: 'd54a1904-7798-401a-be0b-1a83bea73634',
-      event_name: 'page_view',
-      ip_override: '1.2.3.4',
-      language: 'en-GB',
-      page_encoding: 'UTF-8',
-      page_hostname: 'snowplowanalytics.com',
-      page_location: 'https://snowplowanalytics.com/',
-      page_path: '/',
-      page_referrer: 'referer',
-      page_title:
-        'Collect, manage and operationalize behavioral data at scale | Snowplow',
-      screen_resolution: '1920x1080',
-      user_agent: 'user-agent',
-      user_id: 'snow123',
-      viewport_size: '745x1302',
-    };
-
     assertThat(body).isEqualTo(expectedBody);
 - name: Test includeAll
   code: |
-    // Test imports
-    const jsonApi = require('JSON');
-
-    // Test event
-    const testEvent = {
-      event_name: 'page_view',
-      client_id: 'd54a1904-7798-401a-be0b-1a83bea73634',
-      user_id: 'snow123',
-      language: 'en-GB',
-      page_encoding: 'UTF-8',
-      page_hostname: 'snowplowanalytics.com',
-      page_location: 'https://snowplowanalytics.com/',
-      page_path: '/',
-      page_referrer: 'referer',
-      page_title:
-        'Collect, manage and operationalize behavioral data at scale | Snowplow',
-      screen_resolution: '1920x1080',
-      viewport_size: '745x1302',
-      user_agent: 'user-agent',
-      origin: 'origin',
-      host: 'host',
-      'x-sp-app_id': 'website',
-      'x-sp-platform': 'web',
-      'x-sp-dvce_created_tstamp': '1628586512246',
-      'x-sp-event_id': '8676de79-0eba-4435-ad95-8a41a8a0129c',
-      'x-sp-name_tracker': 'sp',
-      'x-sp-v_tracker': 'js-2.18.1',
-      'x-sp-domain_sessionid': 'e7580b71-227b-4868-9ea9-322a263ce885',
-      'x-sp-domain_sessionidx': 1,
-      'x-sp-br_cookies': '1',
-      'x-sp-br_colordepth': '24',
-      'x-sp-br_viewwidth': 745,
-      'x-sp-br_viewheight': 1302,
-      'x-sp-dvce_screenwidth': 1920,
-      'x-sp-dvce_screenheight': 1080,
-      'x-sp-doc_charset': 'UTF-8',
-      'x-sp-doc_width': 730,
-      'x-sp-doc_height': 12393,
-      'x-sp-dvce_sent_tstamp': '1628586512248',
-      'x-sp-tp2': {
-        e: 'pv',
-        url: 'https://snowplowanalytics.com/',
-        page: 'Collect, manage and operationalize behavioral data at scale | Snowplow',
-        tv: 'js-2.18.1',
-        tna: 'sp',
-        aid: 'website',
-        p: 'web',
-        tz: 'Europe/London',
-        lang: 'en-GB',
-        cs: 'UTF-8',
-        res: '1920x1080',
-        cd: '24',
-        cookie: '1',
-        eid: '8676de79-0eba-4435-ad95-8a41a8a0129c',
-        dtm: '1628586512246',
-        cx: 'ewogICJzY2hlbWEiOiAiaWdsdTpjb20uc25vd3Bsb3dhbmFseXRpY3Muc25vd3Bsb3cvY29udGV4dHMvanNvbnNjaGVtYS8xLTAtMCIsCiAgImRhdGEiOiBbCiAgICB7CiAgICAgICJzY2hlbWEiOiAiaWdsdTpjb20uc25vd3Bsb3dhbmFseXRpY3Muc25vd3Bsb3cvd2ViX3BhZ2UvanNvbnNjaGVtYS8xLTAtMCIsCiAgICAgICJkYXRhIjogeyAiaWQiOiAiYTg2YzQyZTUtYjgzMS00NWM4LWI3MDYtZTIxNGMyNmI0YjNkIiB9CiAgICB9LAogICAgewogICAgICAic2NoZW1hIjogImlnbHU6b3JnLnczL1BlcmZvcm1hbmNlVGltaW5nL2pzb25zY2hlbWEvMS0wLTAiLAogICAgICAiZGF0YSI6IHsKICAgICAgICAibmF2aWdhdGlvblN0YXJ0IjogMTYyODU4NjUwODYxMCwKICAgICAgICAidW5sb2FkRXZlbnRTdGFydCI6IDAsCiAgICAgICAgInVubG9hZEV2ZW50RW5kIjogMCwKICAgICAgICAicmVkaXJlY3RTdGFydCI6IDAsCiAgICAgICAgInJlZGlyZWN0RW5kIjogMCwKICAgICAgICAiZmV0Y2hTdGFydCI6IDE2Mjg1ODY1MDg2MTAsCiAgICAgICAgImRvbWFpbkxvb2t1cFN0YXJ0IjogMTYyODU4NjUwODYzNywKICAgICAgICAiZG9tYWluTG9va3VwRW5kIjogMTYyODU4NjUwODY5MSwKICAgICAgICAiY29ubmVjdFN0YXJ0IjogMTYyODU4NjUwODY5MSwKICAgICAgICAiY29ubmVjdEVuZCI6IDE2Mjg1ODY1MDg3NjMsCiAgICAgICAgInNlY3VyZUNvbm5lY3Rpb25TdGFydCI6IDE2Mjg1ODY1MDg3MjEsCiAgICAgICAgInJlcXVlc3RTdGFydCI6IDE2Mjg1ODY1MDg3NjMsCiAgICAgICAgInJlc3BvbnNlU3RhcnQiOiAxNjI4NTg2NTA4Nzk3LAogICAgICAgICJyZXNwb25zZUVuZCI6IDE2Mjg1ODY1MDg4MjEsCiAgICAgICAgImRvbUxvYWRpbmciOiAxNjI4NTg2NTA5MDc2LAogICAgICAgICJkb21JbnRlcmFjdGl2ZSI6IDE2Mjg1ODY1MDkzODEsCiAgICAgICAgImRvbUNvbnRlbnRMb2FkZWRFdmVudFN0YXJ0IjogMTYyODU4NjUwOTQwOCwKICAgICAgICAiZG9tQ29udGVudExvYWRlZEV2ZW50RW5kIjogMTYyODU4NjUwOTQxNywKICAgICAgICAiZG9tQ29tcGxldGUiOiAxNjI4NTg2NTEwMzMyLAogICAgICAgICJsb2FkRXZlbnRTdGFydCI6IDE2Mjg1ODY1MTAzMzIsCiAgICAgICAgImxvYWRFdmVudEVuZCI6IDE2Mjg1ODY1MTAzMzQKICAgICAgfQogICAgfSwKICAgIHsKICAgICAgInNjaGVtYSI6ICJpZ2x1OmNvbS5nb29nbGUudGFnLW1hbmFnZXIuc2VydmVyLXNpZGUvdXNlcl9kYXRhL2pzb25zY2hlbWEvMS0wLTAiLAogICAgICAiZGF0YSI6IHsgCiAgICAgICAgImVtYWlsX2FkZHJlc3MiOiAiZm9vQGV4YW1wbGUuY29tIiwKICAgICAgICAicGhvbmVfbnVtYmVyIjogIisxNTU1MTIzNDU2NyIsCiAgICAgICAgImFkZHJlc3MiOiB7CiAgICAgICAgICAiZmlyc3RfbmFtZSI6ICJKYW5lIiwKICAgICAgICAgICJsYXN0X25hbWUiOiAiRG9lIiwKICAgICAgICAgICJzdHJlZXQiOiAiMTIzIEZha2UgU3QiLAogICAgICAgICAgImNpdHkiOiAiU2FuIEZyYW5jaXNjbyIsCiAgICAgICAgICAicmVnaW9uIjogIkNBIiwKICAgICAgICAgICJwb3N0YWxfY29kZSI6ICI5NDAxNiIsCiAgICAgICAgICAiY291bnRyeSI6ICJVUyIgCiAgICAgICAgfQogICAgICB9CiAgICB9CiAgXQp9Cg',
-        vp: '745x1302',
-        ds: '730x12393',
-        vid: '1',
-        sid: 'e7580b71-227b-4868-9ea9-322a263ce885',
-        duid: 'd54a1904-7798-401a-be0b-1a83bea73634',
-        stm: '1628586512248',
-        uid: 'snow123',
-      },
-      'x-sp-contexts_com_snowplowanalytics_snowplow_web_page_1': [
-        {
-          id: 'a86c42e5-b831-45c8-b706-e214c26b4b3d',
-        },
-      ],
-      'x-sp-contexts_org_w3_performance_timing_1': [
-        {
-          navigationStart: 1628586508610,
-          unloadEventStart: 0,
-          unloadEventEnd: 0,
-          redirectStart: 0,
-          redirectEnd: 0,
-          fetchStart: 1628586508610,
-          domainLookupStart: 1628586508637,
-          domainLookupEnd: 1628586508691,
-          connectStart: 1628586508691,
-          connectEnd: 1628586508763,
-          secureConnectionStart: 1628586508721,
-          requestStart: 1628586508763,
-          responseStart: 1628586508797,
-          responseEnd: 1628586508821,
-          domLoading: 1628586509076,
-          domInteractive: 1628586509381,
-          domContentLoadedEventStart: 1628586509408,
-          domContentLoadedEventEnd: 1628586509417,
-          domComplete: 1628586510332,
-          loadEventStart: 1628586510332,
-          loadEventEnd: 1628586510334,
-        },
-      ],
-      'x-sp-contexts_com_google_tag-manager_server-side_user_data_1': [
-        {
-          email_address: 'foo@example.com',
-          phone_number: '+15551234567',
-          address: {
-            first_name: 'Jane',
-            last_name: 'Doe',
-            street: '123 Fake St',
-            city: 'San Francisco',
-            region: 'CA',
-            postal_code: '94016',
-            country: 'US',
-          },
-        },
-      ],
-      user_data: {
-        email_address: 'foo@example.com',
-        phone_number: '+15551234567',
-        address: {
-          first_name: 'Jane',
-          last_name: 'Doe',
-          street: '123 Fake St',
-          city: 'San Francisco',
-          region: 'CA',
-          postal_code: '94016',
-          country: 'US',
-        },
-      },
-      ga_session_id: 'e7580b71-227b-4868-9ea9-322a263ce885',
-      ga_session_number: '1',
-      'x-ga-mp2-seg': '1',
-      'x-ga-protocol_version': '2',
-      'x-ga-page_id': 'a86c42e5-b831-45c8-b706-e214c26b4b3d',
-      ip_override: '1.2.3.4',
-    };
-
     // Tag config data
     const testMockData = {
       url: 'test',
@@ -1369,6 +1079,10 @@ scenarios:
       requestTimeout: '5000',
     };
 
+    const testEvent = mockEventObjectPageView;
+    const expectedBody = jsonApi.parse(jsonApi.stringify(testEvent));
+    expectedBody.testExtraRequestData = 'extra';
+
     // to assert on
     let argUrl, argCallback, argOptions, argBody;
 
@@ -1397,208 +1111,9 @@ scenarios:
     );
 
     const body = jsonApi.parse(argBody);
-
-    const expectedBody = {
-      event_name: 'page_view',
-      client_id: 'd54a1904-7798-401a-be0b-1a83bea73634',
-      user_id: 'snow123',
-      language: 'en-GB',
-      page_encoding: 'UTF-8',
-      page_hostname: 'snowplowanalytics.com',
-      page_location: 'https://snowplowanalytics.com/',
-      page_path: '/',
-      page_referrer: 'referer',
-      page_title:
-        'Collect, manage and operationalize behavioral data at scale | Snowplow',
-      screen_resolution: '1920x1080',
-      viewport_size: '745x1302',
-      user_agent: 'user-agent',
-      origin: 'origin',
-      host: 'host',
-      'x-sp-app_id': 'website',
-      'x-sp-platform': 'web',
-      'x-sp-dvce_created_tstamp': '1628586512246',
-      'x-sp-event_id': '8676de79-0eba-4435-ad95-8a41a8a0129c',
-      'x-sp-name_tracker': 'sp',
-      'x-sp-v_tracker': 'js-2.18.1',
-      'x-sp-domain_sessionid': 'e7580b71-227b-4868-9ea9-322a263ce885',
-      'x-sp-domain_sessionidx': 1,
-      'x-sp-br_cookies': '1',
-      'x-sp-br_colordepth': '24',
-      'x-sp-br_viewwidth': 745,
-      'x-sp-br_viewheight': 1302,
-      'x-sp-dvce_screenwidth': 1920,
-      'x-sp-dvce_screenheight': 1080,
-      'x-sp-doc_charset': 'UTF-8',
-      'x-sp-doc_width': 730,
-      'x-sp-doc_height': 12393,
-      'x-sp-dvce_sent_tstamp': '1628586512248',
-      'x-sp-tp2': {
-        e: 'pv',
-        url: 'https://snowplowanalytics.com/',
-        page: 'Collect, manage and operationalize behavioral data at scale | Snowplow',
-        tv: 'js-2.18.1',
-        tna: 'sp',
-        aid: 'website',
-        p: 'web',
-        tz: 'Europe/London',
-        lang: 'en-GB',
-        cs: 'UTF-8',
-        res: '1920x1080',
-        cd: '24',
-        cookie: '1',
-        eid: '8676de79-0eba-4435-ad95-8a41a8a0129c',
-        dtm: '1628586512246',
-        cx: 'ewogICJzY2hlbWEiOiAiaWdsdTpjb20uc25vd3Bsb3dhbmFseXRpY3Muc25vd3Bsb3cvY29udGV4dHMvanNvbnNjaGVtYS8xLTAtMCIsCiAgImRhdGEiOiBbCiAgICB7CiAgICAgICJzY2hlbWEiOiAiaWdsdTpjb20uc25vd3Bsb3dhbmFseXRpY3Muc25vd3Bsb3cvd2ViX3BhZ2UvanNvbnNjaGVtYS8xLTAtMCIsCiAgICAgICJkYXRhIjogeyAiaWQiOiAiYTg2YzQyZTUtYjgzMS00NWM4LWI3MDYtZTIxNGMyNmI0YjNkIiB9CiAgICB9LAogICAgewogICAgICAic2NoZW1hIjogImlnbHU6b3JnLnczL1BlcmZvcm1hbmNlVGltaW5nL2pzb25zY2hlbWEvMS0wLTAiLAogICAgICAiZGF0YSI6IHsKICAgICAgICAibmF2aWdhdGlvblN0YXJ0IjogMTYyODU4NjUwODYxMCwKICAgICAgICAidW5sb2FkRXZlbnRTdGFydCI6IDAsCiAgICAgICAgInVubG9hZEV2ZW50RW5kIjogMCwKICAgICAgICAicmVkaXJlY3RTdGFydCI6IDAsCiAgICAgICAgInJlZGlyZWN0RW5kIjogMCwKICAgICAgICAiZmV0Y2hTdGFydCI6IDE2Mjg1ODY1MDg2MTAsCiAgICAgICAgImRvbWFpbkxvb2t1cFN0YXJ0IjogMTYyODU4NjUwODYzNywKICAgICAgICAiZG9tYWluTG9va3VwRW5kIjogMTYyODU4NjUwODY5MSwKICAgICAgICAiY29ubmVjdFN0YXJ0IjogMTYyODU4NjUwODY5MSwKICAgICAgICAiY29ubmVjdEVuZCI6IDE2Mjg1ODY1MDg3NjMsCiAgICAgICAgInNlY3VyZUNvbm5lY3Rpb25TdGFydCI6IDE2Mjg1ODY1MDg3MjEsCiAgICAgICAgInJlcXVlc3RTdGFydCI6IDE2Mjg1ODY1MDg3NjMsCiAgICAgICAgInJlc3BvbnNlU3RhcnQiOiAxNjI4NTg2NTA4Nzk3LAogICAgICAgICJyZXNwb25zZUVuZCI6IDE2Mjg1ODY1MDg4MjEsCiAgICAgICAgImRvbUxvYWRpbmciOiAxNjI4NTg2NTA5MDc2LAogICAgICAgICJkb21JbnRlcmFjdGl2ZSI6IDE2Mjg1ODY1MDkzODEsCiAgICAgICAgImRvbUNvbnRlbnRMb2FkZWRFdmVudFN0YXJ0IjogMTYyODU4NjUwOTQwOCwKICAgICAgICAiZG9tQ29udGVudExvYWRlZEV2ZW50RW5kIjogMTYyODU4NjUwOTQxNywKICAgICAgICAiZG9tQ29tcGxldGUiOiAxNjI4NTg2NTEwMzMyLAogICAgICAgICJsb2FkRXZlbnRTdGFydCI6IDE2Mjg1ODY1MTAzMzIsCiAgICAgICAgImxvYWRFdmVudEVuZCI6IDE2Mjg1ODY1MTAzMzQKICAgICAgfQogICAgfSwKICAgIHsKICAgICAgInNjaGVtYSI6ICJpZ2x1OmNvbS5nb29nbGUudGFnLW1hbmFnZXIuc2VydmVyLXNpZGUvdXNlcl9kYXRhL2pzb25zY2hlbWEvMS0wLTAiLAogICAgICAiZGF0YSI6IHsgCiAgICAgICAgImVtYWlsX2FkZHJlc3MiOiAiZm9vQGV4YW1wbGUuY29tIiwKICAgICAgICAicGhvbmVfbnVtYmVyIjogIisxNTU1MTIzNDU2NyIsCiAgICAgICAgImFkZHJlc3MiOiB7CiAgICAgICAgICAiZmlyc3RfbmFtZSI6ICJKYW5lIiwKICAgICAgICAgICJsYXN0X25hbWUiOiAiRG9lIiwKICAgICAgICAgICJzdHJlZXQiOiAiMTIzIEZha2UgU3QiLAogICAgICAgICAgImNpdHkiOiAiU2FuIEZyYW5jaXNjbyIsCiAgICAgICAgICAicmVnaW9uIjogIkNBIiwKICAgICAgICAgICJwb3N0YWxfY29kZSI6ICI5NDAxNiIsCiAgICAgICAgICAiY291bnRyeSI6ICJVUyIgCiAgICAgICAgfQogICAgICB9CiAgICB9CiAgXQp9Cg',
-        vp: '745x1302',
-        ds: '730x12393',
-        vid: '1',
-        sid: 'e7580b71-227b-4868-9ea9-322a263ce885',
-        duid: 'd54a1904-7798-401a-be0b-1a83bea73634',
-        stm: '1628586512248',
-        uid: 'snow123',
-      },
-      'x-sp-contexts_com_snowplowanalytics_snowplow_web_page_1': [
-        {
-          id: 'a86c42e5-b831-45c8-b706-e214c26b4b3d',
-        },
-      ],
-      'x-sp-contexts_org_w3_performance_timing_1': [
-        {
-          navigationStart: 1628586508610,
-          unloadEventStart: 0,
-          unloadEventEnd: 0,
-          redirectStart: 0,
-          redirectEnd: 0,
-          fetchStart: 1628586508610,
-          domainLookupStart: 1628586508637,
-          domainLookupEnd: 1628586508691,
-          connectStart: 1628586508691,
-          connectEnd: 1628586508763,
-          secureConnectionStart: 1628586508721,
-          requestStart: 1628586508763,
-          responseStart: 1628586508797,
-          responseEnd: 1628586508821,
-          domLoading: 1628586509076,
-          domInteractive: 1628586509381,
-          domContentLoadedEventStart: 1628586509408,
-          domContentLoadedEventEnd: 1628586509417,
-          domComplete: 1628586510332,
-          loadEventStart: 1628586510332,
-          loadEventEnd: 1628586510334,
-        },
-      ],
-      'x-sp-contexts_com_google_tag-manager_server-side_user_data_1': [
-        {
-          email_address: 'foo@example.com',
-          phone_number: '+15551234567',
-          address: {
-            first_name: 'Jane',
-            last_name: 'Doe',
-            street: '123 Fake St',
-            city: 'San Francisco',
-            region: 'CA',
-            postal_code: '94016',
-            country: 'US',
-          },
-        },
-      ],
-      user_data: {
-        email_address: 'foo@example.com',
-        phone_number: '+15551234567',
-        address: {
-          first_name: 'Jane',
-          last_name: 'Doe',
-          street: '123 Fake St',
-          city: 'San Francisco',
-          region: 'CA',
-          postal_code: '94016',
-          country: 'US',
-        },
-      },
-      ga_session_id: 'e7580b71-227b-4868-9ea9-322a263ce885',
-      ga_session_number: '1',
-      'x-ga-mp2-seg': '1',
-      'x-ga-protocol_version': '2',
-      'x-ga-page_id': 'a86c42e5-b831-45c8-b706-e214c26b4b3d',
-      ip_override: '1.2.3.4',
-      testExtraRequestData: 'extra',
-    };
     assertThat(body).isEqualTo(expectedBody);
 - name: Test mappings 0
   code: |
-    // Test imports
-    const jsonApi = require('JSON');
-
-    // Test event
-    const testEvent = {
-      event_name: 'foo',
-      language: 'en-US',
-      page_encoding: 'UTF-8',
-      page_hostname: 'test.example.com',
-      page_location: 'http://test.example.com',
-      page_path: '/',
-      screen_resolution: '1920x1080',
-      user_id: 'tester',
-      viewport_size: '1023x980',
-      user_agent: 'curl/7.74.0',
-      host: 'foo.com',
-      'x-sp-app_id': 'testApp',
-      'x-sp-platform': 'srv',
-      'x-sp-dvce_created_tstamp': '1634551546989',
-      'x-sp-name_tracker': 'sptest',
-      'x-sp-v_tracker': 'curl',
-      'x-sp-domain_sessionidx': 1,
-      'x-sp-br_colordepth': '24',
-      'x-sp-br_viewwidth': 1023,
-      'x-sp-br_viewheight': 980,
-      'x-sp-dvce_screenwidth': 1920,
-      'x-sp-dvce_screenheight': 1080,
-      'x-sp-doc_charset': 'UTF-8',
-      'x-sp-doc_width': 1023,
-      'x-sp-doc_height': 980,
-      'x-sp-tp2': {
-        e: 'ue',
-        p: 'srv',
-        tna: 'sptest',
-        aid: 'testApp',
-        cs: 'UTF-8',
-        lang: 'en-US',
-        res: '1920x1080',
-        cd: '24',
-        tz: 'Europe/London',
-        dtm: '1634551546989',
-        vp: '1023x980',
-        ds: '1023x980',
-        vid: '1',
-        uid: 'tester',
-        url: 'http://test.example.com',
-        tv: 'curl',
-        ue_pr:
-          '{"schema": "iglu:com.snowplowanalytics.snowplow/unstruct_event/jsonschema/1-0-0","data":{"schema":"iglu:com.acme.test/foo/jsonschema/1-0-0","data":{"foo_age":10}}}',
-        co: '{"schema":"iglu:com.snowplowanalytics.snowplow/contexts/jsonschema/1-0-0","data":[{"schema":"iglu:com.snowplowanalytics.snowplow/mobile_context/jsonschema/1-0-2","data":{"osType":"myOsType","osVersion":"myOsVersion","deviceManufacturer":"myDevMan","deviceModel":"myDevModel"}},{"schema":"iglu:com.snowplowanalytics.snowplow/web_page/jsonschema/1-0-0","data":{"id":"c000a256-1e13-4cde-a5b4-d7a00cf88003"}}]}',
-      },
-      'x-sp-self_describing_event_com_acme_test_foo_1': {
-        foo_age: 10,
-      },
-      'x-sp-contexts_com_snowplowanalytics_snowplow_mobile_context_1': [
-        {
-          osType: 'myOsType',
-          osVersion: 'myOsVersion',
-          deviceManufacturer: 'myDevMan',
-          deviceModel: 'myDevModel',
-        },
-      ],
-      'x-sp-contexts_com_snowplowanalytics_snowplow_web_page_1': [
-        { id: 'c000a256-1e13-4cde-a5b4-d7a00cf88003' },
-      ],
-      ga_session_number: '1',
-      'x-ga-mp2-seg': '1',
-      'x-ga-protocol_version': '2',
-      'x-ga-page_id': 'c000a256-1e13-4cde-a5b4-d7a00cf88003',
-      ip_override: '1.2.3.4',
-    };
-
     // Tag config data
     const testMockData = {
       url: 'test',
@@ -1624,6 +1139,28 @@ scenarios:
 
       requestMethod: 'post',
       requestTimeout: '3000',
+    };
+
+    const testEvent = mockEventObjectSelfDesc;
+    const expectedBody = {
+      self_describing_event_com_snowplowanalytics_snowplow_media_player_event_1: {
+        type: 'play',
+      },
+      testEntityMappedKey: {
+        id: '68027aa2-34b1-4018-95e3-7176c62dbc84',
+      },
+      event_name: 'media_player_event',
+      client_id: 'fd0e5288-e89b-45df-aad5-6d0c6eda6198',
+      language: 'en-US',
+      page_encoding: 'windows-1252',
+      page_hostname: 'localhost',
+      page_location: 'http://localhost:8000/',
+      page_path: '/',
+      screen_resolution: '1920x1080',
+      user_agent: 'curl/7.81.0',
+      user_id: 'tester',
+      viewport_size: '1044x975',
+      user_data: { email_address: 'foo@test.io' },
     };
 
     // to assert on
@@ -1654,148 +1191,9 @@ scenarios:
     );
 
     const body = jsonApi.parse(argBody);
-    const expectedBody = {
-      self_describing_event_com_acme_test_foo_1: {
-        foo_age: 10,
-      },
-      testEntityMappedKey: {
-        id: 'c000a256-1e13-4cde-a5b4-d7a00cf88003',
-      },
-      event_name: 'foo',
-      ip_override: '1.2.3.4',
-      language: 'en-US',
-      page_encoding: 'UTF-8',
-      page_hostname: 'test.example.com',
-      page_location: 'http://test.example.com',
-      page_path: '/',
-      screen_resolution: '1920x1080',
-      user_agent: 'curl/7.74.0',
-      user_id: 'tester',
-      viewport_size: '1023x980',
-    };
-
     assertThat(body).isEqualTo(expectedBody);
 - name: Test mappings 1
   code: |
-    // Test imports
-    const jsonApi = require('JSON');
-    const getTypeOf = require('getType');
-
-    // Test event
-    const testEvent = {
-      event_name: 'link_click',
-      client_id: 'bc2e92ec6c204a14',
-      page_hostname: 'www.snowplowanalytics.com',
-      page_location: 'http://www.snowplowanalytics.com',
-      page_path: '/',
-      page_title: 'On Analytics',
-      user_id: 'jon.doe@email.com',
-      host: 'host.foo.com',
-      'x-sp-app_id': 'angry-birds',
-      'x-sp-platform': 'web',
-      'x-sp-etl_tstamp': '2017-01-26T00:01:25.292Z',
-      'x-sp-collector_tstamp': '2013-11-26T00:02:05Z',
-      'x-sp-dvce_created_tstamp': '2013-11-26T00:03:57.885Z',
-      'x-sp-event': 'page_view',
-      'x-sp-event_id': 'c6ef3124-b53a-4b13-a233-0088f79dcbcb',
-      'x-sp-txn_id': 41828,
-      'x-sp-name_tracker': 'spTracker',
-      'x-sp-v_tracker': 'js-3.1.6',
-      'x-sp-v_collector': 'ssc-2.3.1-stdout$',
-      'x-sp-v_etl': 'snowplow-micro-1.2.1-common-2.0.2',
-      'x-sp-user_fingerprint': '2161814971',
-      'x-sp-domain_sessionidx': 3,
-      'x-sp-network_userid': 'ecdff4d0-9175-40ac-a8bb-325c49733607',
-      'x-sp-geo_country': 'US',
-      'x-sp-geo_region': 'TX',
-      'x-sp-geo_city': 'New York',
-      'x-sp-geo_zipcode': '94109',
-      'x-sp-geo_latitude': 37.443604,
-      'x-sp-geo_longitude': -122.4124,
-      'x-sp-geo_location': '37.443604,-122.4124',
-      'x-sp-geo_region_name': 'Florida',
-      'x-sp-ip_isp': 'FDN Communications',
-      'x-sp-ip_organization': 'Bouygues Telecom',
-      'x-sp-ip_domain': 'nuvox.net',
-      'x-sp-ip_netspeed': 'Cable/DSL',
-      'x-sp-page_urlscheme': 'http',
-      'x-sp-page_urlhost': 'www.snowplowanalytics.com',
-      'x-sp-page_urlport': 80,
-      'x-sp-page_urlpath': '/product/index.html',
-      'x-sp-page_urlquery': 'id=GTM-DLRG',
-      'x-sp-page_urlfragment': '4-conclusion',
-      'x-sp-br_features_pdf': true,
-      'x-sp-br_features_flash': false,
-      'x-sp-domain_sessionid': '2b15e5c8-d3b1-11e4-b9d6-1681e6b88ec1',
-      'x-sp-derived_tstamp': '2013-11-26T00:03:57.886Z',
-      'x-sp-event_vendor': 'com.snowplowanalytics.snowplow',
-      'x-sp-event_name': 'link_click',
-      'x-sp-event_format': 'jsonschema',
-      'x-sp-event_version': '1-0-0',
-      'x-sp-event_fingerprint': 'e3dbfa9cca0412c3d4052863cefb547f',
-      'x-sp-true_tstamp': '2013-11-26T00:03:57.886Z',
-      'x-sp-contexts_org_schema_web_page_1': [
-        {
-          genre: 'blog',
-          inLanguage: 'en-US',
-          datePublished: '2014-11-06T00:00:00Z',
-          author: 'Fred Blundun',
-          breadcrumb: ['blog', 'releases'],
-          keywords: ['snowplow', 'javascript', 'tracker', 'event'],
-        },
-      ],
-      'x-sp-contexts_org_w3_performance_timing_1': [
-        {
-          navigationStart: 1415358089861,
-          unloadEventStart: 1415358090270,
-          unloadEventEnd: 1415358090287,
-          redirectStart: 0,
-          redirectEnd: 0,
-          fetchStart: 1415358089870,
-          domainLookupStart: 1415358090102,
-          domainLookupEnd: 1415358090102,
-          connectStart: 1415358090103,
-          connectEnd: 1415358090183,
-          requestStart: 1415358090183,
-          responseStart: 1415358090265,
-          responseEnd: 1415358090265,
-          domLoading: 1415358090270,
-          domInteractive: 1415358090886,
-          domContentLoadedEventStart: 1415358090968,
-          domContentLoadedEventEnd: 1415358091309,
-          domComplete: 0,
-          loadEventStart: 0,
-          loadEventEnd: 0,
-        },
-      ],
-      'x-sp-self_describing_event_com_snowplowanalytics_snowplow_link_click_1': {
-        targetUrl: 'http://www.example.com',
-        elementClasses: ['foreground'],
-        elementId: 'exampleLink',
-      },
-      'x-sp-contexts_com_snowplowanalytics_snowplow_ua_parser_context_1': [
-        {
-          useragentFamily: 'IE',
-          useragentMajor: '7',
-          useragentMinor: '0',
-          useragentPatch: null,
-          useragentVersion: 'IE 7.0',
-          osFamily: 'Windows XP',
-          osMajor: null,
-          osMinor: null,
-          osPatch: null,
-          osPatchMinor: null,
-          osVersion: 'Windows XP',
-          deviceFamily: 'Other',
-        },
-      ],
-      ga_session_id: '2b15e5c8-d3b1-11e4-b9d6-1681e6b88ec1',
-      ga_session_number: '3',
-      'x-ga-mp2-seg': '1',
-      'x-ga-protocol_version': '2',
-      ip_override: '1.2.3.4',
-    };
-
     // Tag config data
     const testMockData = {
       url: 'test',
@@ -1813,8 +1211,8 @@ scenarios:
       unmappedEntityNest: 'data.0',
       entityMappingRules: [
         {
-          key: 'iglu:org.schema/WebPage/jsonschema/1-0-0',
-          mappedKey: 'data.0.testEntityMappedKeyOrgSchemaWebPage',
+          key: 'iglu:com.youtube/youtube/jsonschema/1-0-0',
+          mappedKey: 'data.0.test_youtube',
         },
       ],
 
@@ -1822,20 +1220,24 @@ scenarios:
       includeCommonUserProperties: false,
       eventMappingRules: [
         {
-          key: 'x-sp-contexts_org_w3_performance_timing_1.0.unloadEventStart',
-          mappedKey: 'data.0.contexts_com_acme_foo_unload_1.0.unloadEventStart',
+          key: 'x-sp-contexts_com_snowplowanalytics_snowplow_media_player_1.0.currentTime',
+          mappedKey: 'data.0.contexts_com_acme_test_media_1.0.time',
         },
         {
-          key: 'x-sp-contexts_org_w3_performance_timing_1.0.unloadEventEnd',
-          mappedKey: 'data.0.contexts_com_acme_foo_unload_1.0.unloadEventEnd',
+          key: 'x-sp-contexts_com_youtube_youtube_1.0.avaliableQualityLevels',
+          mappedKey: 'data.0.contexts_com_acme_test_youtube_1.0.quality_levels',
         },
         {
-          key: 'x-sp-contexts_org_w3_performance_timing_1.0.domainLookupStart',
-          mappedKey: 'data.0.contexts_com_acme_foo_lookup_1.0.domainLookupStart',
+          key: 'x-sp-contexts_com_snowplowanalytics_snowplow_mobile_context_1.0.deviceModel',
+          mappedKey: 'data.0.contexts_com_acme_test_mobile_1.0.deviceModel',
         },
         {
-          key: 'x-sp-contexts_org_w3_performance_timing_1.0.domainLookupEnd',
-          mappedKey: 'data.0.contexts_com_acme_foo_lookup_1.0.domainLookupEnd',
+          key: 'x-sp-contexts_com_snowplowanalytics_snowplow_mobile_context_1.0.osVersion',
+          mappedKey: 'data.0.contexts_com_acme_test_mobile_1.1.osVersion',
+        },
+        {
+          key: 'event_name',
+          mappedKey: 'data.0.event',
         },
       ],
 
@@ -1845,6 +1247,71 @@ scenarios:
 
       requestMethod: 'post',
       requestTimeout: '5000',
+    };
+
+    const testEvent = mockEventObjectSelfDesc;
+    const expectedBody = {
+      schema: 'iglu:com.foo.bar/test_fun/jsonschema/1-0-0',
+      data: [
+        {
+          app_id: 'media-test',
+          platform: 'web',
+          dvce_created_tstamp: '1658567928426',
+          event: 'media_player_event',
+          event_id: 'c2084e30-5e4f-4d9c-86b2-e0bc3781509a',
+          name_tracker: 'spTest',
+          v_tracker: 'js-3.5.0',
+          domain_sessionidx: 1,
+          domain_sessionid: '1ab28b79-bfdd-4855-9bf1-5199ce15beac',
+          br_cookies: '1',
+          br_colordepth: '24',
+          br_viewwidth: 1044,
+          br_viewheight: 975,
+          dvce_screenwidth: 1920,
+          dvce_screenheight: 1080,
+          doc_charset: 'windows-1252',
+          doc_width: 1044,
+          doc_height: 975,
+          dvce_sent_tstamp: '1658567928427',
+          contexts: testEvent['x-sp-contexts'],
+          // assert from entity mapping
+          test_youtube: testEvent['x-sp-contexts_com_youtube_youtube_1'],
+
+          // assert on unmapped entities
+          contexts_com_snowplowanalytics_snowplow_mobile_context_1:
+            testEvent[
+              'x-sp-contexts_com_snowplowanalytics_snowplow_mobile_context_1'
+            ],
+          contexts_com_snowplowanalytics_snowplow_media_player_1:
+            testEvent[
+              'x-sp-contexts_com_snowplowanalytics_snowplow_media_player_1'
+            ],
+          contexts_com_snowplowanalytics_snowplow_web_page_1:
+            testEvent['x-sp-contexts_com_snowplowanalytics_snowplow_web_page_1'],
+          'contexts_com_google_tag-manager_server-side_user_data_1':
+            testEvent[
+              'x-sp-contexts_com_google_tag-manager_server-side_user_data_1'
+            ],
+          contexts_com_snowplowanalytics_snowplow_client_session_1:
+            testEvent[
+              'x-sp-contexts_com_snowplowanalytics_snowplow_client_session_1'
+            ],
+
+          // assert on additional event mapping
+          contexts_com_acme_test_media_1: [{ time: 0.015303093460083008 }],
+          contexts_com_acme_test_youtube_1: [
+            {
+              quality_levels:
+                testEvent['x-sp-contexts_com_youtube_youtube_1'][0]
+                  .avaliableQualityLevels,
+            },
+          ],
+          contexts_com_acme_test_mobile_1: [
+            { deviceModel: 'myDevModel' },
+            { osVersion: 'myOsVersion' },
+          ],
+        },
+      ],
     };
 
     // to assert on
@@ -1860,17 +1327,8 @@ scenarios:
     mock('getAllEventData', function () {
       return testEvent;
     });
-
-    const getFromPathMock = (path, obj) => {
-      if (getTypeOf(path) === 'string' && getTypeOf(obj) === 'object') {
-        const splitPath = path.split('.').filter((prop) => !!prop);
-        return splitPath.reduce((acc, curr) => acc && acc[curr], obj);
-      }
-      return undefined;
-    };
-
     mock('getEventData', function (x) {
-      return getFromPathMock(x, testEvent);
+      return getFromPath(x, testEvent);
     });
 
     // Call runCode to run the template's code
@@ -1887,195 +1345,9 @@ scenarios:
     );
 
     const body = jsonApi.parse(argBody);
-    const expectedBody = {
-      schema: 'iglu:com.foo.bar/test_fun/jsonschema/1-0-0',
-      data: [
-        {
-          app_id: 'angry-birds',
-          platform: 'web',
-          etl_tstamp: '2017-01-26T00:01:25.292Z',
-          collector_tstamp: '2013-11-26T00:02:05Z',
-          dvce_created_tstamp: '2013-11-26T00:03:57.885Z',
-          event: 'page_view',
-          event_id: 'c6ef3124-b53a-4b13-a233-0088f79dcbcb',
-          txn_id: 41828,
-          name_tracker: 'spTracker',
-          v_tracker: 'js-3.1.6',
-          v_collector: 'ssc-2.3.1-stdout$',
-          v_etl: 'snowplow-micro-1.2.1-common-2.0.2',
-          user_fingerprint: '2161814971',
-          domain_sessionidx: 3,
-          network_userid: 'ecdff4d0-9175-40ac-a8bb-325c49733607',
-          geo_country: 'US',
-          geo_region: 'TX',
-          geo_city: 'New York',
-          geo_zipcode: '94109',
-          geo_latitude: 37.443604,
-          geo_longitude: -122.4124,
-          geo_location: '37.443604,-122.4124',
-          geo_region_name: 'Florida',
-          ip_isp: 'FDN Communications',
-          ip_organization: 'Bouygues Telecom',
-          ip_domain: 'nuvox.net',
-          ip_netspeed: 'Cable/DSL',
-          page_urlscheme: 'http',
-          page_urlhost: 'www.snowplowanalytics.com',
-          page_urlport: 80,
-          page_urlpath: '/product/index.html',
-          page_urlquery: 'id=GTM-DLRG',
-          page_urlfragment: '4-conclusion',
-          br_features_pdf: true,
-          br_features_flash: false,
-          domain_sessionid: '2b15e5c8-d3b1-11e4-b9d6-1681e6b88ec1',
-          derived_tstamp: '2013-11-26T00:03:57.886Z',
-          event_vendor: 'com.snowplowanalytics.snowplow',
-          event_name: 'link_click',
-          event_format: 'jsonschema',
-          event_version: '1-0-0',
-          event_fingerprint: 'e3dbfa9cca0412c3d4052863cefb547f',
-          true_tstamp: '2013-11-26T00:03:57.886Z',
-
-          // assert from entity mapping
-          testEntityMappedKeyOrgSchemaWebPage: [
-            {
-              genre: 'blog',
-              inLanguage: 'en-US',
-              datePublished: '2014-11-06T00:00:00Z',
-              author: 'Fred Blundun',
-              breadcrumb: ['blog', 'releases'],
-              keywords: ['snowplow', 'javascript', 'tracker', 'event'],
-            },
-          ],
-
-          // assert on unmapped entities
-          contexts_org_w3_performance_timing_1: [
-            {
-              navigationStart: 1415358089861,
-              unloadEventStart: 1415358090270,
-              unloadEventEnd: 1415358090287,
-              redirectStart: 0,
-              redirectEnd: 0,
-              fetchStart: 1415358089870,
-              domainLookupStart: 1415358090102,
-              domainLookupEnd: 1415358090102,
-              connectStart: 1415358090103,
-              connectEnd: 1415358090183,
-              requestStart: 1415358090183,
-              responseStart: 1415358090265,
-              responseEnd: 1415358090265,
-              domLoading: 1415358090270,
-              domInteractive: 1415358090886,
-              domContentLoadedEventStart: 1415358090968,
-              domContentLoadedEventEnd: 1415358091309,
-              domComplete: 0,
-              loadEventStart: 0,
-              loadEventEnd: 0,
-            },
-          ],
-          contexts_com_snowplowanalytics_snowplow_ua_parser_context_1: [
-            {
-              useragentFamily: 'IE',
-              useragentMajor: '7',
-              useragentMinor: '0',
-              useragentPatch: null,
-              useragentVersion: 'IE 7.0',
-              osFamily: 'Windows XP',
-              osMajor: null,
-              osMinor: null,
-              osPatch: null,
-              osPatchMinor: null,
-              osVersion: 'Windows XP',
-              deviceFamily: 'Other',
-            },
-          ],
-
-          // assert on additional event mapping
-          contexts_com_acme_foo_unload_1: [
-            { unloadEventStart: 1415358090270, unloadEventEnd: 1415358090287 },
-          ],
-
-          contexts_com_acme_foo_lookup_1: [
-            { domainLookupStart: 1415358090102, domainLookupEnd: 1415358090102 },
-          ],
-        },
-      ],
-    };
-
     assertThat(body).isEqualTo(expectedBody);
 - name: Test nesting and dot notation 0
   code: |
-    // Test imports
-    const jsonApi = require('JSON');
-
-    // Test event
-    const testEvent = {
-      event_name: 'foo',
-      language: 'en-US',
-      page_encoding: 'UTF-8',
-      page_hostname: 'test.example.com',
-      page_location: 'http://test.example.com',
-      page_path: '/',
-      screen_resolution: '1920x1080',
-      user_id: 'tester',
-      viewport_size: '1023x980',
-      user_agent: 'curl/7.74.0',
-      host: 'engineering-sandbox.appspot.com',
-      'x-sp-app_id': 'testApp',
-      'x-sp-platform': 'srv',
-      'x-sp-dvce_created_tstamp': '1634551546989',
-      'x-sp-name_tracker': 'sptest',
-      'x-sp-v_tracker': 'curl',
-      'x-sp-domain_sessionidx': 1,
-      'x-sp-br_colordepth': '24',
-      'x-sp-br_viewwidth': 1023,
-      'x-sp-br_viewheight': 980,
-      'x-sp-dvce_screenwidth': 1920,
-      'x-sp-dvce_screenheight': 1080,
-      'x-sp-doc_charset': 'UTF-8',
-      'x-sp-doc_width': 1023,
-      'x-sp-doc_height': 980,
-      'x-sp-tp2': {
-        e: 'ue',
-        p: 'srv',
-        tna: 'sptest',
-        aid: 'testApp',
-        cs: 'UTF-8',
-        lang: 'en-US',
-        res: '1920x1080',
-        cd: '24',
-        tz: 'Europe/London',
-        dtm: '1634551546989',
-        vp: '1023x980',
-        ds: '1023x980',
-        vid: '1',
-        uid: 'tester',
-        url: 'http://test.example.com',
-        tv: 'curl',
-        ue_pr:
-          '{"schema": "iglu:com.snowplowanalytics.snowplow/unstruct_event/jsonschema/1-0-0","data":{"schema":"iglu:com.acme.test/foo/jsonschema/1-0-0","data":{"foo_age":10}}}',
-        co: '{"schema":"iglu:com.snowplowanalytics.snowplow/contexts/jsonschema/1-0-0","data":[{"schema":"iglu:com.snowplowanalytics.snowplow/mobile_context/jsonschema/1-0-2","data":{"osType":"myOsType","osVersion":"myOsVersion","deviceManufacturer":"myDevMan","deviceModel":"myDevModel"}},{"schema":"iglu:com.snowplowanalytics.snowplow/web_page/jsonschema/1-0-0","data":{"id":"c000a256-1e13-4cde-a5b4-d7a00cf88003"}}]}',
-      },
-      'x-sp-self_describing_event_com_acme_test_foo_1': {
-        foo_age: 10,
-      },
-      'x-sp-contexts_com_snowplowanalytics_snowplow_mobile_context_1': [
-        {
-          osType: 'myOsType',
-          osVersion: 'myOsVersion',
-          deviceManufacturer: 'myDevMan',
-          deviceModel: 'myDevModel',
-        },
-      ],
-      'x-sp-contexts_com_snowplowanalytics_snowplow_web_page_1': [
-        { id: 'c000a256-1e13-4cde-a5b4-d7a00cf88003' },
-      ],
-      ga_session_number: '1',
-      'x-ga-mp2-seg': '1',
-      'x-ga-protocol_version': '2',
-      'x-ga-page_id': 'c000a256-1e13-4cde-a5b4-d7a00cf88003',
-      ip_override: '1.2.3.4',
-    };
-
     // Tag config data
     const testMockData = {
       url: 'test',
@@ -2100,6 +1372,74 @@ scenarios:
       requestTimeout: '5000',
     };
 
+    const testEvent = mockEventObjectSelfDesc;
+    const expectedBody = {
+      mySpAtomicProps: {
+        app_id: 'media-test',
+        platform: 'web',
+        dvce_created_tstamp: '1658567928426',
+        event_id: 'c2084e30-5e4f-4d9c-86b2-e0bc3781509a',
+        name_tracker: 'spTest',
+        v_tracker: 'js-3.5.0',
+        domain_sessionidx: 1,
+        domain_sessionid: '1ab28b79-bfdd-4855-9bf1-5199ce15beac',
+        br_cookies: '1',
+        br_colordepth: '24',
+        br_viewwidth: 1044,
+        br_viewheight: 975,
+        dvce_screenwidth: 1920,
+        dvce_screenheight: 1080,
+        doc_charset: 'windows-1252',
+        doc_width: 1044,
+        doc_height: 975,
+        dvce_sent_tstamp: '1658567928427',
+      },
+      mySelfDescEvent: {
+        self_describing_event_com_snowplowanalytics_snowplow_media_player_event_1: {
+          type: 'play',
+        },
+      },
+      myContexts: {
+        contexts_com_snowplowanalytics_snowplow_mobile_context_1:
+          testEvent[
+            'x-sp-contexts_com_snowplowanalytics_snowplow_mobile_context_1'
+          ][0],
+        contexts_com_snowplowanalytics_snowplow_web_page_1:
+          testEvent['x-sp-contexts_com_snowplowanalytics_snowplow_web_page_1'][0],
+        contexts_com_youtube_youtube_1:
+          testEvent['x-sp-contexts_com_youtube_youtube_1'][0],
+        contexts_com_snowplowanalytics_snowplow_media_player_1:
+          testEvent[
+            'x-sp-contexts_com_snowplowanalytics_snowplow_media_player_1'
+          ][0],
+        'contexts_com_google_tag-manager_server-side_user_data_1':
+          testEvent[
+            'x-sp-contexts_com_google_tag-manager_server-side_user_data_1'
+          ][0],
+        contexts_com_snowplowanalytics_snowplow_client_session_1:
+          testEvent[
+            'x-sp-contexts_com_snowplowanalytics_snowplow_client_session_1'
+          ][0],
+        contexts: testEvent['x-sp-contexts'],
+      },
+      myCommonEventProps: {
+        client_id: 'fd0e5288-e89b-45df-aad5-6d0c6eda6198',
+        event_name: 'media_player_event',
+        language: 'en-US',
+        page_encoding: 'windows-1252',
+        page_hostname: 'localhost',
+        page_location: 'http://localhost:8000/',
+        page_path: '/',
+        screen_resolution: '1920x1080',
+        user_agent: 'curl/7.81.0',
+        user_id: 'tester',
+        viewport_size: '1044x975',
+      },
+      myUserData: {
+        user_data: { email_address: 'foo@test.io' },
+      },
+    };
+
     // to assert on
     let argUrl, argCallback, argOptions, argBody;
 
@@ -2128,129 +1468,9 @@ scenarios:
     );
 
     const body = jsonApi.parse(argBody);
-    const expectedBody = {
-      mySpAtomicProps: {
-        app_id: 'testApp',
-        platform: 'srv',
-        dvce_created_tstamp: '1634551546989',
-        name_tracker: 'sptest',
-        v_tracker: 'curl',
-        domain_sessionidx: 1,
-        br_colordepth: '24',
-        br_viewwidth: 1023,
-        br_viewheight: 980,
-        dvce_screenwidth: 1920,
-        dvce_screenheight: 1080,
-        doc_charset: 'UTF-8',
-        doc_width: 1023,
-        doc_height: 980,
-      },
-      mySelfDescEvent: {
-        self_describing_event_com_acme_test_foo_1: {
-          foo_age: 10,
-        },
-      },
-      myContexts: {
-        contexts_com_snowplowanalytics_snowplow_mobile_context_1: {
-          osType: 'myOsType',
-          osVersion: 'myOsVersion',
-          deviceManufacturer: 'myDevMan',
-          deviceModel: 'myDevModel',
-        },
-        contexts_com_snowplowanalytics_snowplow_web_page_1: {
-          id: 'c000a256-1e13-4cde-a5b4-d7a00cf88003',
-        },
-      },
-      myCommonEventProps: {
-        event_name: 'foo',
-        ip_override: '1.2.3.4',
-        language: 'en-US',
-        page_encoding: 'UTF-8',
-        page_hostname: 'test.example.com',
-        page_location: 'http://test.example.com',
-        page_path: '/',
-        screen_resolution: '1920x1080',
-        user_agent: 'curl/7.74.0',
-        user_id: 'tester',
-        viewport_size: '1023x980',
-      },
-    };
-
     assertThat(body).isEqualTo(expectedBody);
 - name: Test nesting and dot notation 1
   code: |
-    // Test imports
-    const jsonApi = require('JSON');
-
-    // Test event
-    const testEvent = {
-      event_name: 'foo',
-      language: 'en-US',
-      page_encoding: 'UTF-8',
-      page_hostname: 'test.example.com',
-      page_location: 'http://test.example.com',
-      page_path: '/',
-      screen_resolution: '1920x1080',
-      user_id: 'tester',
-      viewport_size: '1023x980',
-      user_agent: 'curl/7.74.0',
-      host: 'engineering-sandbox.appspot.com',
-      'x-sp-app_id': 'testApp',
-      'x-sp-platform': 'srv',
-      'x-sp-dvce_created_tstamp': '1634551546989',
-      'x-sp-name_tracker': 'sptest',
-      'x-sp-v_tracker': 'curl',
-      'x-sp-domain_sessionidx': 1,
-      'x-sp-br_colordepth': '24',
-      'x-sp-br_viewwidth': 1023,
-      'x-sp-br_viewheight': 980,
-      'x-sp-dvce_screenwidth': 1920,
-      'x-sp-dvce_screenheight': 1080,
-      'x-sp-doc_charset': 'UTF-8',
-      'x-sp-doc_width': 1023,
-      'x-sp-doc_height': 980,
-      'x-sp-tp2': {
-        e: 'ue',
-        p: 'srv',
-        tna: 'sptest',
-        aid: 'testApp',
-        cs: 'UTF-8',
-        lang: 'en-US',
-        res: '1920x1080',
-        cd: '24',
-        tz: 'Europe/London',
-        dtm: '1634551546989',
-        vp: '1023x980',
-        ds: '1023x980',
-        vid: '1',
-        uid: 'tester',
-        url: 'http://test.example.com',
-        tv: 'curl',
-        ue_pr:
-          '{"schema": "iglu:com.snowplowanalytics.snowplow/unstruct_event/jsonschema/1-0-0","data":{"schema":"iglu:com.acme.test/foo/jsonschema/1-0-0","data":{"foo_age":10}}}',
-        co: '{"schema":"iglu:com.snowplowanalytics.snowplow/contexts/jsonschema/1-0-0","data":[{"schema":"iglu:com.snowplowanalytics.snowplow/mobile_context/jsonschema/1-0-2","data":{"osType":"myOsType","osVersion":"myOsVersion","deviceManufacturer":"myDevMan","deviceModel":"myDevModel"}},{"schema":"iglu:com.snowplowanalytics.snowplow/web_page/jsonschema/1-0-0","data":{"id":"c000a256-1e13-4cde-a5b4-d7a00cf88003"}}]}',
-      },
-      'x-sp-self_describing_event_com_acme_test_foo_1': {
-        foo_age: 10,
-      },
-      'x-sp-contexts_com_snowplowanalytics_snowplow_mobile_context_1': [
-        {
-          osType: 'myOsType',
-          osVersion: 'myOsVersion',
-          deviceManufacturer: 'myDevMan',
-          deviceModel: 'myDevModel',
-        },
-      ],
-      'x-sp-contexts_com_snowplowanalytics_snowplow_web_page_1': [
-        { id: 'c000a256-1e13-4cde-a5b4-d7a00cf88003' },
-      ],
-      ga_session_number: '1',
-      'x-ga-mp2-seg': '1',
-      'x-ga-protocol_version': '2',
-      'x-ga-page_id': 'c000a256-1e13-4cde-a5b4-d7a00cf88003',
-      ip_override: '1.2.3.4',
-    };
-
     // Tag config data
     const testMockData = {
       url: 'test',
@@ -2273,6 +1493,57 @@ scenarios:
       requestTimeout: '5000',
     };
 
+    const testEvent = mockEventObjectSelfDesc;
+    const expectedBody = {
+      snowplow: {
+        snowplow: {
+          app_id: 'media-test',
+          platform: 'web',
+          dvce_created_tstamp: '1658567928426',
+          event_id: 'c2084e30-5e4f-4d9c-86b2-e0bc3781509a',
+          name_tracker: 'spTest',
+          v_tracker: 'js-3.5.0',
+          domain_sessionidx: 1,
+          domain_sessionid: '1ab28b79-bfdd-4855-9bf1-5199ce15beac',
+          br_cookies: '1',
+          br_colordepth: '24',
+          br_viewwidth: 1044,
+          br_viewheight: 975,
+          dvce_screenwidth: 1920,
+          dvce_screenheight: 1080,
+          doc_charset: 'windows-1252',
+          doc_width: 1044,
+          doc_height: 975,
+          dvce_sent_tstamp: '1658567928427',
+          self_describing_event_com_snowplowanalytics_snowplow_media_player_event_1:
+            {
+              type: 'play',
+            },
+          contexts_com_snowplowanalytics_snowplow_mobile_context_1:
+            testEvent[
+              'x-sp-contexts_com_snowplowanalytics_snowplow_mobile_context_1'
+            ][0],
+          contexts_com_snowplowanalytics_snowplow_web_page_1:
+            testEvent['x-sp-contexts_com_snowplowanalytics_snowplow_web_page_1'][0],
+          contexts_com_youtube_youtube_1:
+            testEvent['x-sp-contexts_com_youtube_youtube_1'][0],
+          contexts_com_snowplowanalytics_snowplow_media_player_1:
+            testEvent[
+              'x-sp-contexts_com_snowplowanalytics_snowplow_media_player_1'
+            ][0],
+          'contexts_com_google_tag-manager_server-side_user_data_1':
+            testEvent[
+              'x-sp-contexts_com_google_tag-manager_server-side_user_data_1'
+            ][0],
+          contexts_com_snowplowanalytics_snowplow_client_session_1:
+            testEvent[
+              'x-sp-contexts_com_snowplowanalytics_snowplow_client_session_1'
+            ][0],
+          contexts: testEvent['x-sp-contexts'],
+        },
+      },
+    };
+
     // to assert on
     let argUrl, argCallback, argOptions, argBody;
 
@@ -2301,115 +1572,9 @@ scenarios:
     );
 
     const body = jsonApi.parse(argBody);
-    const expectedBody = {
-      snowplow: {
-        snowplow: {
-          app_id: 'testApp',
-          platform: 'srv',
-          dvce_created_tstamp: '1634551546989',
-          name_tracker: 'sptest',
-          v_tracker: 'curl',
-          domain_sessionidx: 1,
-          br_colordepth: '24',
-          br_viewwidth: 1023,
-          br_viewheight: 980,
-          dvce_screenwidth: 1920,
-          dvce_screenheight: 1080,
-          doc_charset: 'UTF-8',
-          doc_width: 1023,
-          doc_height: 980,
-          self_describing_event_com_acme_test_foo_1: {
-            foo_age: 10,
-          },
-          contexts_com_snowplowanalytics_snowplow_mobile_context_1: {
-            osType: 'myOsType',
-            osVersion: 'myOsVersion',
-            deviceManufacturer: 'myDevMan',
-            deviceModel: 'myDevModel',
-          },
-          contexts_com_snowplowanalytics_snowplow_web_page_1: {
-            id: 'c000a256-1e13-4cde-a5b4-d7a00cf88003',
-          },
-        },
-      },
-    };
-
     assertThat(body).isEqualTo(expectedBody);
 - name: Test nesting and mappings
   code: |
-    // Test imports
-    const jsonApi = require('JSON');
-    const getTypeOf = require('getType');
-
-    // Test event
-    const testEvent = {
-      event_name: 'foo',
-      language: 'en-US',
-      page_encoding: 'UTF-8',
-      page_hostname: 'test.example.com',
-      page_location: 'http://test.example.com',
-      page_path: '/',
-      screen_resolution: '1920x1080',
-      user_id: 'tester',
-      viewport_size: '1023x980',
-      user_agent: 'curl/7.74.0',
-      host: 'engineering-sandbox.appspot.com',
-      'x-sp-app_id': 'testApp',
-      'x-sp-platform': 'srv',
-      'x-sp-dvce_created_tstamp': '1634551546989',
-      'x-sp-name_tracker': 'sptest',
-      'x-sp-v_tracker': 'curl',
-      'x-sp-domain_sessionidx': 1,
-      'x-sp-br_colordepth': '24',
-      'x-sp-br_viewwidth': 1023,
-      'x-sp-br_viewheight': 980,
-      'x-sp-dvce_screenwidth': 1920,
-      'x-sp-dvce_screenheight': 1080,
-      'x-sp-doc_charset': 'UTF-8',
-      'x-sp-doc_width': 1023,
-      'x-sp-doc_height': 980,
-      'x-sp-tp2': {
-        e: 'ue',
-        p: 'srv',
-        tna: 'sptest',
-        aid: 'testApp',
-        cs: 'UTF-8',
-        lang: 'en-US',
-        res: '1920x1080',
-        cd: '24',
-        tz: 'Europe/London',
-        dtm: '1634551546989',
-        vp: '1023x980',
-        ds: '1023x980',
-        vid: '1',
-        uid: 'tester',
-        url: 'http://test.example.com',
-        tv: 'curl',
-        ue_pr:
-          '{"schema": "iglu:com.snowplowanalytics.snowplow/unstruct_event/jsonschema/1-0-0","data":{"schema":"iglu:com.acme.test/foo/jsonschema/1-0-0","data":{"foo_age":10}}}',
-        co: '{"schema":"iglu:com.snowplowanalytics.snowplow/contexts/jsonschema/1-0-0","data":[{"schema":"iglu:com.snowplowanalytics.snowplow/mobile_context/jsonschema/1-0-2","data":{"osType":"myOsType","osVersion":"myOsVersion","deviceManufacturer":"myDevMan","deviceModel":"myDevModel"}},{"schema":"iglu:com.snowplowanalytics.snowplow/web_page/jsonschema/1-0-0","data":{"id":"c000a256-1e13-4cde-a5b4-d7a00cf88003"}}]}',
-      },
-      'x-sp-self_describing_event_com_acme_test_foo_1': {
-        foo_age: 10,
-      },
-      'x-sp-contexts_com_snowplowanalytics_snowplow_mobile_context_1': [
-        {
-          osType: 'myOsType',
-          osVersion: 'myOsVersion',
-          deviceManufacturer: 'myDevMan',
-          deviceModel: 'myDevModel',
-        },
-      ],
-      'x-sp-contexts_com_snowplowanalytics_snowplow_web_page_1': [
-        { id: 'c000a256-1e13-4cde-a5b4-d7a00cf88003' },
-      ],
-      ga_session_number: '1',
-      'x-ga-mp2-seg': '1',
-      'x-ga-protocol_version': '2',
-      'x-ga-page_id': 'c000a256-1e13-4cde-a5b4-d7a00cf88003',
-      ip_override: '1.2.3.4',
-    };
-
     // Tag config data
     const testMockData = {
       url: 'test',
@@ -2434,8 +1599,8 @@ scenarios:
       includeCommonUserProperties: false,
       eventMappingRules: [
         {
-          key: 'x-sp-self_describing_event_com_acme_test_foo_1.foo_age',
-          mappedKey: 'testEventMappedKey.foo',
+          key: 'x-sp-self_describing_event_com_snowplowanalytics_snowplow_media_player_event_1.type',
+          mappedKey: 'testEventMappedKey.fooType',
         },
         { key: 'viewport_size', mappedKey: 'myProps.0.viewportMapped' },
       ],
@@ -2446,6 +1611,38 @@ scenarios:
 
       requestMethod: 'post',
       requestTimeout: '5000',
+    };
+
+    const testEvent = mockEventObjectSelfDesc;
+    const expectedBody = {
+      testApiKey: 'bvjdbcjkxbckljdbcksjdbc',
+      myContexts: {
+        contexts_com_snowplowanalytics_snowplow_mobile_context_1:
+          testEvent[
+            'x-sp-contexts_com_snowplowanalytics_snowplow_mobile_context_1'
+          ],
+        contexts_com_youtube_youtube_1:
+          testEvent['x-sp-contexts_com_youtube_youtube_1'],
+        contexts_com_snowplowanalytics_snowplow_media_player_1:
+          testEvent['x-sp-contexts_com_snowplowanalytics_snowplow_media_player_1'],
+        'contexts_com_google_tag-manager_server-side_user_data_1':
+          testEvent['x-sp-contexts_com_google_tag-manager_server-side_user_data_1'],
+        contexts_com_snowplowanalytics_snowplow_client_session_1:
+          testEvent[
+            'x-sp-contexts_com_snowplowanalytics_snowplow_client_session_1'
+          ],
+        contexts: testEvent['x-sp-contexts'],
+        testEntityMappedKey:
+          testEvent['x-sp-contexts_com_snowplowanalytics_snowplow_web_page_1'],
+      },
+      myProps: [
+        {
+          viewportMapped: '1044x975',
+        },
+      ],
+      testEventMappedKey: {
+        fooType: 'play',
+      },
     };
 
     // to assert on
@@ -2461,17 +1658,8 @@ scenarios:
     mock('getAllEventData', function () {
       return testEvent;
     });
-
-    const getFromPathMock = (path, obj) => {
-      if (getTypeOf(path) === 'string' && getTypeOf(obj) === 'object') {
-        const splitPath = path.split('.').filter((prop) => !!prop);
-        return splitPath.reduce((acc, curr) => acc && acc[curr], obj);
-      }
-      return undefined;
-    };
-
     mock('getEventData', function (x) {
-      return getFromPathMock(x, testEvent);
+      return getFromPath(x, testEvent);
     });
 
     // Call runCode to run the template's code
@@ -2488,166 +1676,9 @@ scenarios:
     );
 
     const body = jsonApi.parse(argBody);
-    const expectedBody = {
-      testApiKey: 'bvjdbcjkxbckljdbcksjdbc',
-      myContexts: {
-        contexts_com_snowplowanalytics_snowplow_mobile_context_1: [
-          {
-            osType: 'myOsType',
-            osVersion: 'myOsVersion',
-            deviceManufacturer: 'myDevMan',
-            deviceModel: 'myDevModel',
-          },
-        ],
-        testEntityMappedKey: [
-          {
-            id: 'c000a256-1e13-4cde-a5b4-d7a00cf88003',
-          },
-        ],
-      },
-      myProps: [
-        {
-          viewportMapped: '1023x980',
-        },
-      ],
-      testEventMappedKey: {
-        foo: 10,
-      },
-    };
-
     assertThat(body).isEqualTo(expectedBody);
 - name: Test headers
   code: |
-    // Test imports
-    const jsonApi = require('JSON');
-
-    // Test event
-    const testEvent = {
-      event_name: 'page_view',
-      client_id: 'd54a1904-7798-401a-be0b-1a83bea73634',
-      user_id: 'snow123',
-      language: 'en-GB',
-      page_encoding: 'UTF-8',
-      page_hostname: 'snowplowanalytics.com',
-      page_location: 'https://snowplowanalytics.com/',
-      page_path: '/',
-      page_referrer: 'referer',
-      page_title:
-        'Collect, manage and operationalize behavioral data at scale | Snowplow',
-      screen_resolution: '1920x1080',
-      viewport_size: '745x1302',
-      user_agent: 'user-agent',
-      origin: 'origin',
-      host: 'host',
-      'x-sp-app_id': 'website',
-      'x-sp-platform': 'web',
-      'x-sp-dvce_created_tstamp': '1628586512246',
-      'x-sp-event_id': '8676de79-0eba-4435-ad95-8a41a8a0129c',
-      'x-sp-name_tracker': 'sp',
-      'x-sp-v_tracker': 'js-2.18.1',
-      'x-sp-domain_sessionid': 'e7580b71-227b-4868-9ea9-322a263ce885',
-      'x-sp-domain_sessionidx': 1,
-      'x-sp-br_cookies': '1',
-      'x-sp-br_colordepth': '24',
-      'x-sp-br_viewwidth': 745,
-      'x-sp-br_viewheight': 1302,
-      'x-sp-dvce_screenwidth': 1920,
-      'x-sp-dvce_screenheight': 1080,
-      'x-sp-doc_charset': 'UTF-8',
-      'x-sp-doc_width': 730,
-      'x-sp-doc_height': 12393,
-      'x-sp-dvce_sent_tstamp': '1628586512248',
-      'x-sp-tp2': {
-        e: 'pv',
-        url: 'https://snowplowanalytics.com/',
-        page: 'Collect, manage and operationalize behavioral data at scale | Snowplow',
-        tv: 'js-2.18.1',
-        tna: 'sp',
-        aid: 'website',
-        p: 'web',
-        tz: 'Europe/London',
-        lang: 'en-GB',
-        cs: 'UTF-8',
-        res: '1920x1080',
-        cd: '24',
-        cookie: '1',
-        eid: '8676de79-0eba-4435-ad95-8a41a8a0129c',
-        dtm: '1628586512246',
-        cx: 'ewogICJzY2hlbWEiOiAiaWdsdTpjb20uc25vd3Bsb3dhbmFseXRpY3Muc25vd3Bsb3cvY29udGV4dHMvanNvbnNjaGVtYS8xLTAtMCIsCiAgImRhdGEiOiBbCiAgICB7CiAgICAgICJzY2hlbWEiOiAiaWdsdTpjb20uc25vd3Bsb3dhbmFseXRpY3Muc25vd3Bsb3cvd2ViX3BhZ2UvanNvbnNjaGVtYS8xLTAtMCIsCiAgICAgICJkYXRhIjogeyAiaWQiOiAiYTg2YzQyZTUtYjgzMS00NWM4LWI3MDYtZTIxNGMyNmI0YjNkIiB9CiAgICB9LAogICAgewogICAgICAic2NoZW1hIjogImlnbHU6b3JnLnczL1BlcmZvcm1hbmNlVGltaW5nL2pzb25zY2hlbWEvMS0wLTAiLAogICAgICAiZGF0YSI6IHsKICAgICAgICAibmF2aWdhdGlvblN0YXJ0IjogMTYyODU4NjUwODYxMCwKICAgICAgICAidW5sb2FkRXZlbnRTdGFydCI6IDAsCiAgICAgICAgInVubG9hZEV2ZW50RW5kIjogMCwKICAgICAgICAicmVkaXJlY3RTdGFydCI6IDAsCiAgICAgICAgInJlZGlyZWN0RW5kIjogMCwKICAgICAgICAiZmV0Y2hTdGFydCI6IDE2Mjg1ODY1MDg2MTAsCiAgICAgICAgImRvbWFpbkxvb2t1cFN0YXJ0IjogMTYyODU4NjUwODYzNywKICAgICAgICAiZG9tYWluTG9va3VwRW5kIjogMTYyODU4NjUwODY5MSwKICAgICAgICAiY29ubmVjdFN0YXJ0IjogMTYyODU4NjUwODY5MSwKICAgICAgICAiY29ubmVjdEVuZCI6IDE2Mjg1ODY1MDg3NjMsCiAgICAgICAgInNlY3VyZUNvbm5lY3Rpb25TdGFydCI6IDE2Mjg1ODY1MDg3MjEsCiAgICAgICAgInJlcXVlc3RTdGFydCI6IDE2Mjg1ODY1MDg3NjMsCiAgICAgICAgInJlc3BvbnNlU3RhcnQiOiAxNjI4NTg2NTA4Nzk3LAogICAgICAgICJyZXNwb25zZUVuZCI6IDE2Mjg1ODY1MDg4MjEsCiAgICAgICAgImRvbUxvYWRpbmciOiAxNjI4NTg2NTA5MDc2LAogICAgICAgICJkb21JbnRlcmFjdGl2ZSI6IDE2Mjg1ODY1MDkzODEsCiAgICAgICAgImRvbUNvbnRlbnRMb2FkZWRFdmVudFN0YXJ0IjogMTYyODU4NjUwOTQwOCwKICAgICAgICAiZG9tQ29udGVudExvYWRlZEV2ZW50RW5kIjogMTYyODU4NjUwOTQxNywKICAgICAgICAiZG9tQ29tcGxldGUiOiAxNjI4NTg2NTEwMzMyLAogICAgICAgICJsb2FkRXZlbnRTdGFydCI6IDE2Mjg1ODY1MTAzMzIsCiAgICAgICAgImxvYWRFdmVudEVuZCI6IDE2Mjg1ODY1MTAzMzQKICAgICAgfQogICAgfSwKICAgIHsKICAgICAgInNjaGVtYSI6ICJpZ2x1OmNvbS5nb29nbGUudGFnLW1hbmFnZXIuc2VydmVyLXNpZGUvdXNlcl9kYXRhL2pzb25zY2hlbWEvMS0wLTAiLAogICAgICAiZGF0YSI6IHsgCiAgICAgICAgImVtYWlsX2FkZHJlc3MiOiAiZm9vQGV4YW1wbGUuY29tIiwKICAgICAgICAicGhvbmVfbnVtYmVyIjogIisxNTU1MTIzNDU2NyIsCiAgICAgICAgImFkZHJlc3MiOiB7CiAgICAgICAgICAiZmlyc3RfbmFtZSI6ICJKYW5lIiwKICAgICAgICAgICJsYXN0X25hbWUiOiAiRG9lIiwKICAgICAgICAgICJzdHJlZXQiOiAiMTIzIEZha2UgU3QiLAogICAgICAgICAgImNpdHkiOiAiU2FuIEZyYW5jaXNjbyIsCiAgICAgICAgICAicmVnaW9uIjogIkNBIiwKICAgICAgICAgICJwb3N0YWxfY29kZSI6ICI5NDAxNiIsCiAgICAgICAgICAiY291bnRyeSI6ICJVUyIgCiAgICAgICAgfQogICAgICB9CiAgICB9CiAgXQp9Cg',
-        vp: '745x1302',
-        ds: '730x12393',
-        vid: '1',
-        sid: 'e7580b71-227b-4868-9ea9-322a263ce885',
-        duid: 'd54a1904-7798-401a-be0b-1a83bea73634',
-        stm: '1628586512248',
-        uid: 'snow123',
-      },
-      'x-sp-contexts_com_snowplowanalytics_snowplow_web_page_1': [
-        {
-          id: 'a86c42e5-b831-45c8-b706-e214c26b4b3d',
-        },
-      ],
-      'x-sp-contexts_org_w3_performance_timing_1': [
-        {
-          navigationStart: 1628586508610,
-          unloadEventStart: 0,
-          unloadEventEnd: 0,
-          redirectStart: 0,
-          redirectEnd: 0,
-          fetchStart: 1628586508610,
-          domainLookupStart: 1628586508637,
-          domainLookupEnd: 1628586508691,
-          connectStart: 1628586508691,
-          connectEnd: 1628586508763,
-          secureConnectionStart: 1628586508721,
-          requestStart: 1628586508763,
-          responseStart: 1628586508797,
-          responseEnd: 1628586508821,
-          domLoading: 1628586509076,
-          domInteractive: 1628586509381,
-          domContentLoadedEventStart: 1628586509408,
-          domContentLoadedEventEnd: 1628586509417,
-          domComplete: 1628586510332,
-          loadEventStart: 1628586510332,
-          loadEventEnd: 1628586510334,
-        },
-      ],
-      'x-sp-contexts_com_google_tag-manager_server-side_user_data_1': [
-        {
-          email_address: 'foo@example.com',
-          phone_number: '+15551234567',
-          address: {
-            first_name: 'Jane',
-            last_name: 'Doe',
-            street: '123 Fake St',
-            city: 'San Francisco',
-            region: 'CA',
-            postal_code: '94016',
-            country: 'US',
-          },
-        },
-      ],
-      user_data: {
-        email_address: 'foo@example.com',
-        phone_number: '+15551234567',
-        address: {
-          first_name: 'Jane',
-          last_name: 'Doe',
-          street: '123 Fake St',
-          city: 'San Francisco',
-          region: 'CA',
-          postal_code: '94016',
-          country: 'US',
-        },
-      },
-      ga_session_id: 'e7580b71-227b-4868-9ea9-322a263ce885',
-      ga_session_number: '1',
-      'x-ga-mp2-seg': '1',
-      'x-ga-protocol_version': '2',
-      'x-ga-page_id': 'a86c42e5-b831-45c8-b706-e214c26b4b3d',
-      ip_override: '1.2.3.4',
-    };
-
     // Tag config data
     const testMockData = {
       url: 'test',
@@ -2668,6 +1699,8 @@ scenarios:
       requestMethod: 'post',
       requestTimeout: '5000',
     };
+
+    const testEvent = mockEventObjectPageView;
 
     // to assert on
     let argUrl, argCallback, argOptions, argBody;
@@ -2698,7 +1731,282 @@ scenarios:
     assertThat(argOptions.headers['test-Header-Key']).isStrictlyEqualTo(
       'testHeaderVal'
     );
-setup: ''
+setup: |-
+  const jsonApi = require('JSON');
+  const getTypeOf = require('getType');
+
+  const mockEventObjectPageView = {
+    event_name: 'page_view',
+    client_id: 'd54a1904-7798-401a-be0b-1a83bea73634',
+    user_id: 'snow123',
+    language: 'en-GB',
+    page_encoding: 'UTF-8',
+    page_hostname: 'snowplow.io',
+    page_location: 'https://snowplow.io/',
+    page_path: '/',
+    page_referrer: 'referer',
+    page_title:
+      'Collect, manage and operationalize behavioral data at scale | Snowplow',
+    screen_resolution: '1920x1080',
+    viewport_size: '745x1302',
+    user_agent: 'user-agent',
+    origin: 'origin',
+    host: 'host',
+    'x-sp-app_id': 'website',
+    'x-sp-platform': 'web',
+    'x-sp-dvce_created_tstamp': '1628586512246',
+    'x-sp-event_id': '8676de79-0eba-4435-ad95-8a41a8a0129c',
+    'x-sp-name_tracker': 'sp',
+    'x-sp-v_tracker': 'js-2.18.1',
+    'x-sp-domain_sessionid': 'e7580b71-227b-4868-9ea9-322a263ce885',
+    'x-sp-domain_sessionidx': 1,
+    'x-sp-br_cookies': '1',
+    'x-sp-br_colordepth': '24',
+    'x-sp-br_viewwidth': 745,
+    'x-sp-br_viewheight': 1302,
+    'x-sp-dvce_screenwidth': 1920,
+    'x-sp-dvce_screenheight': 1080,
+    'x-sp-doc_charset': 'UTF-8',
+    'x-sp-doc_width': 730,
+    'x-sp-doc_height': 12393,
+    'x-sp-dvce_sent_tstamp': '1628586512248',
+    'x-sp-contexts_com_snowplowanalytics_snowplow_web_page_1': [
+      {
+        id: 'a86c42e5-b831-45c8-b706-e214c26b4b3d',
+      },
+    ],
+    'x-sp-contexts_org_w3_performance_timing_1': [
+      {
+        navigationStart: 1628586508610,
+        unloadEventStart: 0,
+        unloadEventEnd: 0,
+        redirectStart: 0,
+        redirectEnd: 0,
+        fetchStart: 1628586508610,
+        domainLookupStart: 1628586508637,
+        domainLookupEnd: 1628586508691,
+        connectStart: 1628586508691,
+        connectEnd: 1628586508763,
+        secureConnectionStart: 1628586508721,
+        requestStart: 1628586508763,
+        responseStart: 1628586508797,
+        responseEnd: 1628586508821,
+        domLoading: 1628586509076,
+        domInteractive: 1628586509381,
+        domContentLoadedEventStart: 1628586509408,
+        domContentLoadedEventEnd: 1628586509417,
+        domComplete: 1628586510332,
+        loadEventStart: 1628586510332,
+        loadEventEnd: 1628586510334,
+      },
+    ],
+    'x-sp-contexts_com_google_tag-manager_server-side_user_data_1': [
+      {
+        email_address: 'foo@example.com',
+        phone_number: '+15551234567',
+        address: {
+          first_name: 'Jane',
+          last_name: 'Doe',
+          street: '123 Fake St',
+          city: 'San Francisco',
+          region: 'CA',
+          postal_code: '94016',
+          country: 'US',
+        },
+      },
+    ],
+    user_data: {
+      email_address: 'foo@example.com',
+      phone_number: '+15551234567',
+      address: {
+        first_name: 'Jane',
+        last_name: 'Doe',
+        street: '123 Fake St',
+        city: 'San Francisco',
+        region: 'CA',
+        postal_code: '94016',
+        country: 'US',
+      },
+    },
+    ga_session_id: 'e7580b71-227b-4868-9ea9-322a263ce885',
+    ga_session_number: '1',
+    'x-ga-mp2-seg': '1',
+    'x-ga-protocol_version': '2',
+    'x-ga-page_id': 'a86c42e5-b831-45c8-b706-e214c26b4b3d',
+    ip_override: '1.2.3.4',
+  };
+  const mockEventObjectSelfDesc = {
+    event_name: 'media_player_event',
+    client_id: 'fd0e5288-e89b-45df-aad5-6d0c6eda6198',
+    language: 'en-US',
+    page_encoding: 'windows-1252',
+    page_hostname: 'localhost',
+    page_location: 'http://localhost:8000/',
+    page_path: '/',
+    screen_resolution: '1920x1080',
+    user_id: 'tester',
+    viewport_size: '1044x975',
+    user_agent: 'curl/7.81.0',
+    host: 'host',
+    'x-sp-app_id': 'media-test',
+    'x-sp-platform': 'web',
+    'x-sp-dvce_created_tstamp': '1658567928426',
+    'x-sp-event_id': 'c2084e30-5e4f-4d9c-86b2-e0bc3781509a',
+    'x-sp-name_tracker': 'spTest',
+    'x-sp-v_tracker': 'js-3.5.0',
+    'x-sp-domain_sessionid': '1ab28b79-bfdd-4855-9bf1-5199ce15beac',
+    'x-sp-domain_sessionidx': 1,
+    'x-sp-br_cookies': '1',
+    'x-sp-br_colordepth': '24',
+    'x-sp-br_viewwidth': 1044,
+    'x-sp-br_viewheight': 975,
+    'x-sp-dvce_screenwidth': 1920,
+    'x-sp-dvce_screenheight': 1080,
+    'x-sp-doc_charset': 'windows-1252',
+    'x-sp-doc_width': 1044,
+    'x-sp-doc_height': 975,
+    'x-sp-dvce_sent_tstamp': '1658567928427',
+    'x-sp-self_describing_event_com_snowplowanalytics_snowplow_media_player_event_1':
+      { type: 'play' },
+    'x-sp-contexts_com_snowplowanalytics_snowplow_mobile_context_1': [
+      {
+        osType: 'myOsType',
+        osVersion: 'myOsVersion',
+        deviceManufacturer: 'myDevMan',
+        deviceModel: 'myDevModel',
+      },
+    ],
+    'x-sp-contexts_com_youtube_youtube_1': [
+      {
+        autoPlay: false,
+        avaliablePlaybackRates: [0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2],
+        buffering: false,
+        controls: true,
+        cued: false,
+        loaded: 3,
+        playbackQuality: 'medium',
+        playerId: 'youtube-song',
+        unstarted: false,
+        url: 'https://www.youtube.com/watch?v=foobarbaz',
+        avaliableQualityLevels: [
+          'hd1080',
+          'hd720',
+          'large',
+          'medium',
+          'small',
+          'tiny',
+          'auto',
+        ],
+      },
+    ],
+    'x-sp-contexts_com_snowplowanalytics_snowplow_media_player_1': [
+      {
+        currentTime: 0.015303093460083008,
+        duration: 190.301,
+        ended: false,
+        loop: false,
+        muted: false,
+        paused: false,
+        playbackRate: 1,
+        volume: 100,
+      },
+    ],
+    'x-sp-contexts_com_snowplowanalytics_snowplow_web_page_1': [
+      { id: '68027aa2-34b1-4018-95e3-7176c62dbc84' },
+    ],
+    'x-sp-contexts_com_google_tag-manager_server-side_user_data_1': [
+      { email_address: 'foo@test.io' },
+    ],
+    'x-sp-contexts_com_snowplowanalytics_snowplow_client_session_1': [
+      {
+        userId: 'fd0e5288-e89b-45df-aad5-6d0c6eda6198',
+        sessionId: '1ab28b79-bfdd-4855-9bf1-5199ce15beac',
+        eventIndex: 24,
+        sessionIndex: 1,
+        previousSessionId: null,
+        storageMechanism: 'COOKIE_1',
+        firstEventId: '40fbdb30-1b99-42a3-99f7-850dacf5be43',
+        firstEventTimestamp: '2022-07-23T09:08:04.451Z',
+      },
+    ],
+    'x-sp-contexts': [
+      {
+        schema: 'iglu:com.youtube/youtube/jsonschema/1-0-0',
+        data: {
+          autoPlay: false,
+          avaliablePlaybackRates: [0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2],
+          buffering: false,
+          controls: true,
+          cued: false,
+          loaded: 3,
+          playbackQuality: 'medium',
+          playerId: 'youtube-song',
+          unstarted: false,
+          url: 'https://www.youtube.com/watch?v=foobarbaz',
+          avaliableQualityLevels: [
+            'hd1080',
+            'hd720',
+            'large',
+            'medium',
+            'small',
+            'tiny',
+            'auto',
+          ],
+        },
+      },
+      {
+        schema:
+          'iglu:com.snowplowanalytics.snowplow/media_player/jsonschema/1-0-0',
+        data: {
+          currentTime: 0.015303093460083008,
+          duration: 190.301,
+          ended: false,
+          loop: false,
+          muted: false,
+          paused: false,
+          playbackRate: 1,
+          volume: 100,
+        },
+      },
+      {
+        schema: 'iglu:com.snowplowanalytics.snowplow/web_page/jsonschema/1-0-0',
+        data: { id: '68027aa2-34b1-4018-95e3-7176c62dbc84' },
+      },
+      {
+        schema:
+          'iglu:com.google.tag-manager.server-side/user_data/jsonschema/1-0-0',
+        data: { email_address: 'foo@test.io' },
+      },
+      {
+        schema:
+          'iglu:com.snowplowanalytics.snowplow/client_session/jsonschema/1-0-2',
+        data: {
+          userId: 'fd0e5288-e89b-45df-aad5-6d0c6eda6198',
+          sessionId: '1ab28b79-bfdd-4855-9bf1-5199ce15beac',
+          eventIndex: 24,
+          sessionIndex: 1,
+          previousSessionId: null,
+          storageMechanism: 'COOKIE_1',
+          firstEventId: '40fbdb30-1b99-42a3-99f7-850dacf5be43',
+          firstEventTimestamp: '2022-07-23T09:08:04.451Z',
+        },
+      },
+    ],
+    user_data: { email_address: 'foo@test.io' },
+    ga_session_id: '1ab28b79-bfdd-4855-9bf1-5199ce15beac',
+    ga_session_number: '1',
+    'x-ga-mp2-seg': '1',
+    'x-ga-protocol_version': '2',
+    'x-ga-page_id': '68027aa2-34b1-4018-95e3-7176c62dbc84',
+  };
+  // Helper for mocking
+  const getFromPath = (path, obj) => {
+    if (getTypeOf(path) === 'string' && getTypeOf(obj) === 'object') {
+      const splitPath = path.split('.').filter((prop) => !!prop);
+      return splitPath.reduce((acc, curr) => acc && acc[curr], obj);
+    }
+    return undefined;
+  };
 
 
 ___NOTES___
