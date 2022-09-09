@@ -748,9 +748,7 @@ const addProperty = (prop, setVal, tagConfig, nestId, obj) => {
   const setPath = cleanPropertyName(prop);
   const nest = tagConfig[nestId];
   if (nest && getType(nest) === 'string') {
-    if (
-      ['object', 'array'].indexOf(getType(getFromPath(nest, obj))) < 0
-    ) {
+    if (['object', 'array'].indexOf(getType(getFromPath(nest, obj))) < 0) {
       setFromPath(nest, {}, obj);
     }
     setFromPath(setPath, setVal, getFromPath(nest, obj));
@@ -993,634 +991,1716 @@ ___TESTS___
 
 scenarios:
 - name: Test default config
-  code: "// Test imports\nconst jsonApi = require('JSON');\n\n// Test event\nconst\
-    \ testEvent = {\n  \"event_name\":\"page_view\",\n  \"client_id\":\"d54a1904-7798-401a-be0b-1a83bea73634\"\
-    ,\n  \"user_id\":\"snow123\",\n  \"language\":\"en-GB\",\n  \"page_encoding\"\
-    :\"UTF-8\",\n  \"page_hostname\":\"snowplowanalytics.com\",\n  \"page_location\"\
-    :\"https://snowplowanalytics.com/\",\n  \"page_path\":\"/\",\n  \"page_referrer\"\
-    :\"referer\",\n  \"page_title\":\"Collect, manage and operationalize behavioral\
-    \ data at scale | Snowplow\",\n  \"screen_resolution\":\"1920x1080\",\n  \"viewport_size\"\
-    :\"745x1302\",\n  \"user_agent\":\"user-agent\",\n  \"origin\":\"origin\",\n \
-    \ \"host\":\"host\",\n  \"x-sp-app_id\":\"website\",\n  \"x-sp-platform\":\"web\"\
-    ,\n  \"x-sp-dvce_created_tstamp\":\"1628586512246\",\n  \"x-sp-event_id\":\"8676de79-0eba-4435-ad95-8a41a8a0129c\"\
-    ,\n  \"x-sp-name_tracker\":\"sp\",\n  \"x-sp-v_tracker\":\"js-2.18.1\",\n  \"\
-    x-sp-domain_sessionid\":\"e7580b71-227b-4868-9ea9-322a263ce885\",\n  \"x-sp-domain_sessionidx\"\
-    :1,\n  \"x-sp-br_cookies\":\"1\",\n  \"x-sp-br_colordepth\":\"24\",\n  \"x-sp-br_viewwidth\"\
-    :745,\n  \"x-sp-br_viewheight\":1302,\n  \"x-sp-dvce_screenwidth\":1920,\n  \"\
-    x-sp-dvce_screenheight\":1080,\n  \"x-sp-doc_charset\":\"UTF-8\",\n  \"x-sp-doc_width\"\
-    :730,\n  \"x-sp-doc_height\":12393,\n  \"x-sp-dvce_sent_tstamp\":\"1628586512248\"\
-    ,\n  \"x-sp-tp2\":{\"e\":\"pv\",\"url\":\"https://snowplowanalytics.com/\",\"\
-    page\":\"Collect, manage and operationalize behavioral data at scale | Snowplow\"\
-    ,\"tv\":\"js-2.18.1\",\"tna\":\"sp\",\"aid\":\"website\",\"p\":\"web\",\"tz\"\
-    :\"Europe/London\",\"lang\":\"en-GB\",\"cs\":\"UTF-8\",\"res\":\"1920x1080\",\"\
-    cd\":\"24\",\"cookie\":\"1\",\"eid\":\"8676de79-0eba-4435-ad95-8a41a8a0129c\"\
-    ,\"dtm\":\"1628586512246\",\"cx\":\"ewogICJzY2hlbWEiOiAiaWdsdTpjb20uc25vd3Bsb3dhbmFseXRpY3Muc25vd3Bsb3cvY29udGV4dHMvanNvbnNjaGVtYS8xLTAtMCIsCiAgImRhdGEiOiBbCiAgICB7CiAgICAgICJzY2hlbWEiOiAiaWdsdTpjb20uc25vd3Bsb3dhbmFseXRpY3Muc25vd3Bsb3cvd2ViX3BhZ2UvanNvbnNjaGVtYS8xLTAtMCIsCiAgICAgICJkYXRhIjogeyAiaWQiOiAiYTg2YzQyZTUtYjgzMS00NWM4LWI3MDYtZTIxNGMyNmI0YjNkIiB9CiAgICB9LAogICAgewogICAgICAic2NoZW1hIjogImlnbHU6b3JnLnczL1BlcmZvcm1hbmNlVGltaW5nL2pzb25zY2hlbWEvMS0wLTAiLAogICAgICAiZGF0YSI6IHsKICAgICAgICAibmF2aWdhdGlvblN0YXJ0IjogMTYyODU4NjUwODYxMCwKICAgICAgICAidW5sb2FkRXZlbnRTdGFydCI6IDAsCiAgICAgICAgInVubG9hZEV2ZW50RW5kIjogMCwKICAgICAgICAicmVkaXJlY3RTdGFydCI6IDAsCiAgICAgICAgInJlZGlyZWN0RW5kIjogMCwKICAgICAgICAiZmV0Y2hTdGFydCI6IDE2Mjg1ODY1MDg2MTAsCiAgICAgICAgImRvbWFpbkxvb2t1cFN0YXJ0IjogMTYyODU4NjUwODYzNywKICAgICAgICAiZG9tYWluTG9va3VwRW5kIjogMTYyODU4NjUwODY5MSwKICAgICAgICAiY29ubmVjdFN0YXJ0IjogMTYyODU4NjUwODY5MSwKICAgICAgICAiY29ubmVjdEVuZCI6IDE2Mjg1ODY1MDg3NjMsCiAgICAgICAgInNlY3VyZUNvbm5lY3Rpb25TdGFydCI6IDE2Mjg1ODY1MDg3MjEsCiAgICAgICAgInJlcXVlc3RTdGFydCI6IDE2Mjg1ODY1MDg3NjMsCiAgICAgICAgInJlc3BvbnNlU3RhcnQiOiAxNjI4NTg2NTA4Nzk3LAogICAgICAgICJyZXNwb25zZUVuZCI6IDE2Mjg1ODY1MDg4MjEsCiAgICAgICAgImRvbUxvYWRpbmciOiAxNjI4NTg2NTA5MDc2LAogICAgICAgICJkb21JbnRlcmFjdGl2ZSI6IDE2Mjg1ODY1MDkzODEsCiAgICAgICAgImRvbUNvbnRlbnRMb2FkZWRFdmVudFN0YXJ0IjogMTYyODU4NjUwOTQwOCwKICAgICAgICAiZG9tQ29udGVudExvYWRlZEV2ZW50RW5kIjogMTYyODU4NjUwOTQxNywKICAgICAgICAiZG9tQ29tcGxldGUiOiAxNjI4NTg2NTEwMzMyLAogICAgICAgICJsb2FkRXZlbnRTdGFydCI6IDE2Mjg1ODY1MTAzMzIsCiAgICAgICAgImxvYWRFdmVudEVuZCI6IDE2Mjg1ODY1MTAzMzQKICAgICAgfQogICAgfSwKICAgIHsKICAgICAgInNjaGVtYSI6ICJpZ2x1OmNvbS5nb29nbGUudGFnLW1hbmFnZXIuc2VydmVyLXNpZGUvdXNlcl9kYXRhL2pzb25zY2hlbWEvMS0wLTAiLAogICAgICAiZGF0YSI6IHsgCiAgICAgICAgImVtYWlsX2FkZHJlc3MiOiAiZm9vQGV4YW1wbGUuY29tIiwKICAgICAgICAicGhvbmVfbnVtYmVyIjogIisxNTU1MTIzNDU2NyIsCiAgICAgICAgImFkZHJlc3MiOiB7CiAgICAgICAgICAiZmlyc3RfbmFtZSI6ICJKYW5lIiwKICAgICAgICAgICJsYXN0X25hbWUiOiAiRG9lIiwKICAgICAgICAgICJzdHJlZXQiOiAiMTIzIEZha2UgU3QiLAogICAgICAgICAgImNpdHkiOiAiU2FuIEZyYW5jaXNjbyIsCiAgICAgICAgICAicmVnaW9uIjogIkNBIiwKICAgICAgICAgICJwb3N0YWxfY29kZSI6ICI5NDAxNiIsCiAgICAgICAgICAiY291bnRyeSI6ICJVUyIgCiAgICAgICAgfQogICAgICB9CiAgICB9CiAgXQp9Cg\"\
-    ,\"vp\":\"745x1302\",\"ds\":\"730x12393\",\"vid\":\"1\",\"sid\":\"e7580b71-227b-4868-9ea9-322a263ce885\"\
-    ,\"duid\":\"d54a1904-7798-401a-be0b-1a83bea73634\",\"stm\":\"1628586512248\",\"\
-    uid\":\"snow123\"},\n  \"x-sp-contexts_com_snowplowanalytics_snowplow_web_page_1\"\
-    :[\n    {\n      \"id\":\"a86c42e5-b831-45c8-b706-e214c26b4b3d\"\n    }\n  ],\n\
-    \  \"x-sp-contexts_org_w3_performance_timing_1\":[\n    {\n      \"navigationStart\"\
-    :1628586508610,\n      \"unloadEventStart\":0,\n      \"unloadEventEnd\":0,\n\
-    \      \"redirectStart\":0,\n      \"redirectEnd\":0,\n      \"fetchStart\":1628586508610,\n\
-    \      \"domainLookupStart\":1628586508637,\n      \"domainLookupEnd\":1628586508691,\n\
-    \      \"connectStart\":1628586508691,\n      \"connectEnd\":1628586508763,\n\
-    \      \"secureConnectionStart\":1628586508721,\n      \"requestStart\":1628586508763,\n\
-    \      \"responseStart\":1628586508797,\n      \"responseEnd\":1628586508821,\n\
-    \      \"domLoading\":1628586509076,\n      \"domInteractive\":1628586509381,\n\
-    \      \"domContentLoadedEventStart\":1628586509408,\n      \"domContentLoadedEventEnd\"\
-    :1628586509417,\n      \"domComplete\":1628586510332,\n      \"loadEventStart\"\
-    :1628586510332,\n      \"loadEventEnd\":1628586510334\n    }\n  ],\n  \"x-sp-contexts_com_google_tag-manager_server-side_user_data_1\"\
-    :[\n    {\n      \"email_address\":\"foo@example.com\",\n      \"phone_number\"\
-    :\"+15551234567\",\n      \"address\":{\n        \"first_name\":\"Jane\",\n  \
-    \      \"last_name\":\"Doe\",\n        \"street\":\"123 Fake St\",\n        \"\
-    city\":\"San Francisco\",\n        \"region\":\"CA\",\n        \"postal_code\"\
-    :\"94016\",\n        \"country\":\"US\"\n      }\n    }\n  ],\n  \"user_data\"\
-    :{\n    \"email_address\":\"foo@example.com\",\n    \"phone_number\":\"+15551234567\"\
-    ,\n    \"address\":{\n      \"first_name\":\"Jane\",\n      \"last_name\":\"Doe\"\
-    ,\n      \"street\":\"123 Fake St\",\n      \"city\":\"San Francisco\",\n    \
-    \  \"region\":\"CA\",\n      \"postal_code\":\"94016\",\n      \"country\":\"\
-    US\"\n    }\n  },\n  \"ga_session_id\":\"e7580b71-227b-4868-9ea9-322a263ce885\"\
-    ,\n  \"ga_session_number\":\"1\",\n  \"x-ga-mp2-seg\":\"1\",\n  \"x-ga-protocol_version\"\
-    :\"2\",\n  \"x-ga-page_id\":\"a86c42e5-b831-45c8-b706-e214c26b4b3d\",\n  \"ip_override\"\
-    :\"1.2.3.4\"\n};\n\n// Tag config data\nconst testMockData = {\n  \"url\":\"test\"\
-    ,\n\n  \"inArray\":false,\n  \"includeAll\":false,\n\n  \"includeAllAtomicEventProperties\"\
-    :false,\n  \"includeSelfDescribingEvent\":true,\n  \"extractFromArray\":true,\n\
-    \  \"includeAllEntities\":true,\n\n  \"includeCommonEventProperties\":true,\n\
-    \  \"includeCommonUserProperties\":false,\n\n  \"requestMethod\":\"post\",\n \
-    \ \"requestTimeout\":\"5000\"\n};\n\n// to assert on\nlet argUrl, argCallback,\
-    \ argOptions, argBody;\n\n// Mocks\nmock('sendHttpRequest', function() { \n  argUrl\
-    \ = arguments[0];\n  argOptions = arguments[2];\n  argBody = arguments[3];\n});\n\
-    \nmock('getAllEventData', function() {\n  return testEvent;\n});\n\n// Call runCode\
-    \ to run the template's code\nrunCode(testMockData);\n\n// Assert\nassertApi('sendHttpRequest').wasCalled();\n\
-    assertThat(argUrl).isStrictlyEqualTo(testMockData.url);\n\nassertThat(argOptions.method).isStrictlyEqualTo('POST');\n\
-    assertThat(argOptions.timeout).isStrictlyEqualTo(5000);\nassertThat(argOptions.headers['Content-Type']).isStrictlyEqualTo('application/json');\n\
-    \nconst body = jsonApi.parse(argBody);\nconst expectedBody = {\n  \"contexts_com_snowplowanalytics_snowplow_web_page_1\"\
-    :{\n    \"id\":\"a86c42e5-b831-45c8-b706-e214c26b4b3d\"\n  },\n  \"contexts_org_w3_performance_timing_1\"\
-    :{\"navigationStart\":1628586508610,\"unloadEventStart\":0,\"unloadEventEnd\"\
-    :0,\"redirectStart\":0,\"redirectEnd\":0,\"fetchStart\":1628586508610,\"domainLookupStart\"\
-    :1628586508637,\"domainLookupEnd\":1628586508691,\"connectStart\":1628586508691,\"\
-    connectEnd\":1628586508763,\"secureConnectionStart\":1628586508721,\"requestStart\"\
-    :1628586508763,\"responseStart\":1628586508797,\"responseEnd\":1628586508821,\"\
-    domLoading\":1628586509076,\"domInteractive\":1628586509381,\"domContentLoadedEventStart\"\
-    :1628586509408,\"domContentLoadedEventEnd\":1628586509417,\"domComplete\":1628586510332,\"\
-    loadEventStart\":1628586510332,\"loadEventEnd\":1628586510334},\n  \"contexts_com_google_tag-manager_server-side_user_data_1\"\
-    :{\n    \"email_address\":\"foo@example.com\",\n    \"phone_number\":\"+15551234567\"\
-    ,\n    \"address\":{\n      \"first_name\":\"Jane\",\n      \"last_name\":\"Doe\"\
-    ,\n      \"street\":\"123 Fake St\",\n      \"city\":\"San Francisco\",\n    \
-    \  \"region\":\"CA\",\n      \"postal_code\":\"94016\",\n      \"country\":\"\
-    US\"\n    }\n  },\n  \"client_id\":\"d54a1904-7798-401a-be0b-1a83bea73634\",\n\
-    \  \"event_name\":\"page_view\",\n  \"ip_override\":\"1.2.3.4\",\n  \"language\"\
-    :\"en-GB\",\n  \"page_encoding\":\"UTF-8\",\n  \"page_hostname\":\"snowplowanalytics.com\"\
-    ,\n  \"page_location\":\"https://snowplowanalytics.com/\",\n  \"page_path\":\"\
-    /\",\n  \"page_referrer\":\"referer\",\n  \"page_title\":\"Collect, manage and\
-    \ operationalize behavioral data at scale | Snowplow\",\n  \"screen_resolution\"\
-    :\"1920x1080\",\n  \"user_agent\":\"user-agent\",\n  \"user_id\":\"snow123\",\n\
-    \  \"viewport_size\":\"745x1302\",\n};\n\nassertThat(body).isEqualTo(expectedBody);\n"
+  code: |
+    // Test imports
+    const jsonApi = require('JSON');
+
+    // Test event
+    const testEvent = {
+      event_name: 'page_view',
+      client_id: 'd54a1904-7798-401a-be0b-1a83bea73634',
+      user_id: 'snow123',
+      language: 'en-GB',
+      page_encoding: 'UTF-8',
+      page_hostname: 'snowplowanalytics.com',
+      page_location: 'https://snowplowanalytics.com/',
+      page_path: '/',
+      page_referrer: 'referer',
+      page_title:
+        'Collect, manage and operationalize behavioral data at scale | Snowplow',
+      screen_resolution: '1920x1080',
+      viewport_size: '745x1302',
+      user_agent: 'user-agent',
+      origin: 'origin',
+      host: 'host',
+      'x-sp-app_id': 'website',
+      'x-sp-platform': 'web',
+      'x-sp-dvce_created_tstamp': '1628586512246',
+      'x-sp-event_id': '8676de79-0eba-4435-ad95-8a41a8a0129c',
+      'x-sp-name_tracker': 'sp',
+      'x-sp-v_tracker': 'js-2.18.1',
+      'x-sp-domain_sessionid': 'e7580b71-227b-4868-9ea9-322a263ce885',
+      'x-sp-domain_sessionidx': 1,
+      'x-sp-br_cookies': '1',
+      'x-sp-br_colordepth': '24',
+      'x-sp-br_viewwidth': 745,
+      'x-sp-br_viewheight': 1302,
+      'x-sp-dvce_screenwidth': 1920,
+      'x-sp-dvce_screenheight': 1080,
+      'x-sp-doc_charset': 'UTF-8',
+      'x-sp-doc_width': 730,
+      'x-sp-doc_height': 12393,
+      'x-sp-dvce_sent_tstamp': '1628586512248',
+      'x-sp-tp2': {
+        e: 'pv',
+        url: 'https://snowplowanalytics.com/',
+        page: 'Collect, manage and operationalize behavioral data at scale | Snowplow',
+        tv: 'js-2.18.1',
+        tna: 'sp',
+        aid: 'website',
+        p: 'web',
+        tz: 'Europe/London',
+        lang: 'en-GB',
+        cs: 'UTF-8',
+        res: '1920x1080',
+        cd: '24',
+        cookie: '1',
+        eid: '8676de79-0eba-4435-ad95-8a41a8a0129c',
+        dtm: '1628586512246',
+        cx: 'ewogICJzY2hlbWEiOiAiaWdsdTpjb20uc25vd3Bsb3dhbmFseXRpY3Muc25vd3Bsb3cvY29udGV4dHMvanNvbnNjaGVtYS8xLTAtMCIsCiAgImRhdGEiOiBbCiAgICB7CiAgICAgICJzY2hlbWEiOiAiaWdsdTpjb20uc25vd3Bsb3dhbmFseXRpY3Muc25vd3Bsb3cvd2ViX3BhZ2UvanNvbnNjaGVtYS8xLTAtMCIsCiAgICAgICJkYXRhIjogeyAiaWQiOiAiYTg2YzQyZTUtYjgzMS00NWM4LWI3MDYtZTIxNGMyNmI0YjNkIiB9CiAgICB9LAogICAgewogICAgICAic2NoZW1hIjogImlnbHU6b3JnLnczL1BlcmZvcm1hbmNlVGltaW5nL2pzb25zY2hlbWEvMS0wLTAiLAogICAgICAiZGF0YSI6IHsKICAgICAgICAibmF2aWdhdGlvblN0YXJ0IjogMTYyODU4NjUwODYxMCwKICAgICAgICAidW5sb2FkRXZlbnRTdGFydCI6IDAsCiAgICAgICAgInVubG9hZEV2ZW50RW5kIjogMCwKICAgICAgICAicmVkaXJlY3RTdGFydCI6IDAsCiAgICAgICAgInJlZGlyZWN0RW5kIjogMCwKICAgICAgICAiZmV0Y2hTdGFydCI6IDE2Mjg1ODY1MDg2MTAsCiAgICAgICAgImRvbWFpbkxvb2t1cFN0YXJ0IjogMTYyODU4NjUwODYzNywKICAgICAgICAiZG9tYWluTG9va3VwRW5kIjogMTYyODU4NjUwODY5MSwKICAgICAgICAiY29ubmVjdFN0YXJ0IjogMTYyODU4NjUwODY5MSwKICAgICAgICAiY29ubmVjdEVuZCI6IDE2Mjg1ODY1MDg3NjMsCiAgICAgICAgInNlY3VyZUNvbm5lY3Rpb25TdGFydCI6IDE2Mjg1ODY1MDg3MjEsCiAgICAgICAgInJlcXVlc3RTdGFydCI6IDE2Mjg1ODY1MDg3NjMsCiAgICAgICAgInJlc3BvbnNlU3RhcnQiOiAxNjI4NTg2NTA4Nzk3LAogICAgICAgICJyZXNwb25zZUVuZCI6IDE2Mjg1ODY1MDg4MjEsCiAgICAgICAgImRvbUxvYWRpbmciOiAxNjI4NTg2NTA5MDc2LAogICAgICAgICJkb21JbnRlcmFjdGl2ZSI6IDE2Mjg1ODY1MDkzODEsCiAgICAgICAgImRvbUNvbnRlbnRMb2FkZWRFdmVudFN0YXJ0IjogMTYyODU4NjUwOTQwOCwKICAgICAgICAiZG9tQ29udGVudExvYWRlZEV2ZW50RW5kIjogMTYyODU4NjUwOTQxNywKICAgICAgICAiZG9tQ29tcGxldGUiOiAxNjI4NTg2NTEwMzMyLAogICAgICAgICJsb2FkRXZlbnRTdGFydCI6IDE2Mjg1ODY1MTAzMzIsCiAgICAgICAgImxvYWRFdmVudEVuZCI6IDE2Mjg1ODY1MTAzMzQKICAgICAgfQogICAgfSwKICAgIHsKICAgICAgInNjaGVtYSI6ICJpZ2x1OmNvbS5nb29nbGUudGFnLW1hbmFnZXIuc2VydmVyLXNpZGUvdXNlcl9kYXRhL2pzb25zY2hlbWEvMS0wLTAiLAogICAgICAiZGF0YSI6IHsgCiAgICAgICAgImVtYWlsX2FkZHJlc3MiOiAiZm9vQGV4YW1wbGUuY29tIiwKICAgICAgICAicGhvbmVfbnVtYmVyIjogIisxNTU1MTIzNDU2NyIsCiAgICAgICAgImFkZHJlc3MiOiB7CiAgICAgICAgICAiZmlyc3RfbmFtZSI6ICJKYW5lIiwKICAgICAgICAgICJsYXN0X25hbWUiOiAiRG9lIiwKICAgICAgICAgICJzdHJlZXQiOiAiMTIzIEZha2UgU3QiLAogICAgICAgICAgImNpdHkiOiAiU2FuIEZyYW5jaXNjbyIsCiAgICAgICAgICAicmVnaW9uIjogIkNBIiwKICAgICAgICAgICJwb3N0YWxfY29kZSI6ICI5NDAxNiIsCiAgICAgICAgICAiY291bnRyeSI6ICJVUyIgCiAgICAgICAgfQogICAgICB9CiAgICB9CiAgXQp9Cg',
+        vp: '745x1302',
+        ds: '730x12393',
+        vid: '1',
+        sid: 'e7580b71-227b-4868-9ea9-322a263ce885',
+        duid: 'd54a1904-7798-401a-be0b-1a83bea73634',
+        stm: '1628586512248',
+        uid: 'snow123',
+      },
+      'x-sp-contexts_com_snowplowanalytics_snowplow_web_page_1': [
+        {
+          id: 'a86c42e5-b831-45c8-b706-e214c26b4b3d',
+        },
+      ],
+      'x-sp-contexts_org_w3_performance_timing_1': [
+        {
+          navigationStart: 1628586508610,
+          unloadEventStart: 0,
+          unloadEventEnd: 0,
+          redirectStart: 0,
+          redirectEnd: 0,
+          fetchStart: 1628586508610,
+          domainLookupStart: 1628586508637,
+          domainLookupEnd: 1628586508691,
+          connectStart: 1628586508691,
+          connectEnd: 1628586508763,
+          secureConnectionStart: 1628586508721,
+          requestStart: 1628586508763,
+          responseStart: 1628586508797,
+          responseEnd: 1628586508821,
+          domLoading: 1628586509076,
+          domInteractive: 1628586509381,
+          domContentLoadedEventStart: 1628586509408,
+          domContentLoadedEventEnd: 1628586509417,
+          domComplete: 1628586510332,
+          loadEventStart: 1628586510332,
+          loadEventEnd: 1628586510334,
+        },
+      ],
+      'x-sp-contexts_com_google_tag-manager_server-side_user_data_1': [
+        {
+          email_address: 'foo@example.com',
+          phone_number: '+15551234567',
+          address: {
+            first_name: 'Jane',
+            last_name: 'Doe',
+            street: '123 Fake St',
+            city: 'San Francisco',
+            region: 'CA',
+            postal_code: '94016',
+            country: 'US',
+          },
+        },
+      ],
+      user_data: {
+        email_address: 'foo@example.com',
+        phone_number: '+15551234567',
+        address: {
+          first_name: 'Jane',
+          last_name: 'Doe',
+          street: '123 Fake St',
+          city: 'San Francisco',
+          region: 'CA',
+          postal_code: '94016',
+          country: 'US',
+        },
+      },
+      ga_session_id: 'e7580b71-227b-4868-9ea9-322a263ce885',
+      ga_session_number: '1',
+      'x-ga-mp2-seg': '1',
+      'x-ga-protocol_version': '2',
+      'x-ga-page_id': 'a86c42e5-b831-45c8-b706-e214c26b4b3d',
+      ip_override: '1.2.3.4',
+    };
+
+    // Tag config data
+    const testMockData = {
+      url: 'test',
+
+      inArray: false,
+      includeAll: false,
+
+      includeAllAtomicEventProperties: false,
+      includeSelfDescribingEvent: true,
+      extractFromArray: true,
+      includeAllEntities: true,
+
+      includeCommonEventProperties: true,
+      includeCommonUserProperties: false,
+
+      requestMethod: 'post',
+      requestTimeout: '5000',
+    };
+
+    // to assert on
+    let argUrl, argCallback, argOptions, argBody;
+
+    // Mocks
+    mock('sendHttpRequest', function () {
+      argUrl = arguments[0];
+      argOptions = arguments[2];
+      argBody = arguments[3];
+    });
+
+    mock('getAllEventData', function () {
+      return testEvent;
+    });
+
+    // Call runCode to run the template's code
+    runCode(testMockData);
+
+    // Assert
+    assertApi('sendHttpRequest').wasCalled();
+    assertThat(argUrl).isStrictlyEqualTo(testMockData.url);
+
+    assertThat(argOptions.method).isStrictlyEqualTo('POST');
+    assertThat(argOptions.timeout).isStrictlyEqualTo(5000);
+    assertThat(argOptions.headers['Content-Type']).isStrictlyEqualTo(
+      'application/json'
+    );
+
+    const body = jsonApi.parse(argBody);
+    const expectedBody = {
+      contexts_com_snowplowanalytics_snowplow_web_page_1: {
+        id: 'a86c42e5-b831-45c8-b706-e214c26b4b3d',
+      },
+      contexts_org_w3_performance_timing_1: {
+        navigationStart: 1628586508610,
+        unloadEventStart: 0,
+        unloadEventEnd: 0,
+        redirectStart: 0,
+        redirectEnd: 0,
+        fetchStart: 1628586508610,
+        domainLookupStart: 1628586508637,
+        domainLookupEnd: 1628586508691,
+        connectStart: 1628586508691,
+        connectEnd: 1628586508763,
+        secureConnectionStart: 1628586508721,
+        requestStart: 1628586508763,
+        responseStart: 1628586508797,
+        responseEnd: 1628586508821,
+        domLoading: 1628586509076,
+        domInteractive: 1628586509381,
+        domContentLoadedEventStart: 1628586509408,
+        domContentLoadedEventEnd: 1628586509417,
+        domComplete: 1628586510332,
+        loadEventStart: 1628586510332,
+        loadEventEnd: 1628586510334,
+      },
+      'contexts_com_google_tag-manager_server-side_user_data_1': {
+        email_address: 'foo@example.com',
+        phone_number: '+15551234567',
+        address: {
+          first_name: 'Jane',
+          last_name: 'Doe',
+          street: '123 Fake St',
+          city: 'San Francisco',
+          region: 'CA',
+          postal_code: '94016',
+          country: 'US',
+        },
+      },
+      client_id: 'd54a1904-7798-401a-be0b-1a83bea73634',
+      event_name: 'page_view',
+      ip_override: '1.2.3.4',
+      language: 'en-GB',
+      page_encoding: 'UTF-8',
+      page_hostname: 'snowplowanalytics.com',
+      page_location: 'https://snowplowanalytics.com/',
+      page_path: '/',
+      page_referrer: 'referer',
+      page_title:
+        'Collect, manage and operationalize behavioral data at scale | Snowplow',
+      screen_resolution: '1920x1080',
+      user_agent: 'user-agent',
+      user_id: 'snow123',
+      viewport_size: '745x1302',
+    };
+
+    assertThat(body).isEqualTo(expectedBody);
 - name: Test includeAll
-  code: "// Test imports\nconst jsonApi = require('JSON');\n\n// Test event\nconst\
-    \ testEvent = {\n  \"event_name\":\"page_view\",\n  \"client_id\":\"d54a1904-7798-401a-be0b-1a83bea73634\"\
-    ,\n  \"user_id\":\"snow123\",\n  \"language\":\"en-GB\",\n  \"page_encoding\"\
-    :\"UTF-8\",\n  \"page_hostname\":\"snowplowanalytics.com\",\n  \"page_location\"\
-    :\"https://snowplowanalytics.com/\",\n  \"page_path\":\"/\",\n  \"page_referrer\"\
-    :\"referer\",\n  \"page_title\":\"Collect, manage and operationalize behavioral\
-    \ data at scale | Snowplow\",\n  \"screen_resolution\":\"1920x1080\",\n  \"viewport_size\"\
-    :\"745x1302\",\n  \"user_agent\":\"user-agent\",\n  \"origin\":\"origin\",\n \
-    \ \"host\":\"host\",\n  \"x-sp-app_id\":\"website\",\n  \"x-sp-platform\":\"web\"\
-    ,\n  \"x-sp-dvce_created_tstamp\":\"1628586512246\",\n  \"x-sp-event_id\":\"8676de79-0eba-4435-ad95-8a41a8a0129c\"\
-    ,\n  \"x-sp-name_tracker\":\"sp\",\n  \"x-sp-v_tracker\":\"js-2.18.1\",\n  \"\
-    x-sp-domain_sessionid\":\"e7580b71-227b-4868-9ea9-322a263ce885\",\n  \"x-sp-domain_sessionidx\"\
-    :1,\n  \"x-sp-br_cookies\":\"1\",\n  \"x-sp-br_colordepth\":\"24\",\n  \"x-sp-br_viewwidth\"\
-    :745,\n  \"x-sp-br_viewheight\":1302,\n  \"x-sp-dvce_screenwidth\":1920,\n  \"\
-    x-sp-dvce_screenheight\":1080,\n  \"x-sp-doc_charset\":\"UTF-8\",\n  \"x-sp-doc_width\"\
-    :730,\n  \"x-sp-doc_height\":12393,\n  \"x-sp-dvce_sent_tstamp\":\"1628586512248\"\
-    ,\n  \"x-sp-tp2\":{\"e\":\"pv\",\"url\":\"https://snowplowanalytics.com/\",\"\
-    page\":\"Collect, manage and operationalize behavioral data at scale | Snowplow\"\
-    ,\"tv\":\"js-2.18.1\",\"tna\":\"sp\",\"aid\":\"website\",\"p\":\"web\",\"tz\"\
-    :\"Europe/London\",\"lang\":\"en-GB\",\"cs\":\"UTF-8\",\"res\":\"1920x1080\",\"\
-    cd\":\"24\",\"cookie\":\"1\",\"eid\":\"8676de79-0eba-4435-ad95-8a41a8a0129c\"\
-    ,\"dtm\":\"1628586512246\",\"cx\":\"ewogICJzY2hlbWEiOiAiaWdsdTpjb20uc25vd3Bsb3dhbmFseXRpY3Muc25vd3Bsb3cvY29udGV4dHMvanNvbnNjaGVtYS8xLTAtMCIsCiAgImRhdGEiOiBbCiAgICB7CiAgICAgICJzY2hlbWEiOiAiaWdsdTpjb20uc25vd3Bsb3dhbmFseXRpY3Muc25vd3Bsb3cvd2ViX3BhZ2UvanNvbnNjaGVtYS8xLTAtMCIsCiAgICAgICJkYXRhIjogeyAiaWQiOiAiYTg2YzQyZTUtYjgzMS00NWM4LWI3MDYtZTIxNGMyNmI0YjNkIiB9CiAgICB9LAogICAgewogICAgICAic2NoZW1hIjogImlnbHU6b3JnLnczL1BlcmZvcm1hbmNlVGltaW5nL2pzb25zY2hlbWEvMS0wLTAiLAogICAgICAiZGF0YSI6IHsKICAgICAgICAibmF2aWdhdGlvblN0YXJ0IjogMTYyODU4NjUwODYxMCwKICAgICAgICAidW5sb2FkRXZlbnRTdGFydCI6IDAsCiAgICAgICAgInVubG9hZEV2ZW50RW5kIjogMCwKICAgICAgICAicmVkaXJlY3RTdGFydCI6IDAsCiAgICAgICAgInJlZGlyZWN0RW5kIjogMCwKICAgICAgICAiZmV0Y2hTdGFydCI6IDE2Mjg1ODY1MDg2MTAsCiAgICAgICAgImRvbWFpbkxvb2t1cFN0YXJ0IjogMTYyODU4NjUwODYzNywKICAgICAgICAiZG9tYWluTG9va3VwRW5kIjogMTYyODU4NjUwODY5MSwKICAgICAgICAiY29ubmVjdFN0YXJ0IjogMTYyODU4NjUwODY5MSwKICAgICAgICAiY29ubmVjdEVuZCI6IDE2Mjg1ODY1MDg3NjMsCiAgICAgICAgInNlY3VyZUNvbm5lY3Rpb25TdGFydCI6IDE2Mjg1ODY1MDg3MjEsCiAgICAgICAgInJlcXVlc3RTdGFydCI6IDE2Mjg1ODY1MDg3NjMsCiAgICAgICAgInJlc3BvbnNlU3RhcnQiOiAxNjI4NTg2NTA4Nzk3LAogICAgICAgICJyZXNwb25zZUVuZCI6IDE2Mjg1ODY1MDg4MjEsCiAgICAgICAgImRvbUxvYWRpbmciOiAxNjI4NTg2NTA5MDc2LAogICAgICAgICJkb21JbnRlcmFjdGl2ZSI6IDE2Mjg1ODY1MDkzODEsCiAgICAgICAgImRvbUNvbnRlbnRMb2FkZWRFdmVudFN0YXJ0IjogMTYyODU4NjUwOTQwOCwKICAgICAgICAiZG9tQ29udGVudExvYWRlZEV2ZW50RW5kIjogMTYyODU4NjUwOTQxNywKICAgICAgICAiZG9tQ29tcGxldGUiOiAxNjI4NTg2NTEwMzMyLAogICAgICAgICJsb2FkRXZlbnRTdGFydCI6IDE2Mjg1ODY1MTAzMzIsCiAgICAgICAgImxvYWRFdmVudEVuZCI6IDE2Mjg1ODY1MTAzMzQKICAgICAgfQogICAgfSwKICAgIHsKICAgICAgInNjaGVtYSI6ICJpZ2x1OmNvbS5nb29nbGUudGFnLW1hbmFnZXIuc2VydmVyLXNpZGUvdXNlcl9kYXRhL2pzb25zY2hlbWEvMS0wLTAiLAogICAgICAiZGF0YSI6IHsgCiAgICAgICAgImVtYWlsX2FkZHJlc3MiOiAiZm9vQGV4YW1wbGUuY29tIiwKICAgICAgICAicGhvbmVfbnVtYmVyIjogIisxNTU1MTIzNDU2NyIsCiAgICAgICAgImFkZHJlc3MiOiB7CiAgICAgICAgICAiZmlyc3RfbmFtZSI6ICJKYW5lIiwKICAgICAgICAgICJsYXN0X25hbWUiOiAiRG9lIiwKICAgICAgICAgICJzdHJlZXQiOiAiMTIzIEZha2UgU3QiLAogICAgICAgICAgImNpdHkiOiAiU2FuIEZyYW5jaXNjbyIsCiAgICAgICAgICAicmVnaW9uIjogIkNBIiwKICAgICAgICAgICJwb3N0YWxfY29kZSI6ICI5NDAxNiIsCiAgICAgICAgICAiY291bnRyeSI6ICJVUyIgCiAgICAgICAgfQogICAgICB9CiAgICB9CiAgXQp9Cg\"\
-    ,\"vp\":\"745x1302\",\"ds\":\"730x12393\",\"vid\":\"1\",\"sid\":\"e7580b71-227b-4868-9ea9-322a263ce885\"\
-    ,\"duid\":\"d54a1904-7798-401a-be0b-1a83bea73634\",\"stm\":\"1628586512248\",\"\
-    uid\":\"snow123\"},\n  \"x-sp-contexts_com_snowplowanalytics_snowplow_web_page_1\"\
-    :[\n    {\n      \"id\":\"a86c42e5-b831-45c8-b706-e214c26b4b3d\"\n    }\n  ],\n\
-    \  \"x-sp-contexts_org_w3_performance_timing_1\":[\n    {\n      \"navigationStart\"\
-    :1628586508610,\n      \"unloadEventStart\":0,\n      \"unloadEventEnd\":0,\n\
-    \      \"redirectStart\":0,\n      \"redirectEnd\":0,\n      \"fetchStart\":1628586508610,\n\
-    \      \"domainLookupStart\":1628586508637,\n      \"domainLookupEnd\":1628586508691,\n\
-    \      \"connectStart\":1628586508691,\n      \"connectEnd\":1628586508763,\n\
-    \      \"secureConnectionStart\":1628586508721,\n      \"requestStart\":1628586508763,\n\
-    \      \"responseStart\":1628586508797,\n      \"responseEnd\":1628586508821,\n\
-    \      \"domLoading\":1628586509076,\n      \"domInteractive\":1628586509381,\n\
-    \      \"domContentLoadedEventStart\":1628586509408,\n      \"domContentLoadedEventEnd\"\
-    :1628586509417,\n      \"domComplete\":1628586510332,\n      \"loadEventStart\"\
-    :1628586510332,\n      \"loadEventEnd\":1628586510334\n    }\n  ],\n  \"x-sp-contexts_com_google_tag-manager_server-side_user_data_1\"\
-    :[\n    {\n      \"email_address\":\"foo@example.com\",\n      \"phone_number\"\
-    :\"+15551234567\",\n      \"address\":{\n        \"first_name\":\"Jane\",\n  \
-    \      \"last_name\":\"Doe\",\n        \"street\":\"123 Fake St\",\n        \"\
-    city\":\"San Francisco\",\n        \"region\":\"CA\",\n        \"postal_code\"\
-    :\"94016\",\n        \"country\":\"US\"\n      }\n    }\n  ],\n  \"user_data\"\
-    :{\n    \"email_address\":\"foo@example.com\",\n    \"phone_number\":\"+15551234567\"\
-    ,\n    \"address\":{\n      \"first_name\":\"Jane\",\n      \"last_name\":\"Doe\"\
-    ,\n      \"street\":\"123 Fake St\",\n      \"city\":\"San Francisco\",\n    \
-    \  \"region\":\"CA\",\n      \"postal_code\":\"94016\",\n      \"country\":\"\
-    US\"\n    }\n  },\n  \"ga_session_id\":\"e7580b71-227b-4868-9ea9-322a263ce885\"\
-    ,\n  \"ga_session_number\":\"1\",\n  \"x-ga-mp2-seg\":\"1\",\n  \"x-ga-protocol_version\"\
-    :\"2\",\n  \"x-ga-page_id\":\"a86c42e5-b831-45c8-b706-e214c26b4b3d\",\n  \"ip_override\"\
-    :\"1.2.3.4\"\n};\n\n// Tag config data\nconst testMockData = {\n  \"url\":\"test\"\
-    ,\n  \"inArray\":false,\n  \"includeAll\":true, \n  \"additionalRequestData\"\
-    :[\n    {\"key\":\"testExtraRequestData\",\"value\":\"extra\"}\n  ],\n  \"requestMethod\"\
-    :\"post\",\n  \"requestTimeout\":\"5000\"\n};\n\n// to assert on\nlet argUrl,\
-    \ argCallback, argOptions, argBody;\n\n// Mocks\nmock('sendHttpRequest', function()\
-    \ { \n  argUrl = arguments[0];\n  argOptions = arguments[2];\n  argBody = arguments[3];\n\
-    });\n\nmock('getAllEventData', function() {\n  return testEvent;\n});\n\n// Call\
-    \ runCode to run the template's code\nrunCode(testMockData);\n\n// Assert\nassertApi('sendHttpRequest').wasCalled();\n\
-    assertThat(argUrl).isStrictlyEqualTo(testMockData.url);\n\nassertThat(argOptions.method).isStrictlyEqualTo('POST');\n\
-    assertThat(argOptions.timeout).isStrictlyEqualTo(5000);\nassertThat(argOptions.headers['Content-Type']).isStrictlyEqualTo('application/json');\n\
-    \nconst body = jsonApi.parse(argBody);\n\nconst expectedBody = {             \
-    \   \n  \"event_name\":\"page_view\",\n  \"client_id\":\"d54a1904-7798-401a-be0b-1a83bea73634\"\
-    ,\n  \"user_id\":\"snow123\",\n  \"language\":\"en-GB\",\n  \"page_encoding\"\
-    :\"UTF-8\",\n  \"page_hostname\":\"snowplowanalytics.com\",\n  \"page_location\"\
-    :\"https://snowplowanalytics.com/\",\n  \"page_path\":\"/\",\n  \"page_referrer\"\
-    :\"referer\",\n  \"page_title\":\"Collect, manage and operationalize behavioral\
-    \ data at scale | Snowplow\",\n  \"screen_resolution\":\"1920x1080\",\n  \"viewport_size\"\
-    :\"745x1302\",\n  \"user_agent\":\"user-agent\",\n  \"origin\":\"origin\",\n \
-    \ \"host\":\"host\",\n  \"x-sp-app_id\":\"website\",\n  \"x-sp-platform\":\"web\"\
-    ,\n  \"x-sp-dvce_created_tstamp\":\"1628586512246\",\n  \"x-sp-event_id\":\"8676de79-0eba-4435-ad95-8a41a8a0129c\"\
-    ,\n  \"x-sp-name_tracker\":\"sp\",\n  \"x-sp-v_tracker\":\"js-2.18.1\",\n  \"\
-    x-sp-domain_sessionid\":\"e7580b71-227b-4868-9ea9-322a263ce885\",\n  \"x-sp-domain_sessionidx\"\
-    :1,\n  \"x-sp-br_cookies\":\"1\",\n  \"x-sp-br_colordepth\":\"24\",\n  \"x-sp-br_viewwidth\"\
-    :745,\n  \"x-sp-br_viewheight\":1302,\n  \"x-sp-dvce_screenwidth\":1920,\n  \"\
-    x-sp-dvce_screenheight\":1080,\n  \"x-sp-doc_charset\":\"UTF-8\",\n  \"x-sp-doc_width\"\
-    :730,\n  \"x-sp-doc_height\":12393,\n  \"x-sp-dvce_sent_tstamp\":\"1628586512248\"\
-    ,\n  \"x-sp-tp2\":{\"e\":\"pv\",\"url\":\"https://snowplowanalytics.com/\",\"\
-    page\":\"Collect, manage and operationalize behavioral data at scale | Snowplow\"\
-    ,\"tv\":\"js-2.18.1\",\"tna\":\"sp\",\"aid\":\"website\",\"p\":\"web\",\"tz\"\
-    :\"Europe/London\",\"lang\":\"en-GB\",\"cs\":\"UTF-8\",\"res\":\"1920x1080\",\"\
-    cd\":\"24\",\"cookie\":\"1\",\"eid\":\"8676de79-0eba-4435-ad95-8a41a8a0129c\"\
-    ,\"dtm\":\"1628586512246\",\"cx\":\"ewogICJzY2hlbWEiOiAiaWdsdTpjb20uc25vd3Bsb3dhbmFseXRpY3Muc25vd3Bsb3cvY29udGV4dHMvanNvbnNjaGVtYS8xLTAtMCIsCiAgImRhdGEiOiBbCiAgICB7CiAgICAgICJzY2hlbWEiOiAiaWdsdTpjb20uc25vd3Bsb3dhbmFseXRpY3Muc25vd3Bsb3cvd2ViX3BhZ2UvanNvbnNjaGVtYS8xLTAtMCIsCiAgICAgICJkYXRhIjogeyAiaWQiOiAiYTg2YzQyZTUtYjgzMS00NWM4LWI3MDYtZTIxNGMyNmI0YjNkIiB9CiAgICB9LAogICAgewogICAgICAic2NoZW1hIjogImlnbHU6b3JnLnczL1BlcmZvcm1hbmNlVGltaW5nL2pzb25zY2hlbWEvMS0wLTAiLAogICAgICAiZGF0YSI6IHsKICAgICAgICAibmF2aWdhdGlvblN0YXJ0IjogMTYyODU4NjUwODYxMCwKICAgICAgICAidW5sb2FkRXZlbnRTdGFydCI6IDAsCiAgICAgICAgInVubG9hZEV2ZW50RW5kIjogMCwKICAgICAgICAicmVkaXJlY3RTdGFydCI6IDAsCiAgICAgICAgInJlZGlyZWN0RW5kIjogMCwKICAgICAgICAiZmV0Y2hTdGFydCI6IDE2Mjg1ODY1MDg2MTAsCiAgICAgICAgImRvbWFpbkxvb2t1cFN0YXJ0IjogMTYyODU4NjUwODYzNywKICAgICAgICAiZG9tYWluTG9va3VwRW5kIjogMTYyODU4NjUwODY5MSwKICAgICAgICAiY29ubmVjdFN0YXJ0IjogMTYyODU4NjUwODY5MSwKICAgICAgICAiY29ubmVjdEVuZCI6IDE2Mjg1ODY1MDg3NjMsCiAgICAgICAgInNlY3VyZUNvbm5lY3Rpb25TdGFydCI6IDE2Mjg1ODY1MDg3MjEsCiAgICAgICAgInJlcXVlc3RTdGFydCI6IDE2Mjg1ODY1MDg3NjMsCiAgICAgICAgInJlc3BvbnNlU3RhcnQiOiAxNjI4NTg2NTA4Nzk3LAogICAgICAgICJyZXNwb25zZUVuZCI6IDE2Mjg1ODY1MDg4MjEsCiAgICAgICAgImRvbUxvYWRpbmciOiAxNjI4NTg2NTA5MDc2LAogICAgICAgICJkb21JbnRlcmFjdGl2ZSI6IDE2Mjg1ODY1MDkzODEsCiAgICAgICAgImRvbUNvbnRlbnRMb2FkZWRFdmVudFN0YXJ0IjogMTYyODU4NjUwOTQwOCwKICAgICAgICAiZG9tQ29udGVudExvYWRlZEV2ZW50RW5kIjogMTYyODU4NjUwOTQxNywKICAgICAgICAiZG9tQ29tcGxldGUiOiAxNjI4NTg2NTEwMzMyLAogICAgICAgICJsb2FkRXZlbnRTdGFydCI6IDE2Mjg1ODY1MTAzMzIsCiAgICAgICAgImxvYWRFdmVudEVuZCI6IDE2Mjg1ODY1MTAzMzQKICAgICAgfQogICAgfSwKICAgIHsKICAgICAgInNjaGVtYSI6ICJpZ2x1OmNvbS5nb29nbGUudGFnLW1hbmFnZXIuc2VydmVyLXNpZGUvdXNlcl9kYXRhL2pzb25zY2hlbWEvMS0wLTAiLAogICAgICAiZGF0YSI6IHsgCiAgICAgICAgImVtYWlsX2FkZHJlc3MiOiAiZm9vQGV4YW1wbGUuY29tIiwKICAgICAgICAicGhvbmVfbnVtYmVyIjogIisxNTU1MTIzNDU2NyIsCiAgICAgICAgImFkZHJlc3MiOiB7CiAgICAgICAgICAiZmlyc3RfbmFtZSI6ICJKYW5lIiwKICAgICAgICAgICJsYXN0X25hbWUiOiAiRG9lIiwKICAgICAgICAgICJzdHJlZXQiOiAiMTIzIEZha2UgU3QiLAogICAgICAgICAgImNpdHkiOiAiU2FuIEZyYW5jaXNjbyIsCiAgICAgICAgICAicmVnaW9uIjogIkNBIiwKICAgICAgICAgICJwb3N0YWxfY29kZSI6ICI5NDAxNiIsCiAgICAgICAgICAiY291bnRyeSI6ICJVUyIgCiAgICAgICAgfQogICAgICB9CiAgICB9CiAgXQp9Cg\"\
-    ,\"vp\":\"745x1302\",\"ds\":\"730x12393\",\"vid\":\"1\",\"sid\":\"e7580b71-227b-4868-9ea9-322a263ce885\"\
-    ,\"duid\":\"d54a1904-7798-401a-be0b-1a83bea73634\",\"stm\":\"1628586512248\",\"\
-    uid\":\"snow123\"},\n  \"x-sp-contexts_com_snowplowanalytics_snowplow_web_page_1\"\
-    :[\n    {\n      \"id\":\"a86c42e5-b831-45c8-b706-e214c26b4b3d\"\n    }\n  ],\n\
-    \  \"x-sp-contexts_org_w3_performance_timing_1\":[\n    {\n      \"navigationStart\"\
-    :1628586508610,\n      \"unloadEventStart\":0,\n      \"unloadEventEnd\":0,\n\
-    \      \"redirectStart\":0,\n      \"redirectEnd\":0,\n      \"fetchStart\":1628586508610,\n\
-    \      \"domainLookupStart\":1628586508637,\n      \"domainLookupEnd\":1628586508691,\n\
-    \      \"connectStart\":1628586508691,\n      \"connectEnd\":1628586508763,\n\
-    \      \"secureConnectionStart\":1628586508721,\n      \"requestStart\":1628586508763,\n\
-    \      \"responseStart\":1628586508797,\n      \"responseEnd\":1628586508821,\n\
-    \      \"domLoading\":1628586509076,\n      \"domInteractive\":1628586509381,\n\
-    \      \"domContentLoadedEventStart\":1628586509408,\n      \"domContentLoadedEventEnd\"\
-    :1628586509417,\n      \"domComplete\":1628586510332,\n      \"loadEventStart\"\
-    :1628586510332,\n      \"loadEventEnd\":1628586510334\n    }\n  ],\n  \"x-sp-contexts_com_google_tag-manager_server-side_user_data_1\"\
-    :[\n    {\n      \"email_address\":\"foo@example.com\",\n      \"phone_number\"\
-    :\"+15551234567\",\n      \"address\":{\n        \"first_name\":\"Jane\",\n  \
-    \      \"last_name\":\"Doe\",\n        \"street\":\"123 Fake St\",\n        \"\
-    city\":\"San Francisco\",\n        \"region\":\"CA\",\n        \"postal_code\"\
-    :\"94016\",\n        \"country\":\"US\"\n      }\n    }\n  ],\n  \"user_data\"\
-    :{\n    \"email_address\":\"foo@example.com\",\n    \"phone_number\":\"+15551234567\"\
-    ,\n    \"address\":{\n      \"first_name\":\"Jane\",\n      \"last_name\":\"Doe\"\
-    ,\n      \"street\":\"123 Fake St\",\n      \"city\":\"San Francisco\",\n    \
-    \  \"region\":\"CA\",\n      \"postal_code\":\"94016\",\n      \"country\":\"\
-    US\"\n    }\n  },\n  \"ga_session_id\":\"e7580b71-227b-4868-9ea9-322a263ce885\"\
-    ,\n  \"ga_session_number\":\"1\",\n  \"x-ga-mp2-seg\":\"1\",\n  \"x-ga-protocol_version\"\
-    :\"2\",\n  \"x-ga-page_id\":\"a86c42e5-b831-45c8-b706-e214c26b4b3d\",\n  \"ip_override\"\
-    :\"1.2.3.4\",\n  \"testExtraRequestData\": \"extra\"\n};\nassertThat(body).isEqualTo(expectedBody);\n"
+  code: |
+    // Test imports
+    const jsonApi = require('JSON');
+
+    // Test event
+    const testEvent = {
+      event_name: 'page_view',
+      client_id: 'd54a1904-7798-401a-be0b-1a83bea73634',
+      user_id: 'snow123',
+      language: 'en-GB',
+      page_encoding: 'UTF-8',
+      page_hostname: 'snowplowanalytics.com',
+      page_location: 'https://snowplowanalytics.com/',
+      page_path: '/',
+      page_referrer: 'referer',
+      page_title:
+        'Collect, manage and operationalize behavioral data at scale | Snowplow',
+      screen_resolution: '1920x1080',
+      viewport_size: '745x1302',
+      user_agent: 'user-agent',
+      origin: 'origin',
+      host: 'host',
+      'x-sp-app_id': 'website',
+      'x-sp-platform': 'web',
+      'x-sp-dvce_created_tstamp': '1628586512246',
+      'x-sp-event_id': '8676de79-0eba-4435-ad95-8a41a8a0129c',
+      'x-sp-name_tracker': 'sp',
+      'x-sp-v_tracker': 'js-2.18.1',
+      'x-sp-domain_sessionid': 'e7580b71-227b-4868-9ea9-322a263ce885',
+      'x-sp-domain_sessionidx': 1,
+      'x-sp-br_cookies': '1',
+      'x-sp-br_colordepth': '24',
+      'x-sp-br_viewwidth': 745,
+      'x-sp-br_viewheight': 1302,
+      'x-sp-dvce_screenwidth': 1920,
+      'x-sp-dvce_screenheight': 1080,
+      'x-sp-doc_charset': 'UTF-8',
+      'x-sp-doc_width': 730,
+      'x-sp-doc_height': 12393,
+      'x-sp-dvce_sent_tstamp': '1628586512248',
+      'x-sp-tp2': {
+        e: 'pv',
+        url: 'https://snowplowanalytics.com/',
+        page: 'Collect, manage and operationalize behavioral data at scale | Snowplow',
+        tv: 'js-2.18.1',
+        tna: 'sp',
+        aid: 'website',
+        p: 'web',
+        tz: 'Europe/London',
+        lang: 'en-GB',
+        cs: 'UTF-8',
+        res: '1920x1080',
+        cd: '24',
+        cookie: '1',
+        eid: '8676de79-0eba-4435-ad95-8a41a8a0129c',
+        dtm: '1628586512246',
+        cx: 'ewogICJzY2hlbWEiOiAiaWdsdTpjb20uc25vd3Bsb3dhbmFseXRpY3Muc25vd3Bsb3cvY29udGV4dHMvanNvbnNjaGVtYS8xLTAtMCIsCiAgImRhdGEiOiBbCiAgICB7CiAgICAgICJzY2hlbWEiOiAiaWdsdTpjb20uc25vd3Bsb3dhbmFseXRpY3Muc25vd3Bsb3cvd2ViX3BhZ2UvanNvbnNjaGVtYS8xLTAtMCIsCiAgICAgICJkYXRhIjogeyAiaWQiOiAiYTg2YzQyZTUtYjgzMS00NWM4LWI3MDYtZTIxNGMyNmI0YjNkIiB9CiAgICB9LAogICAgewogICAgICAic2NoZW1hIjogImlnbHU6b3JnLnczL1BlcmZvcm1hbmNlVGltaW5nL2pzb25zY2hlbWEvMS0wLTAiLAogICAgICAiZGF0YSI6IHsKICAgICAgICAibmF2aWdhdGlvblN0YXJ0IjogMTYyODU4NjUwODYxMCwKICAgICAgICAidW5sb2FkRXZlbnRTdGFydCI6IDAsCiAgICAgICAgInVubG9hZEV2ZW50RW5kIjogMCwKICAgICAgICAicmVkaXJlY3RTdGFydCI6IDAsCiAgICAgICAgInJlZGlyZWN0RW5kIjogMCwKICAgICAgICAiZmV0Y2hTdGFydCI6IDE2Mjg1ODY1MDg2MTAsCiAgICAgICAgImRvbWFpbkxvb2t1cFN0YXJ0IjogMTYyODU4NjUwODYzNywKICAgICAgICAiZG9tYWluTG9va3VwRW5kIjogMTYyODU4NjUwODY5MSwKICAgICAgICAiY29ubmVjdFN0YXJ0IjogMTYyODU4NjUwODY5MSwKICAgICAgICAiY29ubmVjdEVuZCI6IDE2Mjg1ODY1MDg3NjMsCiAgICAgICAgInNlY3VyZUNvbm5lY3Rpb25TdGFydCI6IDE2Mjg1ODY1MDg3MjEsCiAgICAgICAgInJlcXVlc3RTdGFydCI6IDE2Mjg1ODY1MDg3NjMsCiAgICAgICAgInJlc3BvbnNlU3RhcnQiOiAxNjI4NTg2NTA4Nzk3LAogICAgICAgICJyZXNwb25zZUVuZCI6IDE2Mjg1ODY1MDg4MjEsCiAgICAgICAgImRvbUxvYWRpbmciOiAxNjI4NTg2NTA5MDc2LAogICAgICAgICJkb21JbnRlcmFjdGl2ZSI6IDE2Mjg1ODY1MDkzODEsCiAgICAgICAgImRvbUNvbnRlbnRMb2FkZWRFdmVudFN0YXJ0IjogMTYyODU4NjUwOTQwOCwKICAgICAgICAiZG9tQ29udGVudExvYWRlZEV2ZW50RW5kIjogMTYyODU4NjUwOTQxNywKICAgICAgICAiZG9tQ29tcGxldGUiOiAxNjI4NTg2NTEwMzMyLAogICAgICAgICJsb2FkRXZlbnRTdGFydCI6IDE2Mjg1ODY1MTAzMzIsCiAgICAgICAgImxvYWRFdmVudEVuZCI6IDE2Mjg1ODY1MTAzMzQKICAgICAgfQogICAgfSwKICAgIHsKICAgICAgInNjaGVtYSI6ICJpZ2x1OmNvbS5nb29nbGUudGFnLW1hbmFnZXIuc2VydmVyLXNpZGUvdXNlcl9kYXRhL2pzb25zY2hlbWEvMS0wLTAiLAogICAgICAiZGF0YSI6IHsgCiAgICAgICAgImVtYWlsX2FkZHJlc3MiOiAiZm9vQGV4YW1wbGUuY29tIiwKICAgICAgICAicGhvbmVfbnVtYmVyIjogIisxNTU1MTIzNDU2NyIsCiAgICAgICAgImFkZHJlc3MiOiB7CiAgICAgICAgICAiZmlyc3RfbmFtZSI6ICJKYW5lIiwKICAgICAgICAgICJsYXN0X25hbWUiOiAiRG9lIiwKICAgICAgICAgICJzdHJlZXQiOiAiMTIzIEZha2UgU3QiLAogICAgICAgICAgImNpdHkiOiAiU2FuIEZyYW5jaXNjbyIsCiAgICAgICAgICAicmVnaW9uIjogIkNBIiwKICAgICAgICAgICJwb3N0YWxfY29kZSI6ICI5NDAxNiIsCiAgICAgICAgICAiY291bnRyeSI6ICJVUyIgCiAgICAgICAgfQogICAgICB9CiAgICB9CiAgXQp9Cg',
+        vp: '745x1302',
+        ds: '730x12393',
+        vid: '1',
+        sid: 'e7580b71-227b-4868-9ea9-322a263ce885',
+        duid: 'd54a1904-7798-401a-be0b-1a83bea73634',
+        stm: '1628586512248',
+        uid: 'snow123',
+      },
+      'x-sp-contexts_com_snowplowanalytics_snowplow_web_page_1': [
+        {
+          id: 'a86c42e5-b831-45c8-b706-e214c26b4b3d',
+        },
+      ],
+      'x-sp-contexts_org_w3_performance_timing_1': [
+        {
+          navigationStart: 1628586508610,
+          unloadEventStart: 0,
+          unloadEventEnd: 0,
+          redirectStart: 0,
+          redirectEnd: 0,
+          fetchStart: 1628586508610,
+          domainLookupStart: 1628586508637,
+          domainLookupEnd: 1628586508691,
+          connectStart: 1628586508691,
+          connectEnd: 1628586508763,
+          secureConnectionStart: 1628586508721,
+          requestStart: 1628586508763,
+          responseStart: 1628586508797,
+          responseEnd: 1628586508821,
+          domLoading: 1628586509076,
+          domInteractive: 1628586509381,
+          domContentLoadedEventStart: 1628586509408,
+          domContentLoadedEventEnd: 1628586509417,
+          domComplete: 1628586510332,
+          loadEventStart: 1628586510332,
+          loadEventEnd: 1628586510334,
+        },
+      ],
+      'x-sp-contexts_com_google_tag-manager_server-side_user_data_1': [
+        {
+          email_address: 'foo@example.com',
+          phone_number: '+15551234567',
+          address: {
+            first_name: 'Jane',
+            last_name: 'Doe',
+            street: '123 Fake St',
+            city: 'San Francisco',
+            region: 'CA',
+            postal_code: '94016',
+            country: 'US',
+          },
+        },
+      ],
+      user_data: {
+        email_address: 'foo@example.com',
+        phone_number: '+15551234567',
+        address: {
+          first_name: 'Jane',
+          last_name: 'Doe',
+          street: '123 Fake St',
+          city: 'San Francisco',
+          region: 'CA',
+          postal_code: '94016',
+          country: 'US',
+        },
+      },
+      ga_session_id: 'e7580b71-227b-4868-9ea9-322a263ce885',
+      ga_session_number: '1',
+      'x-ga-mp2-seg': '1',
+      'x-ga-protocol_version': '2',
+      'x-ga-page_id': 'a86c42e5-b831-45c8-b706-e214c26b4b3d',
+      ip_override: '1.2.3.4',
+    };
+
+    // Tag config data
+    const testMockData = {
+      url: 'test',
+      inArray: false,
+      includeAll: true,
+      additionalRequestData: [{ key: 'testExtraRequestData', value: 'extra' }],
+      requestMethod: 'post',
+      requestTimeout: '5000',
+    };
+
+    // to assert on
+    let argUrl, argCallback, argOptions, argBody;
+
+    // Mocks
+    mock('sendHttpRequest', function () {
+      argUrl = arguments[0];
+      argOptions = arguments[2];
+      argBody = arguments[3];
+    });
+
+    mock('getAllEventData', function () {
+      return testEvent;
+    });
+
+    // Call runCode to run the template's code
+    runCode(testMockData);
+
+    // Assert
+    assertApi('sendHttpRequest').wasCalled();
+    assertThat(argUrl).isStrictlyEqualTo(testMockData.url);
+
+    assertThat(argOptions.method).isStrictlyEqualTo('POST');
+    assertThat(argOptions.timeout).isStrictlyEqualTo(5000);
+    assertThat(argOptions.headers['Content-Type']).isStrictlyEqualTo(
+      'application/json'
+    );
+
+    const body = jsonApi.parse(argBody);
+
+    const expectedBody = {
+      event_name: 'page_view',
+      client_id: 'd54a1904-7798-401a-be0b-1a83bea73634',
+      user_id: 'snow123',
+      language: 'en-GB',
+      page_encoding: 'UTF-8',
+      page_hostname: 'snowplowanalytics.com',
+      page_location: 'https://snowplowanalytics.com/',
+      page_path: '/',
+      page_referrer: 'referer',
+      page_title:
+        'Collect, manage and operationalize behavioral data at scale | Snowplow',
+      screen_resolution: '1920x1080',
+      viewport_size: '745x1302',
+      user_agent: 'user-agent',
+      origin: 'origin',
+      host: 'host',
+      'x-sp-app_id': 'website',
+      'x-sp-platform': 'web',
+      'x-sp-dvce_created_tstamp': '1628586512246',
+      'x-sp-event_id': '8676de79-0eba-4435-ad95-8a41a8a0129c',
+      'x-sp-name_tracker': 'sp',
+      'x-sp-v_tracker': 'js-2.18.1',
+      'x-sp-domain_sessionid': 'e7580b71-227b-4868-9ea9-322a263ce885',
+      'x-sp-domain_sessionidx': 1,
+      'x-sp-br_cookies': '1',
+      'x-sp-br_colordepth': '24',
+      'x-sp-br_viewwidth': 745,
+      'x-sp-br_viewheight': 1302,
+      'x-sp-dvce_screenwidth': 1920,
+      'x-sp-dvce_screenheight': 1080,
+      'x-sp-doc_charset': 'UTF-8',
+      'x-sp-doc_width': 730,
+      'x-sp-doc_height': 12393,
+      'x-sp-dvce_sent_tstamp': '1628586512248',
+      'x-sp-tp2': {
+        e: 'pv',
+        url: 'https://snowplowanalytics.com/',
+        page: 'Collect, manage and operationalize behavioral data at scale | Snowplow',
+        tv: 'js-2.18.1',
+        tna: 'sp',
+        aid: 'website',
+        p: 'web',
+        tz: 'Europe/London',
+        lang: 'en-GB',
+        cs: 'UTF-8',
+        res: '1920x1080',
+        cd: '24',
+        cookie: '1',
+        eid: '8676de79-0eba-4435-ad95-8a41a8a0129c',
+        dtm: '1628586512246',
+        cx: 'ewogICJzY2hlbWEiOiAiaWdsdTpjb20uc25vd3Bsb3dhbmFseXRpY3Muc25vd3Bsb3cvY29udGV4dHMvanNvbnNjaGVtYS8xLTAtMCIsCiAgImRhdGEiOiBbCiAgICB7CiAgICAgICJzY2hlbWEiOiAiaWdsdTpjb20uc25vd3Bsb3dhbmFseXRpY3Muc25vd3Bsb3cvd2ViX3BhZ2UvanNvbnNjaGVtYS8xLTAtMCIsCiAgICAgICJkYXRhIjogeyAiaWQiOiAiYTg2YzQyZTUtYjgzMS00NWM4LWI3MDYtZTIxNGMyNmI0YjNkIiB9CiAgICB9LAogICAgewogICAgICAic2NoZW1hIjogImlnbHU6b3JnLnczL1BlcmZvcm1hbmNlVGltaW5nL2pzb25zY2hlbWEvMS0wLTAiLAogICAgICAiZGF0YSI6IHsKICAgICAgICAibmF2aWdhdGlvblN0YXJ0IjogMTYyODU4NjUwODYxMCwKICAgICAgICAidW5sb2FkRXZlbnRTdGFydCI6IDAsCiAgICAgICAgInVubG9hZEV2ZW50RW5kIjogMCwKICAgICAgICAicmVkaXJlY3RTdGFydCI6IDAsCiAgICAgICAgInJlZGlyZWN0RW5kIjogMCwKICAgICAgICAiZmV0Y2hTdGFydCI6IDE2Mjg1ODY1MDg2MTAsCiAgICAgICAgImRvbWFpbkxvb2t1cFN0YXJ0IjogMTYyODU4NjUwODYzNywKICAgICAgICAiZG9tYWluTG9va3VwRW5kIjogMTYyODU4NjUwODY5MSwKICAgICAgICAiY29ubmVjdFN0YXJ0IjogMTYyODU4NjUwODY5MSwKICAgICAgICAiY29ubmVjdEVuZCI6IDE2Mjg1ODY1MDg3NjMsCiAgICAgICAgInNlY3VyZUNvbm5lY3Rpb25TdGFydCI6IDE2Mjg1ODY1MDg3MjEsCiAgICAgICAgInJlcXVlc3RTdGFydCI6IDE2Mjg1ODY1MDg3NjMsCiAgICAgICAgInJlc3BvbnNlU3RhcnQiOiAxNjI4NTg2NTA4Nzk3LAogICAgICAgICJyZXNwb25zZUVuZCI6IDE2Mjg1ODY1MDg4MjEsCiAgICAgICAgImRvbUxvYWRpbmciOiAxNjI4NTg2NTA5MDc2LAogICAgICAgICJkb21JbnRlcmFjdGl2ZSI6IDE2Mjg1ODY1MDkzODEsCiAgICAgICAgImRvbUNvbnRlbnRMb2FkZWRFdmVudFN0YXJ0IjogMTYyODU4NjUwOTQwOCwKICAgICAgICAiZG9tQ29udGVudExvYWRlZEV2ZW50RW5kIjogMTYyODU4NjUwOTQxNywKICAgICAgICAiZG9tQ29tcGxldGUiOiAxNjI4NTg2NTEwMzMyLAogICAgICAgICJsb2FkRXZlbnRTdGFydCI6IDE2Mjg1ODY1MTAzMzIsCiAgICAgICAgImxvYWRFdmVudEVuZCI6IDE2Mjg1ODY1MTAzMzQKICAgICAgfQogICAgfSwKICAgIHsKICAgICAgInNjaGVtYSI6ICJpZ2x1OmNvbS5nb29nbGUudGFnLW1hbmFnZXIuc2VydmVyLXNpZGUvdXNlcl9kYXRhL2pzb25zY2hlbWEvMS0wLTAiLAogICAgICAiZGF0YSI6IHsgCiAgICAgICAgImVtYWlsX2FkZHJlc3MiOiAiZm9vQGV4YW1wbGUuY29tIiwKICAgICAgICAicGhvbmVfbnVtYmVyIjogIisxNTU1MTIzNDU2NyIsCiAgICAgICAgImFkZHJlc3MiOiB7CiAgICAgICAgICAiZmlyc3RfbmFtZSI6ICJKYW5lIiwKICAgICAgICAgICJsYXN0X25hbWUiOiAiRG9lIiwKICAgICAgICAgICJzdHJlZXQiOiAiMTIzIEZha2UgU3QiLAogICAgICAgICAgImNpdHkiOiAiU2FuIEZyYW5jaXNjbyIsCiAgICAgICAgICAicmVnaW9uIjogIkNBIiwKICAgICAgICAgICJwb3N0YWxfY29kZSI6ICI5NDAxNiIsCiAgICAgICAgICAiY291bnRyeSI6ICJVUyIgCiAgICAgICAgfQogICAgICB9CiAgICB9CiAgXQp9Cg',
+        vp: '745x1302',
+        ds: '730x12393',
+        vid: '1',
+        sid: 'e7580b71-227b-4868-9ea9-322a263ce885',
+        duid: 'd54a1904-7798-401a-be0b-1a83bea73634',
+        stm: '1628586512248',
+        uid: 'snow123',
+      },
+      'x-sp-contexts_com_snowplowanalytics_snowplow_web_page_1': [
+        {
+          id: 'a86c42e5-b831-45c8-b706-e214c26b4b3d',
+        },
+      ],
+      'x-sp-contexts_org_w3_performance_timing_1': [
+        {
+          navigationStart: 1628586508610,
+          unloadEventStart: 0,
+          unloadEventEnd: 0,
+          redirectStart: 0,
+          redirectEnd: 0,
+          fetchStart: 1628586508610,
+          domainLookupStart: 1628586508637,
+          domainLookupEnd: 1628586508691,
+          connectStart: 1628586508691,
+          connectEnd: 1628586508763,
+          secureConnectionStart: 1628586508721,
+          requestStart: 1628586508763,
+          responseStart: 1628586508797,
+          responseEnd: 1628586508821,
+          domLoading: 1628586509076,
+          domInteractive: 1628586509381,
+          domContentLoadedEventStart: 1628586509408,
+          domContentLoadedEventEnd: 1628586509417,
+          domComplete: 1628586510332,
+          loadEventStart: 1628586510332,
+          loadEventEnd: 1628586510334,
+        },
+      ],
+      'x-sp-contexts_com_google_tag-manager_server-side_user_data_1': [
+        {
+          email_address: 'foo@example.com',
+          phone_number: '+15551234567',
+          address: {
+            first_name: 'Jane',
+            last_name: 'Doe',
+            street: '123 Fake St',
+            city: 'San Francisco',
+            region: 'CA',
+            postal_code: '94016',
+            country: 'US',
+          },
+        },
+      ],
+      user_data: {
+        email_address: 'foo@example.com',
+        phone_number: '+15551234567',
+        address: {
+          first_name: 'Jane',
+          last_name: 'Doe',
+          street: '123 Fake St',
+          city: 'San Francisco',
+          region: 'CA',
+          postal_code: '94016',
+          country: 'US',
+        },
+      },
+      ga_session_id: 'e7580b71-227b-4868-9ea9-322a263ce885',
+      ga_session_number: '1',
+      'x-ga-mp2-seg': '1',
+      'x-ga-protocol_version': '2',
+      'x-ga-page_id': 'a86c42e5-b831-45c8-b706-e214c26b4b3d',
+      ip_override: '1.2.3.4',
+      testExtraRequestData: 'extra',
+    };
+    assertThat(body).isEqualTo(expectedBody);
 - name: Test mappings 0
-  code: "// Test imports\nconst jsonApi = require('JSON');\n\n// Test event\nconst\
-    \ testEvent = {\n  \"event_name\":\"foo\",\n  \"language\":\"en-US\",\n  \"page_encoding\"\
-    :\"UTF-8\",\n  \"page_hostname\":\"test.example.com\",\n  \"page_location\":\"\
-    http://test.example.com\",\n  \"page_path\":\"/\",\n  \"screen_resolution\":\"\
-    1920x1080\",\n  \"user_id\":\"tester\",\n  \"viewport_size\":\"1023x980\",\n \
-    \ \"user_agent\":\"curl/7.74.0\",\n  \"host\":\"foo.com\",\n  \"x-sp-app_id\"\
-    :\"testApp\",\n  \"x-sp-platform\":\"srv\",\n  \"x-sp-dvce_created_tstamp\":\"\
-    1634551546989\",\n  \"x-sp-name_tracker\":\"sptest\",\n  \"x-sp-v_tracker\":\"\
-    curl\",\n  \"x-sp-domain_sessionidx\":1,\n  \"x-sp-br_colordepth\":\"24\",\n \
-    \ \"x-sp-br_viewwidth\":1023,\n  \"x-sp-br_viewheight\":980,\n  \"x-sp-dvce_screenwidth\"\
-    :1920,\n  \"x-sp-dvce_screenheight\":1080,\n  \"x-sp-doc_charset\":\"UTF-8\",\n\
-    \  \"x-sp-doc_width\":1023,\n  \"x-sp-doc_height\":980,\n  \"x-sp-tp2\":{\"e\"\
-    :\"ue\",\"p\":\"srv\",\"tna\":\"sptest\",\"aid\":\"testApp\",\"cs\":\"UTF-8\"\
-    ,\"lang\":\"en-US\",\"res\":\"1920x1080\",\"cd\":\"24\",\"tz\":\"Europe/London\"\
-    ,\"dtm\":\"1634551546989\",\"vp\":\"1023x980\",\"ds\":\"1023x980\",\"vid\":\"\
-    1\",\"uid\":\"tester\",\"url\":\"http://test.example.com\",\"tv\":\"curl\",\"\
-    ue_pr\":\"{\\\"schema\\\": \\\"iglu:com.snowplowanalytics.snowplow/unstruct_event/jsonschema/1-0-0\\\
-    \",\\\"data\\\":{\\\"schema\\\":\\\"iglu:com.acme.test/foo/jsonschema/1-0-0\\\"\
-    ,\\\"data\\\":{\\\"foo_age\\\":10}}}\",\"co\":\"{\\\"schema\\\":\\\"iglu:com.snowplowanalytics.snowplow/contexts/jsonschema/1-0-0\\\
-    \",\\\"data\\\":[{\\\"schema\\\":\\\"iglu:com.snowplowanalytics.snowplow/mobile_context/jsonschema/1-0-2\\\
-    \",\\\"data\\\":{\\\"osType\\\":\\\"myOsType\\\",\\\"osVersion\\\":\\\"myOsVersion\\\
-    \",\\\"deviceManufacturer\\\":\\\"myDevMan\\\",\\\"deviceModel\\\":\\\"myDevModel\\\
-    \"}},{\\\"schema\\\":\\\"iglu:com.snowplowanalytics.snowplow/web_page/jsonschema/1-0-0\\\
-    \",\\\"data\\\":{\\\"id\\\":\\\"c000a256-1e13-4cde-a5b4-d7a00cf88003\\\"}}]}\"\
-    },\n  \"x-sp-self_describing_event_com_acme_test_foo_1\":{\n    \"foo_age\":10\n\
-    \  },\n  \"x-sp-contexts_com_snowplowanalytics_snowplow_mobile_context_1\":[\n\
-    \    {\"osType\":\"myOsType\",\"osVersion\":\"myOsVersion\",\"deviceManufacturer\"\
-    :\"myDevMan\",\"deviceModel\":\"myDevModel\"}\n  ],\n  \"x-sp-contexts_com_snowplowanalytics_snowplow_web_page_1\"\
-    :[\n    {\"id\":\"c000a256-1e13-4cde-a5b4-d7a00cf88003\"}\n  ],\n  \"ga_session_number\"\
-    :\"1\",\n  \"x-ga-mp2-seg\":\"1\",\n  \"x-ga-protocol_version\":\"2\",\n  \"x-ga-page_id\"\
-    :\"c000a256-1e13-4cde-a5b4-d7a00cf88003\",\n  \"ip_override\":\"1.2.3.4\"\n};\n\
-    \n// Tag config data\nconst testMockData = {\n  \"url\":\"test\",\n\n  \"inArray\"\
-    :false,\n  \"includeAll\":false,\n\n  \"includeAllAtomicEventProperties\":false,\n\
-    \  \"includeSelfDescribingEvent\":true,\n  \"extractFromArray\":true,\n  \"includeAllEntities\"\
-    :false,\n  \"includeUnmappedEntities\":false,\n  \"entityMappingRules\":[\n  \
-    \  {\"key\":\"iglu:com.snowplowanalytics.snowplow/web_page/jsonschema/1-0-0\"\
-    ,\"mappedKey\":\"testEntityMappedKey\"} \n  ],\n\n  \"includeCommonEventProperties\"\
-    :true,\n  \"includeCommonUserProperties\":true,\n  \"eventMappingRules\":[\n \
-    \   {\"key\":\"testEventKey\",\"mappedKey\":\"testDestinKey\"}\n  ],\n\n  \"requestMethod\"\
-    :\"post\",\n  \"requestTimeout\":\"3000\"\n};\n\n// to assert on\nlet argUrl,\
-    \ argCallback, argOptions, argBody;\n\n// Mocks\nmock('sendHttpRequest', function()\
-    \ { \n  argUrl = arguments[0];\n  argOptions = arguments[2];\n  argBody = arguments[3];\n\
-    });\n\nmock('getAllEventData', function() {\n  return testEvent;\n});\n\n// Call\
-    \ runCode to run the template's code\nrunCode(testMockData);\n\n// Assert\nassertApi('sendHttpRequest').wasCalled();\n\
-    assertThat(argUrl).isStrictlyEqualTo(testMockData.url);\n\nassertThat(argOptions.method).isStrictlyEqualTo('POST');\n\
-    assertThat(argOptions.timeout).isStrictlyEqualTo(3000);\nassertThat(argOptions.headers['Content-Type']).isStrictlyEqualTo('application/json');\n\
-    \nconst body = jsonApi.parse(argBody);\nconst expectedBody = {\n  \"self_describing_event_com_acme_test_foo_1\"\
-    :{\n    \"foo_age\":10\n  },\n  \"testEntityMappedKey\":{\n    \"id\":\"c000a256-1e13-4cde-a5b4-d7a00cf88003\"\
-    \n  },\n  \"event_name\":\"foo\",\n  \"ip_override\":\"1.2.3.4\",\n  \"language\"\
-    :\"en-US\",\n  \"page_encoding\":\"UTF-8\",\n  \"page_hostname\":\"test.example.com\"\
-    ,\n  \"page_location\":\"http://test.example.com\",\n  \"page_path\":\"/\",\n\
-    \  \"screen_resolution\":\"1920x1080\",\n  \"user_agent\":\"curl/7.74.0\",\n \
-    \ \"user_id\":\"tester\",\n  \"viewport_size\":\"1023x980\"\n};\n\nassertThat(body).isEqualTo(expectedBody);\n"
+  code: |
+    // Test imports
+    const jsonApi = require('JSON');
+
+    // Test event
+    const testEvent = {
+      event_name: 'foo',
+      language: 'en-US',
+      page_encoding: 'UTF-8',
+      page_hostname: 'test.example.com',
+      page_location: 'http://test.example.com',
+      page_path: '/',
+      screen_resolution: '1920x1080',
+      user_id: 'tester',
+      viewport_size: '1023x980',
+      user_agent: 'curl/7.74.0',
+      host: 'foo.com',
+      'x-sp-app_id': 'testApp',
+      'x-sp-platform': 'srv',
+      'x-sp-dvce_created_tstamp': '1634551546989',
+      'x-sp-name_tracker': 'sptest',
+      'x-sp-v_tracker': 'curl',
+      'x-sp-domain_sessionidx': 1,
+      'x-sp-br_colordepth': '24',
+      'x-sp-br_viewwidth': 1023,
+      'x-sp-br_viewheight': 980,
+      'x-sp-dvce_screenwidth': 1920,
+      'x-sp-dvce_screenheight': 1080,
+      'x-sp-doc_charset': 'UTF-8',
+      'x-sp-doc_width': 1023,
+      'x-sp-doc_height': 980,
+      'x-sp-tp2': {
+        e: 'ue',
+        p: 'srv',
+        tna: 'sptest',
+        aid: 'testApp',
+        cs: 'UTF-8',
+        lang: 'en-US',
+        res: '1920x1080',
+        cd: '24',
+        tz: 'Europe/London',
+        dtm: '1634551546989',
+        vp: '1023x980',
+        ds: '1023x980',
+        vid: '1',
+        uid: 'tester',
+        url: 'http://test.example.com',
+        tv: 'curl',
+        ue_pr:
+          '{"schema": "iglu:com.snowplowanalytics.snowplow/unstruct_event/jsonschema/1-0-0","data":{"schema":"iglu:com.acme.test/foo/jsonschema/1-0-0","data":{"foo_age":10}}}',
+        co: '{"schema":"iglu:com.snowplowanalytics.snowplow/contexts/jsonschema/1-0-0","data":[{"schema":"iglu:com.snowplowanalytics.snowplow/mobile_context/jsonschema/1-0-2","data":{"osType":"myOsType","osVersion":"myOsVersion","deviceManufacturer":"myDevMan","deviceModel":"myDevModel"}},{"schema":"iglu:com.snowplowanalytics.snowplow/web_page/jsonschema/1-0-0","data":{"id":"c000a256-1e13-4cde-a5b4-d7a00cf88003"}}]}',
+      },
+      'x-sp-self_describing_event_com_acme_test_foo_1': {
+        foo_age: 10,
+      },
+      'x-sp-contexts_com_snowplowanalytics_snowplow_mobile_context_1': [
+        {
+          osType: 'myOsType',
+          osVersion: 'myOsVersion',
+          deviceManufacturer: 'myDevMan',
+          deviceModel: 'myDevModel',
+        },
+      ],
+      'x-sp-contexts_com_snowplowanalytics_snowplow_web_page_1': [
+        { id: 'c000a256-1e13-4cde-a5b4-d7a00cf88003' },
+      ],
+      ga_session_number: '1',
+      'x-ga-mp2-seg': '1',
+      'x-ga-protocol_version': '2',
+      'x-ga-page_id': 'c000a256-1e13-4cde-a5b4-d7a00cf88003',
+      ip_override: '1.2.3.4',
+    };
+
+    // Tag config data
+    const testMockData = {
+      url: 'test',
+
+      inArray: false,
+      includeAll: false,
+
+      includeAllAtomicEventProperties: false,
+      includeSelfDescribingEvent: true,
+      extractFromArray: true,
+      includeAllEntities: false,
+      includeUnmappedEntities: false,
+      entityMappingRules: [
+        {
+          key: 'iglu:com.snowplowanalytics.snowplow/web_page/jsonschema/1-0-0',
+          mappedKey: 'testEntityMappedKey',
+        },
+      ],
+
+      includeCommonEventProperties: true,
+      includeCommonUserProperties: true,
+      eventMappingRules: [{ key: 'testEventKey', mappedKey: 'testDestinKey' }],
+
+      requestMethod: 'post',
+      requestTimeout: '3000',
+    };
+
+    // to assert on
+    let argUrl, argCallback, argOptions, argBody;
+
+    // Mocks
+    mock('sendHttpRequest', function () {
+      argUrl = arguments[0];
+      argOptions = arguments[2];
+      argBody = arguments[3];
+    });
+
+    mock('getAllEventData', function () {
+      return testEvent;
+    });
+
+    // Call runCode to run the template's code
+    runCode(testMockData);
+
+    // Assert
+    assertApi('sendHttpRequest').wasCalled();
+    assertThat(argUrl).isStrictlyEqualTo(testMockData.url);
+
+    assertThat(argOptions.method).isStrictlyEqualTo('POST');
+    assertThat(argOptions.timeout).isStrictlyEqualTo(3000);
+    assertThat(argOptions.headers['Content-Type']).isStrictlyEqualTo(
+      'application/json'
+    );
+
+    const body = jsonApi.parse(argBody);
+    const expectedBody = {
+      self_describing_event_com_acme_test_foo_1: {
+        foo_age: 10,
+      },
+      testEntityMappedKey: {
+        id: 'c000a256-1e13-4cde-a5b4-d7a00cf88003',
+      },
+      event_name: 'foo',
+      ip_override: '1.2.3.4',
+      language: 'en-US',
+      page_encoding: 'UTF-8',
+      page_hostname: 'test.example.com',
+      page_location: 'http://test.example.com',
+      page_path: '/',
+      screen_resolution: '1920x1080',
+      user_agent: 'curl/7.74.0',
+      user_id: 'tester',
+      viewport_size: '1023x980',
+    };
+
+    assertThat(body).isEqualTo(expectedBody);
 - name: Test mappings 1
-  code: "// Test imports\nconst jsonApi = require('JSON');\nconst getTypeOf = require('getType');\n\
-    \n// Test event\nconst testEvent = {\n  \"event_name\":\"link_click\",\n  \"client_id\"\
-    :\"bc2e92ec6c204a14\",\n  \"page_hostname\":\"www.snowplowanalytics.com\",\n \
-    \ \"page_location\":\"http://www.snowplowanalytics.com\",\n  \"page_path\":\"\
-    /\",\n  \"page_title\":\"On Analytics\",\n  \"user_id\":\"jon.doe@email.com\"\
-    ,\n  \"host\":\"host.foo.com\",\n  \"x-sp-app_id\":\"angry-birds\",\n  \"x-sp-platform\"\
-    :\"web\",\n  \"x-sp-etl_tstamp\":\"2017-01-26T00:01:25.292Z\",\n  \"x-sp-collector_tstamp\"\
-    :\"2013-11-26T00:02:05Z\",\n  \"x-sp-dvce_created_tstamp\":\"2013-11-26T00:03:57.885Z\"\
-    ,\n  \"x-sp-event\":\"page_view\",\n  \"x-sp-event_id\":\"c6ef3124-b53a-4b13-a233-0088f79dcbcb\"\
-    ,\n  \"x-sp-txn_id\":41828,\n  \"x-sp-name_tracker\":\"spTracker\",\n  \"x-sp-v_tracker\"\
-    :\"js-3.1.6\",\n  \"x-sp-v_collector\":\"ssc-2.3.1-stdout$\",\n  \"x-sp-v_etl\"\
-    :\"snowplow-micro-1.2.1-common-2.0.2\",\n  \"x-sp-user_fingerprint\":\"2161814971\"\
-    ,\n  \"x-sp-domain_sessionidx\":3,\n  \"x-sp-network_userid\":\"ecdff4d0-9175-40ac-a8bb-325c49733607\"\
-    ,\n  \"x-sp-geo_country\":\"US\",\n  \"x-sp-geo_region\":\"TX\",\n  \"x-sp-geo_city\"\
-    :\"New York\",\n  \"x-sp-geo_zipcode\":\"94109\",\n  \"x-sp-geo_latitude\":37.443604,\n\
-    \  \"x-sp-geo_longitude\":-122.4124,\n  \"x-sp-geo_location\":\"37.443604,-122.4124\"\
-    ,\n  \"x-sp-geo_region_name\":\"Florida\",\n  \"x-sp-ip_isp\":\"FDN Communications\"\
-    ,\n  \"x-sp-ip_organization\":\"Bouygues Telecom\",\n  \"x-sp-ip_domain\":\"nuvox.net\"\
-    ,\n  \"x-sp-ip_netspeed\":\"Cable/DSL\",\n  \"x-sp-page_urlscheme\":\"http\",\n\
-    \  \"x-sp-page_urlhost\":\"www.snowplowanalytics.com\",\n  \"x-sp-page_urlport\"\
-    :80,\n  \"x-sp-page_urlpath\":\"/product/index.html\",\n  \"x-sp-page_urlquery\"\
-    :\"id=GTM-DLRG\",\n  \"x-sp-page_urlfragment\":\"4-conclusion\",\n  \"x-sp-br_features_pdf\"\
-    :true,\n  \"x-sp-br_features_flash\":false,\n  \"x-sp-domain_sessionid\":\"2b15e5c8-d3b1-11e4-b9d6-1681e6b88ec1\"\
-    ,\n  \"x-sp-derived_tstamp\":\"2013-11-26T00:03:57.886Z\",\n  \"x-sp-event_vendor\"\
-    :\"com.snowplowanalytics.snowplow\",\n  \"x-sp-event_name\":\"link_click\",\n\
-    \  \"x-sp-event_format\":\"jsonschema\",\n  \"x-sp-event_version\":\"1-0-0\",\n\
-    \  \"x-sp-event_fingerprint\":\"e3dbfa9cca0412c3d4052863cefb547f\",\n  \"x-sp-true_tstamp\"\
-    :\"2013-11-26T00:03:57.886Z\",\n  \"x-sp-contexts_org_schema_web_page_1\":[\n\
-    \    {\"genre\":\"blog\",\"inLanguage\":\"en-US\",\"datePublished\":\"2014-11-06T00:00:00Z\"\
-    ,\"author\":\"Fred Blundun\",\"breadcrumb\":[\"blog\",\"releases\"],\"keywords\"\
-    :[\"snowplow\",\"javascript\",\"tracker\",\"event\"]}\n  ],\n  \"x-sp-contexts_org_w3_performance_timing_1\"\
-    :[\n    {\"navigationStart\":1415358089861,\"unloadEventStart\":1415358090270,\"\
-    unloadEventEnd\":1415358090287,\"redirectStart\":0,\"redirectEnd\":0,\"fetchStart\"\
-    :1415358089870,\"domainLookupStart\":1415358090102,\"domainLookupEnd\":1415358090102,\"\
-    connectStart\":1415358090103,\"connectEnd\":1415358090183,\"requestStart\":1415358090183,\"\
-    responseStart\":1415358090265,\"responseEnd\":1415358090265,\"domLoading\":1415358090270,\"\
-    domInteractive\":1415358090886,\"domContentLoadedEventStart\":1415358090968,\"\
-    domContentLoadedEventEnd\":1415358091309,\"domComplete\":0,\"loadEventStart\"\
-    :0,\"loadEventEnd\":0}\n  ],\n  \"x-sp-self_describing_event_com_snowplowanalytics_snowplow_link_click_1\"\
-    :{\n    \"targetUrl\":\"http://www.example.com\",\n    \"elementClasses\":[\"\
-    foreground\"],\n    \"elementId\":\"exampleLink\"\n  },\n  \"x-sp-contexts_com_snowplowanalytics_snowplow_ua_parser_context_1\"\
-    :[\n    {\"useragentFamily\":\"IE\",\"useragentMajor\":\"7\",\"useragentMinor\"\
-    :\"0\",\"useragentPatch\":null,\"useragentVersion\":\"IE 7.0\",\"osFamily\":\"\
-    Windows XP\",\"osMajor\":null,\"osMinor\":null,\"osPatch\":null,\"osPatchMinor\"\
-    :null,\"osVersion\":\"Windows XP\",\"deviceFamily\":\"Other\"}\n  ],\n  \"ga_session_id\"\
-    :\"2b15e5c8-d3b1-11e4-b9d6-1681e6b88ec1\",\n  \"ga_session_number\":\"3\",\n \
-    \ \"x-ga-mp2-seg\":\"1\",\n  \"x-ga-protocol_version\":\"2\",\n  \"ip_override\"\
-    :\"1.2.3.4\"\n};\n\n// Tag config data\nconst testMockData = {\n  \"url\":\"test\"\
-    ,\n\n  \"inArray\":false,\n  \"includeAll\":false,\n\n  \"includeAllAtomicEventProperties\"\
-    :true,\n  \"atomicNest\":\"data.0\",\n  \"includeSelfDescribingEvent\":false,\n\
-    \  \"selfDescNest\": \"data.0\",\n  \"extractFromArray\":false,\n  \"includeAllEntities\"\
-    :false,\n  \"includeUnmappedEntities\":true,\n  \"unmappedEntityNest\":\"data.0\"\
-    ,\n  \"entityMappingRules\":[\n    {\n      \"key\":\"iglu:org.schema/WebPage/jsonschema/1-0-0\"\
-    ,\n      \"mappedKey\":\"data.0.testEntityMappedKeyOrgSchemaWebPage\"\n    } \n\
-    \  ],\n\n  \"includeCommonEventProperties\":false,           \n  \"includeCommonUserProperties\"\
-    :false,\n  \"eventMappingRules\":[\n    {\n      \"key\":\"x-sp-contexts_org_w3_performance_timing_1.0.unloadEventStart\"\
-    ,\n      \"mappedKey\":\"data.0.contexts_com_acme_foo_unload_1.0.unloadEventStart\"\
-    \n    },\n    {\n      \"key\":\"x-sp-contexts_org_w3_performance_timing_1.0.unloadEventEnd\"\
-    ,\n      \"mappedKey\":\"data.0.contexts_com_acme_foo_unload_1.0.unloadEventEnd\"\
-    \n    },\n    {\n      \"key\":\"x-sp-contexts_org_w3_performance_timing_1.0.domainLookupStart\"\
-    ,\n      \"mappedKey\":\"data.0.contexts_com_acme_foo_lookup_1.0.domainLookupStart\"\
-    \n    },\n    {\n      \"key\":\"x-sp-contexts_org_w3_performance_timing_1.0.domainLookupEnd\"\
-    ,\n      \"mappedKey\":\"data.0.contexts_com_acme_foo_lookup_1.0.domainLookupEnd\"\
-    \n    }\n  ],\n  \n  \"additionalRequestData\":[\n    {\"key\":\"schema\",\"value\"\
-    :\"iglu:com.foo.bar/test_fun/jsonschema/1-0-0\"}\n  ],\n\n  \"requestMethod\"\
-    :\"post\",\n  \"requestTimeout\":\"5000\",\n};\n\n// to assert on\nlet argUrl,\
-    \ argCallback, argOptions, argBody;\n\n// Mocks\nmock('sendHttpRequest', function()\
-    \ { \n  argUrl = arguments[0];\n  argOptions = arguments[2];\n  argBody = arguments[3];\n\
-    });\n\nmock('getAllEventData', function() {\n  return testEvent;\n});\n\nconst\
-    \ getFromPathMock = (path, obj) => {\n  if (getTypeOf(path) === 'string' && getTypeOf(obj)\
-    \ === 'object') {\n    const splitPath = path.split('.').filter((prop) => !!prop);\n\
-    \    return splitPath.reduce((acc, curr) => acc && acc[curr], obj);\n  }\n  return\
-    \ undefined;\n};\n\nmock('getEventData', function(x) {\n  return getFromPathMock(x,\
-    \ testEvent);\n});\n\n// Call runCode to run the template's code\nrunCode(testMockData);\n\
-    \n// Assert\nassertApi('sendHttpRequest').wasCalled();\nassertThat(argUrl).isStrictlyEqualTo(testMockData.url);\n\
-    \nassertThat(argOptions.method).isStrictlyEqualTo('POST');\nassertThat(argOptions.timeout).isStrictlyEqualTo(5000);\n\
-    assertThat(argOptions.headers['Content-Type']).isStrictlyEqualTo('application/json');\n\
-    \nconst body = jsonApi.parse(argBody);\nconst expectedBody = {\n  \"schema\":\"\
-    iglu:com.foo.bar/test_fun/jsonschema/1-0-0\",\n  \"data\": [\n    {\n      \"\
-    app_id\":\"angry-birds\",\n      \"platform\":\"web\",\n      \"etl_tstamp\":\"\
-    2017-01-26T00:01:25.292Z\",\n      \"collector_tstamp\":\"2013-11-26T00:02:05Z\"\
-    ,\n      \"dvce_created_tstamp\":\"2013-11-26T00:03:57.885Z\",\n      \"event\"\
-    :\"page_view\",\n      \"event_id\":\"c6ef3124-b53a-4b13-a233-0088f79dcbcb\",\n\
-    \      \"txn_id\":41828,\n      \"name_tracker\":\"spTracker\",\n      \"v_tracker\"\
-    :\"js-3.1.6\",\n      \"v_collector\":\"ssc-2.3.1-stdout$\",\n      \"v_etl\"\
-    :\"snowplow-micro-1.2.1-common-2.0.2\",\n      \"user_fingerprint\":\"2161814971\"\
-    ,\n      \"domain_sessionidx\":3,\n      \"network_userid\":\"ecdff4d0-9175-40ac-a8bb-325c49733607\"\
-    , \n      \"geo_country\":\"US\", \n      \"geo_region\":\"TX\", \n      \"geo_city\"\
-    :\"New York\", \n      \"geo_zipcode\":\"94109\",\n      \"geo_latitude\":37.443604,\n\
-    \      \"geo_longitude\":-122.4124,\n      \"geo_location\":\"37.443604,-122.4124\"\
-    ,\n      \"geo_region_name\":\"Florida\",\n      \"ip_isp\":\"FDN Communications\"\
-    ,\n      \"ip_organization\":\"Bouygues Telecom\",\n      \"ip_domain\":\"nuvox.net\"\
-    ,\n      \"ip_netspeed\":\"Cable/DSL\",\n      \"page_urlscheme\":\"http\",\n\
-    \      \"page_urlhost\":\"www.snowplowanalytics.com\",\n      \"page_urlport\"\
-    :80,\n      \"page_urlpath\":\"/product/index.html\",\n      \"page_urlquery\"\
-    :\"id=GTM-DLRG\",\n      \"page_urlfragment\":\"4-conclusion\",\n      \"br_features_pdf\"\
-    :true,\n      \"br_features_flash\":false,\n      \"domain_sessionid\":\"2b15e5c8-d3b1-11e4-b9d6-1681e6b88ec1\"\
-    ,\n      \"derived_tstamp\":\"2013-11-26T00:03:57.886Z\",\n      \"event_vendor\"\
-    :\"com.snowplowanalytics.snowplow\",\n      \"event_name\":\"link_click\",\n \
-    \     \"event_format\":\"jsonschema\",\n      \"event_version\":\"1-0-0\",\n \
-    \     \"event_fingerprint\":\"e3dbfa9cca0412c3d4052863cefb547f\",\n      \"true_tstamp\"\
-    :\"2013-11-26T00:03:57.886Z\",\n      \n      // assert from entity mapping\n\
-    \      \"testEntityMappedKeyOrgSchemaWebPage\":[\n        {\"genre\":\"blog\"\
-    ,\"inLanguage\":\"en-US\",\"datePublished\":\"2014-11-06T00:00:00Z\",\"author\"\
-    :\"Fred Blundun\",\"breadcrumb\":[\"blog\",\"releases\"],\"keywords\":[\"snowplow\"\
-    ,\"javascript\",\"tracker\",\"event\"]}],\n      \n      // assert on unmapped\
-    \ entities\n      \"contexts_org_w3_performance_timing_1\":[{\"navigationStart\"\
-    :1415358089861,\"unloadEventStart\":1415358090270,\"unloadEventEnd\":1415358090287,\"\
-    redirectStart\":0,\"redirectEnd\":0,\"fetchStart\":1415358089870,\"domainLookupStart\"\
-    :1415358090102,\"domainLookupEnd\":1415358090102,\"connectStart\":1415358090103,\"\
-    connectEnd\":1415358090183,\"requestStart\":1415358090183,\"responseStart\":1415358090265,\"\
-    responseEnd\":1415358090265,\"domLoading\":1415358090270,\"domInteractive\":1415358090886,\"\
-    domContentLoadedEventStart\":1415358090968,\"domContentLoadedEventEnd\":1415358091309,\"\
-    domComplete\":0,\"loadEventStart\":0,\"loadEventEnd\":0}],\n      \"contexts_com_snowplowanalytics_snowplow_ua_parser_context_1\"\
-    :[{\"useragentFamily\":\"IE\",\"useragentMajor\":\"7\",\"useragentMinor\":\"0\"\
-    ,\"useragentPatch\":null,\"useragentVersion\":\"IE 7.0\",\"osFamily\":\"Windows\
-    \ XP\",\"osMajor\":null,\"osMinor\":null,\"osPatch\":null,\"osPatchMinor\":null,\"\
-    osVersion\":\"Windows XP\",\"deviceFamily\":\"Other\"}],\n      \n      // assert\
-    \ on additional event mapping\n      \"contexts_com_acme_foo_unload_1\":[{\"unloadEventStart\"\
-    :1415358090270,\"unloadEventEnd\":1415358090287}],\n      \n      \"contexts_com_acme_foo_lookup_1\"\
-    :[{\"domainLookupStart\":1415358090102,\"domainLookupEnd\":1415358090102}]\n \
-    \   }\n  ]\n};\n\nassertThat(body).isEqualTo(expectedBody);\n"
+  code: |
+    // Test imports
+    const jsonApi = require('JSON');
+    const getTypeOf = require('getType');
+
+    // Test event
+    const testEvent = {
+      event_name: 'link_click',
+      client_id: 'bc2e92ec6c204a14',
+      page_hostname: 'www.snowplowanalytics.com',
+      page_location: 'http://www.snowplowanalytics.com',
+      page_path: '/',
+      page_title: 'On Analytics',
+      user_id: 'jon.doe@email.com',
+      host: 'host.foo.com',
+      'x-sp-app_id': 'angry-birds',
+      'x-sp-platform': 'web',
+      'x-sp-etl_tstamp': '2017-01-26T00:01:25.292Z',
+      'x-sp-collector_tstamp': '2013-11-26T00:02:05Z',
+      'x-sp-dvce_created_tstamp': '2013-11-26T00:03:57.885Z',
+      'x-sp-event': 'page_view',
+      'x-sp-event_id': 'c6ef3124-b53a-4b13-a233-0088f79dcbcb',
+      'x-sp-txn_id': 41828,
+      'x-sp-name_tracker': 'spTracker',
+      'x-sp-v_tracker': 'js-3.1.6',
+      'x-sp-v_collector': 'ssc-2.3.1-stdout$',
+      'x-sp-v_etl': 'snowplow-micro-1.2.1-common-2.0.2',
+      'x-sp-user_fingerprint': '2161814971',
+      'x-sp-domain_sessionidx': 3,
+      'x-sp-network_userid': 'ecdff4d0-9175-40ac-a8bb-325c49733607',
+      'x-sp-geo_country': 'US',
+      'x-sp-geo_region': 'TX',
+      'x-sp-geo_city': 'New York',
+      'x-sp-geo_zipcode': '94109',
+      'x-sp-geo_latitude': 37.443604,
+      'x-sp-geo_longitude': -122.4124,
+      'x-sp-geo_location': '37.443604,-122.4124',
+      'x-sp-geo_region_name': 'Florida',
+      'x-sp-ip_isp': 'FDN Communications',
+      'x-sp-ip_organization': 'Bouygues Telecom',
+      'x-sp-ip_domain': 'nuvox.net',
+      'x-sp-ip_netspeed': 'Cable/DSL',
+      'x-sp-page_urlscheme': 'http',
+      'x-sp-page_urlhost': 'www.snowplowanalytics.com',
+      'x-sp-page_urlport': 80,
+      'x-sp-page_urlpath': '/product/index.html',
+      'x-sp-page_urlquery': 'id=GTM-DLRG',
+      'x-sp-page_urlfragment': '4-conclusion',
+      'x-sp-br_features_pdf': true,
+      'x-sp-br_features_flash': false,
+      'x-sp-domain_sessionid': '2b15e5c8-d3b1-11e4-b9d6-1681e6b88ec1',
+      'x-sp-derived_tstamp': '2013-11-26T00:03:57.886Z',
+      'x-sp-event_vendor': 'com.snowplowanalytics.snowplow',
+      'x-sp-event_name': 'link_click',
+      'x-sp-event_format': 'jsonschema',
+      'x-sp-event_version': '1-0-0',
+      'x-sp-event_fingerprint': 'e3dbfa9cca0412c3d4052863cefb547f',
+      'x-sp-true_tstamp': '2013-11-26T00:03:57.886Z',
+      'x-sp-contexts_org_schema_web_page_1': [
+        {
+          genre: 'blog',
+          inLanguage: 'en-US',
+          datePublished: '2014-11-06T00:00:00Z',
+          author: 'Fred Blundun',
+          breadcrumb: ['blog', 'releases'],
+          keywords: ['snowplow', 'javascript', 'tracker', 'event'],
+        },
+      ],
+      'x-sp-contexts_org_w3_performance_timing_1': [
+        {
+          navigationStart: 1415358089861,
+          unloadEventStart: 1415358090270,
+          unloadEventEnd: 1415358090287,
+          redirectStart: 0,
+          redirectEnd: 0,
+          fetchStart: 1415358089870,
+          domainLookupStart: 1415358090102,
+          domainLookupEnd: 1415358090102,
+          connectStart: 1415358090103,
+          connectEnd: 1415358090183,
+          requestStart: 1415358090183,
+          responseStart: 1415358090265,
+          responseEnd: 1415358090265,
+          domLoading: 1415358090270,
+          domInteractive: 1415358090886,
+          domContentLoadedEventStart: 1415358090968,
+          domContentLoadedEventEnd: 1415358091309,
+          domComplete: 0,
+          loadEventStart: 0,
+          loadEventEnd: 0,
+        },
+      ],
+      'x-sp-self_describing_event_com_snowplowanalytics_snowplow_link_click_1': {
+        targetUrl: 'http://www.example.com',
+        elementClasses: ['foreground'],
+        elementId: 'exampleLink',
+      },
+      'x-sp-contexts_com_snowplowanalytics_snowplow_ua_parser_context_1': [
+        {
+          useragentFamily: 'IE',
+          useragentMajor: '7',
+          useragentMinor: '0',
+          useragentPatch: null,
+          useragentVersion: 'IE 7.0',
+          osFamily: 'Windows XP',
+          osMajor: null,
+          osMinor: null,
+          osPatch: null,
+          osPatchMinor: null,
+          osVersion: 'Windows XP',
+          deviceFamily: 'Other',
+        },
+      ],
+      ga_session_id: '2b15e5c8-d3b1-11e4-b9d6-1681e6b88ec1',
+      ga_session_number: '3',
+      'x-ga-mp2-seg': '1',
+      'x-ga-protocol_version': '2',
+      ip_override: '1.2.3.4',
+    };
+
+    // Tag config data
+    const testMockData = {
+      url: 'test',
+
+      inArray: false,
+      includeAll: false,
+
+      includeAllAtomicEventProperties: true,
+      atomicNest: 'data.0',
+      includeSelfDescribingEvent: false,
+      selfDescNest: 'data.0',
+      extractFromArray: false,
+      includeAllEntities: false,
+      includeUnmappedEntities: true,
+      unmappedEntityNest: 'data.0',
+      entityMappingRules: [
+        {
+          key: 'iglu:org.schema/WebPage/jsonschema/1-0-0',
+          mappedKey: 'data.0.testEntityMappedKeyOrgSchemaWebPage',
+        },
+      ],
+
+      includeCommonEventProperties: false,
+      includeCommonUserProperties: false,
+      eventMappingRules: [
+        {
+          key: 'x-sp-contexts_org_w3_performance_timing_1.0.unloadEventStart',
+          mappedKey: 'data.0.contexts_com_acme_foo_unload_1.0.unloadEventStart',
+        },
+        {
+          key: 'x-sp-contexts_org_w3_performance_timing_1.0.unloadEventEnd',
+          mappedKey: 'data.0.contexts_com_acme_foo_unload_1.0.unloadEventEnd',
+        },
+        {
+          key: 'x-sp-contexts_org_w3_performance_timing_1.0.domainLookupStart',
+          mappedKey: 'data.0.contexts_com_acme_foo_lookup_1.0.domainLookupStart',
+        },
+        {
+          key: 'x-sp-contexts_org_w3_performance_timing_1.0.domainLookupEnd',
+          mappedKey: 'data.0.contexts_com_acme_foo_lookup_1.0.domainLookupEnd',
+        },
+      ],
+
+      additionalRequestData: [
+        { key: 'schema', value: 'iglu:com.foo.bar/test_fun/jsonschema/1-0-0' },
+      ],
+
+      requestMethod: 'post',
+      requestTimeout: '5000',
+    };
+
+    // to assert on
+    let argUrl, argCallback, argOptions, argBody;
+
+    // Mocks
+    mock('sendHttpRequest', function () {
+      argUrl = arguments[0];
+      argOptions = arguments[2];
+      argBody = arguments[3];
+    });
+
+    mock('getAllEventData', function () {
+      return testEvent;
+    });
+
+    const getFromPathMock = (path, obj) => {
+      if (getTypeOf(path) === 'string' && getTypeOf(obj) === 'object') {
+        const splitPath = path.split('.').filter((prop) => !!prop);
+        return splitPath.reduce((acc, curr) => acc && acc[curr], obj);
+      }
+      return undefined;
+    };
+
+    mock('getEventData', function (x) {
+      return getFromPathMock(x, testEvent);
+    });
+
+    // Call runCode to run the template's code
+    runCode(testMockData);
+
+    // Assert
+    assertApi('sendHttpRequest').wasCalled();
+    assertThat(argUrl).isStrictlyEqualTo(testMockData.url);
+
+    assertThat(argOptions.method).isStrictlyEqualTo('POST');
+    assertThat(argOptions.timeout).isStrictlyEqualTo(5000);
+    assertThat(argOptions.headers['Content-Type']).isStrictlyEqualTo(
+      'application/json'
+    );
+
+    const body = jsonApi.parse(argBody);
+    const expectedBody = {
+      schema: 'iglu:com.foo.bar/test_fun/jsonschema/1-0-0',
+      data: [
+        {
+          app_id: 'angry-birds',
+          platform: 'web',
+          etl_tstamp: '2017-01-26T00:01:25.292Z',
+          collector_tstamp: '2013-11-26T00:02:05Z',
+          dvce_created_tstamp: '2013-11-26T00:03:57.885Z',
+          event: 'page_view',
+          event_id: 'c6ef3124-b53a-4b13-a233-0088f79dcbcb',
+          txn_id: 41828,
+          name_tracker: 'spTracker',
+          v_tracker: 'js-3.1.6',
+          v_collector: 'ssc-2.3.1-stdout$',
+          v_etl: 'snowplow-micro-1.2.1-common-2.0.2',
+          user_fingerprint: '2161814971',
+          domain_sessionidx: 3,
+          network_userid: 'ecdff4d0-9175-40ac-a8bb-325c49733607',
+          geo_country: 'US',
+          geo_region: 'TX',
+          geo_city: 'New York',
+          geo_zipcode: '94109',
+          geo_latitude: 37.443604,
+          geo_longitude: -122.4124,
+          geo_location: '37.443604,-122.4124',
+          geo_region_name: 'Florida',
+          ip_isp: 'FDN Communications',
+          ip_organization: 'Bouygues Telecom',
+          ip_domain: 'nuvox.net',
+          ip_netspeed: 'Cable/DSL',
+          page_urlscheme: 'http',
+          page_urlhost: 'www.snowplowanalytics.com',
+          page_urlport: 80,
+          page_urlpath: '/product/index.html',
+          page_urlquery: 'id=GTM-DLRG',
+          page_urlfragment: '4-conclusion',
+          br_features_pdf: true,
+          br_features_flash: false,
+          domain_sessionid: '2b15e5c8-d3b1-11e4-b9d6-1681e6b88ec1',
+          derived_tstamp: '2013-11-26T00:03:57.886Z',
+          event_vendor: 'com.snowplowanalytics.snowplow',
+          event_name: 'link_click',
+          event_format: 'jsonschema',
+          event_version: '1-0-0',
+          event_fingerprint: 'e3dbfa9cca0412c3d4052863cefb547f',
+          true_tstamp: '2013-11-26T00:03:57.886Z',
+
+          // assert from entity mapping
+          testEntityMappedKeyOrgSchemaWebPage: [
+            {
+              genre: 'blog',
+              inLanguage: 'en-US',
+              datePublished: '2014-11-06T00:00:00Z',
+              author: 'Fred Blundun',
+              breadcrumb: ['blog', 'releases'],
+              keywords: ['snowplow', 'javascript', 'tracker', 'event'],
+            },
+          ],
+
+          // assert on unmapped entities
+          contexts_org_w3_performance_timing_1: [
+            {
+              navigationStart: 1415358089861,
+              unloadEventStart: 1415358090270,
+              unloadEventEnd: 1415358090287,
+              redirectStart: 0,
+              redirectEnd: 0,
+              fetchStart: 1415358089870,
+              domainLookupStart: 1415358090102,
+              domainLookupEnd: 1415358090102,
+              connectStart: 1415358090103,
+              connectEnd: 1415358090183,
+              requestStart: 1415358090183,
+              responseStart: 1415358090265,
+              responseEnd: 1415358090265,
+              domLoading: 1415358090270,
+              domInteractive: 1415358090886,
+              domContentLoadedEventStart: 1415358090968,
+              domContentLoadedEventEnd: 1415358091309,
+              domComplete: 0,
+              loadEventStart: 0,
+              loadEventEnd: 0,
+            },
+          ],
+          contexts_com_snowplowanalytics_snowplow_ua_parser_context_1: [
+            {
+              useragentFamily: 'IE',
+              useragentMajor: '7',
+              useragentMinor: '0',
+              useragentPatch: null,
+              useragentVersion: 'IE 7.0',
+              osFamily: 'Windows XP',
+              osMajor: null,
+              osMinor: null,
+              osPatch: null,
+              osPatchMinor: null,
+              osVersion: 'Windows XP',
+              deviceFamily: 'Other',
+            },
+          ],
+
+          // assert on additional event mapping
+          contexts_com_acme_foo_unload_1: [
+            { unloadEventStart: 1415358090270, unloadEventEnd: 1415358090287 },
+          ],
+
+          contexts_com_acme_foo_lookup_1: [
+            { domainLookupStart: 1415358090102, domainLookupEnd: 1415358090102 },
+          ],
+        },
+      ],
+    };
+
+    assertThat(body).isEqualTo(expectedBody);
 - name: Test nesting and dot notation 0
-  code: "// Test imports\nconst jsonApi = require('JSON');\n\n// Test event\nconst\
-    \ testEvent = {\n  \"event_name\":\"foo\",\n  \"language\":\"en-US\",\n  \"page_encoding\"\
-    :\"UTF-8\",\n  \"page_hostname\":\"test.example.com\",\n  \"page_location\":\"\
-    http://test.example.com\",\n  \"page_path\":\"/\",\n  \"screen_resolution\":\"\
-    1920x1080\",\n  \"user_id\":\"tester\",\n  \"viewport_size\":\"1023x980\",\n \
-    \ \"user_agent\":\"curl/7.74.0\",\n  \"host\":\"engineering-sandbox.appspot.com\"\
-    ,\n  \"x-sp-app_id\":\"testApp\",\n  \"x-sp-platform\":\"srv\",\n  \"x-sp-dvce_created_tstamp\"\
-    :\"1634551546989\",\n  \"x-sp-name_tracker\":\"sptest\",\n  \"x-sp-v_tracker\"\
-    :\"curl\",\n  \"x-sp-domain_sessionidx\":1,\n  \"x-sp-br_colordepth\":\"24\",\n\
-    \  \"x-sp-br_viewwidth\":1023,\n  \"x-sp-br_viewheight\":980,\n  \"x-sp-dvce_screenwidth\"\
-    :1920,\n  \"x-sp-dvce_screenheight\":1080,\n  \"x-sp-doc_charset\":\"UTF-8\",\n\
-    \  \"x-sp-doc_width\":1023,\n  \"x-sp-doc_height\":980,\n  \"x-sp-tp2\":{\"e\"\
-    :\"ue\",\"p\":\"srv\",\"tna\":\"sptest\",\"aid\":\"testApp\",\"cs\":\"UTF-8\"\
-    ,\"lang\":\"en-US\",\"res\":\"1920x1080\",\"cd\":\"24\",\"tz\":\"Europe/London\"\
-    ,\"dtm\":\"1634551546989\",\"vp\":\"1023x980\",\"ds\":\"1023x980\",\"vid\":\"\
-    1\",\"uid\":\"tester\",\"url\":\"http://test.example.com\",\"tv\":\"curl\",\"\
-    ue_pr\":\"{\\\"schema\\\": \\\"iglu:com.snowplowanalytics.snowplow/unstruct_event/jsonschema/1-0-0\\\
-    \",\\\"data\\\":{\\\"schema\\\":\\\"iglu:com.acme.test/foo/jsonschema/1-0-0\\\"\
-    ,\\\"data\\\":{\\\"foo_age\\\":10}}}\",\"co\":\"{\\\"schema\\\":\\\"iglu:com.snowplowanalytics.snowplow/contexts/jsonschema/1-0-0\\\
-    \",\\\"data\\\":[{\\\"schema\\\":\\\"iglu:com.snowplowanalytics.snowplow/mobile_context/jsonschema/1-0-2\\\
-    \",\\\"data\\\":{\\\"osType\\\":\\\"myOsType\\\",\\\"osVersion\\\":\\\"myOsVersion\\\
-    \",\\\"deviceManufacturer\\\":\\\"myDevMan\\\",\\\"deviceModel\\\":\\\"myDevModel\\\
-    \"}},{\\\"schema\\\":\\\"iglu:com.snowplowanalytics.snowplow/web_page/jsonschema/1-0-0\\\
-    \",\\\"data\\\":{\\\"id\\\":\\\"c000a256-1e13-4cde-a5b4-d7a00cf88003\\\"}}]}\"\
-    },\n  \"x-sp-self_describing_event_com_acme_test_foo_1\":{\n    \"foo_age\":10\n\
-    \  },\n  \"x-sp-contexts_com_snowplowanalytics_snowplow_mobile_context_1\":[\n\
-    \    {\"osType\":\"myOsType\",\"osVersion\":\"myOsVersion\",\"deviceManufacturer\"\
-    :\"myDevMan\",\"deviceModel\":\"myDevModel\"}\n  ],\n  \"x-sp-contexts_com_snowplowanalytics_snowplow_web_page_1\"\
-    :[\n    {\"id\":\"c000a256-1e13-4cde-a5b4-d7a00cf88003\"}\n  ],\n  \"ga_session_number\"\
-    :\"1\",\n  \"x-ga-mp2-seg\":\"1\",\n  \"x-ga-protocol_version\":\"2\",\n  \"x-ga-page_id\"\
-    :\"c000a256-1e13-4cde-a5b4-d7a00cf88003\",\n  \"ip_override\":\"1.2.3.4\"\n};\n\
-    \n// Tag config data\nconst testMockData = {\n  \"url\":\"test\",\n\n  \"inArray\"\
-    :false,\n  \"includeAll\":false,\n\n  \"includeAllAtomicEventProperties\":true,\n\
-    \  \"atomicNest\":\"mySpAtomicProps\",           \n  \"includeSelfDescribingEvent\"\
-    :true,\n  \"selfDescNest\":\"mySelfDescEvent\",             \n  \"extractFromArray\"\
-    :true,\n  \"includeAllEntities\":true,\n  \"allEntityNest\":\"myContexts\",  \
-    \      \n\n  \"includeCommonEventProperties\":true,\n  \"commonEventNest\":\"\
-    myCommonEventProps\",           \n  \"includeCommonUserProperties\":true,\n  \"\
-    userDataNest\":\"myUserData\",              \n\n  \"requestMethod\":\"post\",\n\
-    \  \"requestTimeout\":\"5000\",\n};\n\n// to assert on\nlet argUrl, argCallback,\
-    \ argOptions, argBody;\n\n// Mocks\nmock('sendHttpRequest', function() { \n  argUrl\
-    \ = arguments[0];\n  argOptions = arguments[2];\n  argBody = arguments[3];\n});\n\
-    \nmock('getAllEventData', function() {\n  return testEvent;\n});\n\n// Call runCode\
-    \ to run the template's code\nrunCode(testMockData);\n\n// Assert\nassertApi('sendHttpRequest').wasCalled();\n\
-    assertThat(argUrl).isStrictlyEqualTo(testMockData.url);\n\nassertThat(argOptions.method).isStrictlyEqualTo('POST');\n\
-    assertThat(argOptions.timeout).isStrictlyEqualTo(5000);\nassertThat(argOptions.headers['Content-Type']).isStrictlyEqualTo('application/json');\n\
-    \nconst body = jsonApi.parse(argBody);\nconst expectedBody = {\n  \"mySpAtomicProps\"\
-    :{\n    \"app_id\":\"testApp\",\n    \"platform\":\"srv\",\n    \"dvce_created_tstamp\"\
-    :\"1634551546989\",\n    \"name_tracker\":\"sptest\",\n    \"v_tracker\":\"curl\"\
-    ,\n    \"domain_sessionidx\":1,\n    \"br_colordepth\":\"24\",\n    \"br_viewwidth\"\
-    :1023,\n    \"br_viewheight\":980,\n    \"dvce_screenwidth\":1920,\n    \"dvce_screenheight\"\
-    :1080,\n    \"doc_charset\":\"UTF-8\",\n    \"doc_width\":1023,\n    \"doc_height\"\
-    :980\n  },\n  \"mySelfDescEvent\":{\n    \"self_describing_event_com_acme_test_foo_1\"\
-    :{\n      \"foo_age\":10\n    }\n  },\n  \"myContexts\":{\n    \"contexts_com_snowplowanalytics_snowplow_mobile_context_1\"\
-    :{\n      \"osType\":\"myOsType\",\n      \"osVersion\":\"myOsVersion\",\n   \
-    \   \"deviceManufacturer\":\"myDevMan\",\n      \"deviceModel\":\"myDevModel\"\
-    \n    },\n    \"contexts_com_snowplowanalytics_snowplow_web_page_1\":{\n     \
-    \ \"id\":\"c000a256-1e13-4cde-a5b4-d7a00cf88003\"\n    }\n  },\n  \"myCommonEventProps\"\
-    :{\n    \"event_name\":\"foo\",\n    \"ip_override\":\"1.2.3.4\",\n    \"language\"\
-    :\"en-US\",\n    \"page_encoding\":\"UTF-8\",\n    \"page_hostname\":\"test.example.com\"\
-    ,\n    \"page_location\":\"http://test.example.com\",\n    \"page_path\":\"/\"\
-    ,\n    \"screen_resolution\":\"1920x1080\",\n    \"user_agent\":\"curl/7.74.0\"\
-    ,\n    \"user_id\":\"tester\",\n    \"viewport_size\":\"1023x980\"\n  }\n};\n\n\
-    assertThat(body).isEqualTo(expectedBody);\n"
+  code: |
+    // Test imports
+    const jsonApi = require('JSON');
+
+    // Test event
+    const testEvent = {
+      event_name: 'foo',
+      language: 'en-US',
+      page_encoding: 'UTF-8',
+      page_hostname: 'test.example.com',
+      page_location: 'http://test.example.com',
+      page_path: '/',
+      screen_resolution: '1920x1080',
+      user_id: 'tester',
+      viewport_size: '1023x980',
+      user_agent: 'curl/7.74.0',
+      host: 'engineering-sandbox.appspot.com',
+      'x-sp-app_id': 'testApp',
+      'x-sp-platform': 'srv',
+      'x-sp-dvce_created_tstamp': '1634551546989',
+      'x-sp-name_tracker': 'sptest',
+      'x-sp-v_tracker': 'curl',
+      'x-sp-domain_sessionidx': 1,
+      'x-sp-br_colordepth': '24',
+      'x-sp-br_viewwidth': 1023,
+      'x-sp-br_viewheight': 980,
+      'x-sp-dvce_screenwidth': 1920,
+      'x-sp-dvce_screenheight': 1080,
+      'x-sp-doc_charset': 'UTF-8',
+      'x-sp-doc_width': 1023,
+      'x-sp-doc_height': 980,
+      'x-sp-tp2': {
+        e: 'ue',
+        p: 'srv',
+        tna: 'sptest',
+        aid: 'testApp',
+        cs: 'UTF-8',
+        lang: 'en-US',
+        res: '1920x1080',
+        cd: '24',
+        tz: 'Europe/London',
+        dtm: '1634551546989',
+        vp: '1023x980',
+        ds: '1023x980',
+        vid: '1',
+        uid: 'tester',
+        url: 'http://test.example.com',
+        tv: 'curl',
+        ue_pr:
+          '{"schema": "iglu:com.snowplowanalytics.snowplow/unstruct_event/jsonschema/1-0-0","data":{"schema":"iglu:com.acme.test/foo/jsonschema/1-0-0","data":{"foo_age":10}}}',
+        co: '{"schema":"iglu:com.snowplowanalytics.snowplow/contexts/jsonschema/1-0-0","data":[{"schema":"iglu:com.snowplowanalytics.snowplow/mobile_context/jsonschema/1-0-2","data":{"osType":"myOsType","osVersion":"myOsVersion","deviceManufacturer":"myDevMan","deviceModel":"myDevModel"}},{"schema":"iglu:com.snowplowanalytics.snowplow/web_page/jsonschema/1-0-0","data":{"id":"c000a256-1e13-4cde-a5b4-d7a00cf88003"}}]}',
+      },
+      'x-sp-self_describing_event_com_acme_test_foo_1': {
+        foo_age: 10,
+      },
+      'x-sp-contexts_com_snowplowanalytics_snowplow_mobile_context_1': [
+        {
+          osType: 'myOsType',
+          osVersion: 'myOsVersion',
+          deviceManufacturer: 'myDevMan',
+          deviceModel: 'myDevModel',
+        },
+      ],
+      'x-sp-contexts_com_snowplowanalytics_snowplow_web_page_1': [
+        { id: 'c000a256-1e13-4cde-a5b4-d7a00cf88003' },
+      ],
+      ga_session_number: '1',
+      'x-ga-mp2-seg': '1',
+      'x-ga-protocol_version': '2',
+      'x-ga-page_id': 'c000a256-1e13-4cde-a5b4-d7a00cf88003',
+      ip_override: '1.2.3.4',
+    };
+
+    // Tag config data
+    const testMockData = {
+      url: 'test',
+
+      inArray: false,
+      includeAll: false,
+
+      includeAllAtomicEventProperties: true,
+      atomicNest: 'mySpAtomicProps',
+      includeSelfDescribingEvent: true,
+      selfDescNest: 'mySelfDescEvent',
+      extractFromArray: true,
+      includeAllEntities: true,
+      allEntityNest: 'myContexts',
+
+      includeCommonEventProperties: true,
+      commonEventNest: 'myCommonEventProps',
+      includeCommonUserProperties: true,
+      userDataNest: 'myUserData',
+
+      requestMethod: 'post',
+      requestTimeout: '5000',
+    };
+
+    // to assert on
+    let argUrl, argCallback, argOptions, argBody;
+
+    // Mocks
+    mock('sendHttpRequest', function () {
+      argUrl = arguments[0];
+      argOptions = arguments[2];
+      argBody = arguments[3];
+    });
+
+    mock('getAllEventData', function () {
+      return testEvent;
+    });
+
+    // Call runCode to run the template's code
+    runCode(testMockData);
+
+    // Assert
+    assertApi('sendHttpRequest').wasCalled();
+    assertThat(argUrl).isStrictlyEqualTo(testMockData.url);
+
+    assertThat(argOptions.method).isStrictlyEqualTo('POST');
+    assertThat(argOptions.timeout).isStrictlyEqualTo(5000);
+    assertThat(argOptions.headers['Content-Type']).isStrictlyEqualTo(
+      'application/json'
+    );
+
+    const body = jsonApi.parse(argBody);
+    const expectedBody = {
+      mySpAtomicProps: {
+        app_id: 'testApp',
+        platform: 'srv',
+        dvce_created_tstamp: '1634551546989',
+        name_tracker: 'sptest',
+        v_tracker: 'curl',
+        domain_sessionidx: 1,
+        br_colordepth: '24',
+        br_viewwidth: 1023,
+        br_viewheight: 980,
+        dvce_screenwidth: 1920,
+        dvce_screenheight: 1080,
+        doc_charset: 'UTF-8',
+        doc_width: 1023,
+        doc_height: 980,
+      },
+      mySelfDescEvent: {
+        self_describing_event_com_acme_test_foo_1: {
+          foo_age: 10,
+        },
+      },
+      myContexts: {
+        contexts_com_snowplowanalytics_snowplow_mobile_context_1: {
+          osType: 'myOsType',
+          osVersion: 'myOsVersion',
+          deviceManufacturer: 'myDevMan',
+          deviceModel: 'myDevModel',
+        },
+        contexts_com_snowplowanalytics_snowplow_web_page_1: {
+          id: 'c000a256-1e13-4cde-a5b4-d7a00cf88003',
+        },
+      },
+      myCommonEventProps: {
+        event_name: 'foo',
+        ip_override: '1.2.3.4',
+        language: 'en-US',
+        page_encoding: 'UTF-8',
+        page_hostname: 'test.example.com',
+        page_location: 'http://test.example.com',
+        page_path: '/',
+        screen_resolution: '1920x1080',
+        user_agent: 'curl/7.74.0',
+        user_id: 'tester',
+        viewport_size: '1023x980',
+      },
+    };
+
+    assertThat(body).isEqualTo(expectedBody);
 - name: Test nesting and dot notation 1
-  code: "// Test imports\nconst jsonApi = require('JSON');\n\n// Test event\nconst\
-    \ testEvent = {\n  \"event_name\":\"foo\",\n  \"language\":\"en-US\",\n  \"page_encoding\"\
-    :\"UTF-8\",\n  \"page_hostname\":\"test.example.com\",\n  \"page_location\":\"\
-    http://test.example.com\",\n  \"page_path\":\"/\",\n  \"screen_resolution\":\"\
-    1920x1080\",\n  \"user_id\":\"tester\",\n  \"viewport_size\":\"1023x980\",\n \
-    \ \"user_agent\":\"curl/7.74.0\",\n  \"host\":\"engineering-sandbox.appspot.com\"\
-    ,\n  \"x-sp-app_id\":\"testApp\",\n  \"x-sp-platform\":\"srv\",\n  \"x-sp-dvce_created_tstamp\"\
-    :\"1634551546989\",\n  \"x-sp-name_tracker\":\"sptest\",\n  \"x-sp-v_tracker\"\
-    :\"curl\",\n  \"x-sp-domain_sessionidx\":1,\n  \"x-sp-br_colordepth\":\"24\",\n\
-    \  \"x-sp-br_viewwidth\":1023,\n  \"x-sp-br_viewheight\":980,\n  \"x-sp-dvce_screenwidth\"\
-    :1920,\n  \"x-sp-dvce_screenheight\":1080,\n  \"x-sp-doc_charset\":\"UTF-8\",\n\
-    \  \"x-sp-doc_width\":1023,\n  \"x-sp-doc_height\":980,\n  \"x-sp-tp2\":{\"e\"\
-    :\"ue\",\"p\":\"srv\",\"tna\":\"sptest\",\"aid\":\"testApp\",\"cs\":\"UTF-8\"\
-    ,\"lang\":\"en-US\",\"res\":\"1920x1080\",\"cd\":\"24\",\"tz\":\"Europe/London\"\
-    ,\"dtm\":\"1634551546989\",\"vp\":\"1023x980\",\"ds\":\"1023x980\",\"vid\":\"\
-    1\",\"uid\":\"tester\",\"url\":\"http://test.example.com\",\"tv\":\"curl\",\"\
-    ue_pr\":\"{\\\"schema\\\": \\\"iglu:com.snowplowanalytics.snowplow/unstruct_event/jsonschema/1-0-0\\\
-    \",\\\"data\\\":{\\\"schema\\\":\\\"iglu:com.acme.test/foo/jsonschema/1-0-0\\\"\
-    ,\\\"data\\\":{\\\"foo_age\\\":10}}}\",\"co\":\"{\\\"schema\\\":\\\"iglu:com.snowplowanalytics.snowplow/contexts/jsonschema/1-0-0\\\
-    \",\\\"data\\\":[{\\\"schema\\\":\\\"iglu:com.snowplowanalytics.snowplow/mobile_context/jsonschema/1-0-2\\\
-    \",\\\"data\\\":{\\\"osType\\\":\\\"myOsType\\\",\\\"osVersion\\\":\\\"myOsVersion\\\
-    \",\\\"deviceManufacturer\\\":\\\"myDevMan\\\",\\\"deviceModel\\\":\\\"myDevModel\\\
-    \"}},{\\\"schema\\\":\\\"iglu:com.snowplowanalytics.snowplow/web_page/jsonschema/1-0-0\\\
-    \",\\\"data\\\":{\\\"id\\\":\\\"c000a256-1e13-4cde-a5b4-d7a00cf88003\\\"}}]}\"\
-    },\n  \"x-sp-self_describing_event_com_acme_test_foo_1\":{\n    \"foo_age\":10\n\
-    \  },\n  \"x-sp-contexts_com_snowplowanalytics_snowplow_mobile_context_1\":[\n\
-    \    {\"osType\":\"myOsType\",\"osVersion\":\"myOsVersion\",\"deviceManufacturer\"\
-    :\"myDevMan\",\"deviceModel\":\"myDevModel\"}\n  ],\n  \"x-sp-contexts_com_snowplowanalytics_snowplow_web_page_1\"\
-    :[\n    {\"id\":\"c000a256-1e13-4cde-a5b4-d7a00cf88003\"}\n  ],\n  \"ga_session_number\"\
-    :\"1\",\n  \"x-ga-mp2-seg\":\"1\",\n  \"x-ga-protocol_version\":\"2\",\n  \"x-ga-page_id\"\
-    :\"c000a256-1e13-4cde-a5b4-d7a00cf88003\",\n  \"ip_override\":\"1.2.3.4\"\n};\n\
-    \n// Tag config data\nconst testMockData = {\n  \"url\":\"test\",\n\n  \"inArray\"\
-    :false,\n  \"includeAll\":false,\n\n  \"includeAllAtomicEventProperties\":true,\n\
-    \  \"atomicNest\":\"snowplow.snowplow\",           \n  \"includeSelfDescribingEvent\"\
-    :true,\n  \"selfDescNest\":\"snowplow.snowplow\",             \n  \"extractFromArray\"\
-    :true,\n  \"includeAllEntities\":true,\n  \"allEntityNest\":\"snowplow.snowplow\"\
-    ,        \n\n  \"includeCommonEventProperties\":false,           \n  \"includeCommonUserProperties\"\
-    :false,           \n\n  \"requestMethod\":\"post\",\n  \"requestTimeout\":\"5000\"\
-    ,\n};\n\n// to assert on\nlet argUrl, argCallback, argOptions, argBody;\n\n//\
-    \ Mocks\nmock('sendHttpRequest', function() { \n  argUrl = arguments[0];\n  argOptions\
-    \ = arguments[2];\n  argBody = arguments[3];\n});\n\nmock('getAllEventData', function()\
-    \ {\n  return testEvent;\n});\n\n// Call runCode to run the template's code\n\
-    runCode(testMockData);\n\n// Assert\nassertApi('sendHttpRequest').wasCalled();\n\
-    assertThat(argUrl).isStrictlyEqualTo(testMockData.url);\n\nassertThat(argOptions.method).isStrictlyEqualTo('POST');\n\
-    assertThat(argOptions.timeout).isStrictlyEqualTo(5000);\nassertThat(argOptions.headers['Content-Type']).isStrictlyEqualTo('application/json');\n\
-    \nconst body = jsonApi.parse(argBody);\nconst expectedBody = {\n  \"snowplow\"\
-    : {\n    \"snowplow\":{\n      \"app_id\":\"testApp\",\n      \"platform\":\"\
-    srv\",\n      \"dvce_created_tstamp\":\"1634551546989\",\n      \"name_tracker\"\
-    :\"sptest\",\n      \"v_tracker\":\"curl\",\n      \"domain_sessionidx\":1,\n\
-    \      \"br_colordepth\":\"24\",\n      \"br_viewwidth\":1023,\n      \"br_viewheight\"\
-    :980,\n      \"dvce_screenwidth\":1920,\n      \"dvce_screenheight\":1080,\n \
-    \     \"doc_charset\":\"UTF-8\",\n      \"doc_width\":1023,\n      \"doc_height\"\
-    :980,\n      \"self_describing_event_com_acme_test_foo_1\":{\n        \"foo_age\"\
-    :10\n      },\n      \"contexts_com_snowplowanalytics_snowplow_mobile_context_1\"\
-    :{\n        \"osType\":\"myOsType\",\n        \"osVersion\":\"myOsVersion\",\n\
-    \        \"deviceManufacturer\":\"myDevMan\",\n        \"deviceModel\":\"myDevModel\"\
-    \n      },\n      \"contexts_com_snowplowanalytics_snowplow_web_page_1\":{\n \
-    \       \"id\":\"c000a256-1e13-4cde-a5b4-d7a00cf88003\"\n      }\n    }\n  }\n\
-    };\n\nassertThat(body).isEqualTo(expectedBody);\n"
+  code: |
+    // Test imports
+    const jsonApi = require('JSON');
+
+    // Test event
+    const testEvent = {
+      event_name: 'foo',
+      language: 'en-US',
+      page_encoding: 'UTF-8',
+      page_hostname: 'test.example.com',
+      page_location: 'http://test.example.com',
+      page_path: '/',
+      screen_resolution: '1920x1080',
+      user_id: 'tester',
+      viewport_size: '1023x980',
+      user_agent: 'curl/7.74.0',
+      host: 'engineering-sandbox.appspot.com',
+      'x-sp-app_id': 'testApp',
+      'x-sp-platform': 'srv',
+      'x-sp-dvce_created_tstamp': '1634551546989',
+      'x-sp-name_tracker': 'sptest',
+      'x-sp-v_tracker': 'curl',
+      'x-sp-domain_sessionidx': 1,
+      'x-sp-br_colordepth': '24',
+      'x-sp-br_viewwidth': 1023,
+      'x-sp-br_viewheight': 980,
+      'x-sp-dvce_screenwidth': 1920,
+      'x-sp-dvce_screenheight': 1080,
+      'x-sp-doc_charset': 'UTF-8',
+      'x-sp-doc_width': 1023,
+      'x-sp-doc_height': 980,
+      'x-sp-tp2': {
+        e: 'ue',
+        p: 'srv',
+        tna: 'sptest',
+        aid: 'testApp',
+        cs: 'UTF-8',
+        lang: 'en-US',
+        res: '1920x1080',
+        cd: '24',
+        tz: 'Europe/London',
+        dtm: '1634551546989',
+        vp: '1023x980',
+        ds: '1023x980',
+        vid: '1',
+        uid: 'tester',
+        url: 'http://test.example.com',
+        tv: 'curl',
+        ue_pr:
+          '{"schema": "iglu:com.snowplowanalytics.snowplow/unstruct_event/jsonschema/1-0-0","data":{"schema":"iglu:com.acme.test/foo/jsonschema/1-0-0","data":{"foo_age":10}}}',
+        co: '{"schema":"iglu:com.snowplowanalytics.snowplow/contexts/jsonschema/1-0-0","data":[{"schema":"iglu:com.snowplowanalytics.snowplow/mobile_context/jsonschema/1-0-2","data":{"osType":"myOsType","osVersion":"myOsVersion","deviceManufacturer":"myDevMan","deviceModel":"myDevModel"}},{"schema":"iglu:com.snowplowanalytics.snowplow/web_page/jsonschema/1-0-0","data":{"id":"c000a256-1e13-4cde-a5b4-d7a00cf88003"}}]}',
+      },
+      'x-sp-self_describing_event_com_acme_test_foo_1': {
+        foo_age: 10,
+      },
+      'x-sp-contexts_com_snowplowanalytics_snowplow_mobile_context_1': [
+        {
+          osType: 'myOsType',
+          osVersion: 'myOsVersion',
+          deviceManufacturer: 'myDevMan',
+          deviceModel: 'myDevModel',
+        },
+      ],
+      'x-sp-contexts_com_snowplowanalytics_snowplow_web_page_1': [
+        { id: 'c000a256-1e13-4cde-a5b4-d7a00cf88003' },
+      ],
+      ga_session_number: '1',
+      'x-ga-mp2-seg': '1',
+      'x-ga-protocol_version': '2',
+      'x-ga-page_id': 'c000a256-1e13-4cde-a5b4-d7a00cf88003',
+      ip_override: '1.2.3.4',
+    };
+
+    // Tag config data
+    const testMockData = {
+      url: 'test',
+
+      inArray: false,
+      includeAll: false,
+
+      includeAllAtomicEventProperties: true,
+      atomicNest: 'snowplow.snowplow',
+      includeSelfDescribingEvent: true,
+      selfDescNest: 'snowplow.snowplow',
+      extractFromArray: true,
+      includeAllEntities: true,
+      allEntityNest: 'snowplow.snowplow',
+
+      includeCommonEventProperties: false,
+      includeCommonUserProperties: false,
+
+      requestMethod: 'post',
+      requestTimeout: '5000',
+    };
+
+    // to assert on
+    let argUrl, argCallback, argOptions, argBody;
+
+    // Mocks
+    mock('sendHttpRequest', function () {
+      argUrl = arguments[0];
+      argOptions = arguments[2];
+      argBody = arguments[3];
+    });
+
+    mock('getAllEventData', function () {
+      return testEvent;
+    });
+
+    // Call runCode to run the template's code
+    runCode(testMockData);
+
+    // Assert
+    assertApi('sendHttpRequest').wasCalled();
+    assertThat(argUrl).isStrictlyEqualTo(testMockData.url);
+
+    assertThat(argOptions.method).isStrictlyEqualTo('POST');
+    assertThat(argOptions.timeout).isStrictlyEqualTo(5000);
+    assertThat(argOptions.headers['Content-Type']).isStrictlyEqualTo(
+      'application/json'
+    );
+
+    const body = jsonApi.parse(argBody);
+    const expectedBody = {
+      snowplow: {
+        snowplow: {
+          app_id: 'testApp',
+          platform: 'srv',
+          dvce_created_tstamp: '1634551546989',
+          name_tracker: 'sptest',
+          v_tracker: 'curl',
+          domain_sessionidx: 1,
+          br_colordepth: '24',
+          br_viewwidth: 1023,
+          br_viewheight: 980,
+          dvce_screenwidth: 1920,
+          dvce_screenheight: 1080,
+          doc_charset: 'UTF-8',
+          doc_width: 1023,
+          doc_height: 980,
+          self_describing_event_com_acme_test_foo_1: {
+            foo_age: 10,
+          },
+          contexts_com_snowplowanalytics_snowplow_mobile_context_1: {
+            osType: 'myOsType',
+            osVersion: 'myOsVersion',
+            deviceManufacturer: 'myDevMan',
+            deviceModel: 'myDevModel',
+          },
+          contexts_com_snowplowanalytics_snowplow_web_page_1: {
+            id: 'c000a256-1e13-4cde-a5b4-d7a00cf88003',
+          },
+        },
+      },
+    };
+
+    assertThat(body).isEqualTo(expectedBody);
 - name: Test nesting and mappings
-  code: "// Test imports\nconst jsonApi = require('JSON');\nconst getTypeOf = require('getType');\n\
-    \n// Test event\nconst testEvent = {\n  \"event_name\":\"foo\",\n  \"language\"\
-    :\"en-US\",\n  \"page_encoding\":\"UTF-8\",\n  \"page_hostname\":\"test.example.com\"\
-    ,\n  \"page_location\":\"http://test.example.com\",\n  \"page_path\":\"/\",\n\
-    \  \"screen_resolution\":\"1920x1080\",\n  \"user_id\":\"tester\",\n  \"viewport_size\"\
-    :\"1023x980\",\n  \"user_agent\":\"curl/7.74.0\",\n  \"host\":\"engineering-sandbox.appspot.com\"\
-    ,\n  \"x-sp-app_id\":\"testApp\",\n  \"x-sp-platform\":\"srv\",\n  \"x-sp-dvce_created_tstamp\"\
-    :\"1634551546989\",\n  \"x-sp-name_tracker\":\"sptest\",\n  \"x-sp-v_tracker\"\
-    :\"curl\",\n  \"x-sp-domain_sessionidx\":1,\n  \"x-sp-br_colordepth\":\"24\",\n\
-    \  \"x-sp-br_viewwidth\":1023,\n  \"x-sp-br_viewheight\":980,\n  \"x-sp-dvce_screenwidth\"\
-    :1920,\n  \"x-sp-dvce_screenheight\":1080,\n  \"x-sp-doc_charset\":\"UTF-8\",\n\
-    \  \"x-sp-doc_width\":1023,\n  \"x-sp-doc_height\":980,\n  \"x-sp-tp2\":{\"e\"\
-    :\"ue\",\"p\":\"srv\",\"tna\":\"sptest\",\"aid\":\"testApp\",\"cs\":\"UTF-8\"\
-    ,\"lang\":\"en-US\",\"res\":\"1920x1080\",\"cd\":\"24\",\"tz\":\"Europe/London\"\
-    ,\"dtm\":\"1634551546989\",\"vp\":\"1023x980\",\"ds\":\"1023x980\",\"vid\":\"\
-    1\",\"uid\":\"tester\",\"url\":\"http://test.example.com\",\"tv\":\"curl\",\"\
-    ue_pr\":\"{\\\"schema\\\": \\\"iglu:com.snowplowanalytics.snowplow/unstruct_event/jsonschema/1-0-0\\\
-    \",\\\"data\\\":{\\\"schema\\\":\\\"iglu:com.acme.test/foo/jsonschema/1-0-0\\\"\
-    ,\\\"data\\\":{\\\"foo_age\\\":10}}}\",\"co\":\"{\\\"schema\\\":\\\"iglu:com.snowplowanalytics.snowplow/contexts/jsonschema/1-0-0\\\
-    \",\\\"data\\\":[{\\\"schema\\\":\\\"iglu:com.snowplowanalytics.snowplow/mobile_context/jsonschema/1-0-2\\\
-    \",\\\"data\\\":{\\\"osType\\\":\\\"myOsType\\\",\\\"osVersion\\\":\\\"myOsVersion\\\
-    \",\\\"deviceManufacturer\\\":\\\"myDevMan\\\",\\\"deviceModel\\\":\\\"myDevModel\\\
-    \"}},{\\\"schema\\\":\\\"iglu:com.snowplowanalytics.snowplow/web_page/jsonschema/1-0-0\\\
-    \",\\\"data\\\":{\\\"id\\\":\\\"c000a256-1e13-4cde-a5b4-d7a00cf88003\\\"}}]}\"\
-    },\n  \"x-sp-self_describing_event_com_acme_test_foo_1\":{\n    \"foo_age\":10\n\
-    \  },\n  \"x-sp-contexts_com_snowplowanalytics_snowplow_mobile_context_1\":[\n\
-    \    {\"osType\":\"myOsType\",\"osVersion\":\"myOsVersion\",\"deviceManufacturer\"\
-    :\"myDevMan\",\"deviceModel\":\"myDevModel\"}\n  ],\n  \"x-sp-contexts_com_snowplowanalytics_snowplow_web_page_1\"\
-    :[\n    {\"id\":\"c000a256-1e13-4cde-a5b4-d7a00cf88003\"}\n  ],\n  \"ga_session_number\"\
-    :\"1\",\n  \"x-ga-mp2-seg\":\"1\",\n  \"x-ga-protocol_version\":\"2\",\n  \"x-ga-page_id\"\
-    :\"c000a256-1e13-4cde-a5b4-d7a00cf88003\",\n  \"ip_override\":\"1.2.3.4\"\n};\n\
-    \n// Tag config data\nconst testMockData = {\n  \"url\":\"test\",\n\n  \"inArray\"\
-    :false,\n  \"includeAll\":false,\n\n  \"includeAllAtomicEventProperties\":false,\
-    \   \n  \"includeSelfDescribingEvent\":false,            \n  \"extractFromArray\"\
-    :false,\n  \"includeAllEntities\":false,\n  \"includeUnmappedEntities\":true,\n\
-    \  \"unmappedEntityNest\":\"myContexts\",\n  \"entityMappingRules\":[\n    {\n\
-    \      \"key\":\"iglu:com.snowplowanalytics.snowplow/web_page/jsonschema/1-0-0\"\
-    ,\n      \"mappedKey\":\"myContexts.testEntityMappedKey\"\n    } \n  ],\n\n  \"\
-    includeCommonEventProperties\":false,           \n  \"includeCommonUserProperties\"\
-    :false,\n  \"eventMappingRules\":[\n    {\"key\":\"x-sp-self_describing_event_com_acme_test_foo_1.foo_age\"\
-    ,\"mappedKey\":\"testEventMappedKey.foo\"},\n    {\"key\":\"viewport_size\",\"\
-    mappedKey\":\"myProps.0.viewportMapped\"}\n  ],\n  \n  \"additionalRequestData\"\
-    :[\n    {\"key\":\"testApiKey\",\"value\":\"bvjdbcjkxbckljdbcksjdbc\"}\n  ],\n\
-    \n  \"requestMethod\":\"post\",\n  \"requestTimeout\":\"5000\",\n};\n\n// to assert\
-    \ on\nlet argUrl, argCallback, argOptions, argBody;\n\n// Mocks\nmock('sendHttpRequest',\
-    \ function() { \n  argUrl = arguments[0];\n  argOptions = arguments[2];\n  argBody\
-    \ = arguments[3];\n});\n\nmock('getAllEventData', function() {\n  return testEvent;\n\
-    });\n\nconst getFromPathMock = (path, obj) => {\n  if (getTypeOf(path) === 'string'\
-    \ && getTypeOf(obj) === 'object') {\n    const splitPath = path.split('.').filter((prop)\
-    \ => !!prop);\n    return splitPath.reduce((acc, curr) => acc && acc[curr], obj);\n\
-    \  }\n  return undefined;\n};\n\nmock('getEventData', function(x) {\n  return\
-    \ getFromPathMock(x, testEvent);\n});\n\n// Call runCode to run the template's\
-    \ code\nrunCode(testMockData);\n\n// Assert\nassertApi('sendHttpRequest').wasCalled();\n\
-    assertThat(argUrl).isStrictlyEqualTo(testMockData.url);\n\nassertThat(argOptions.method).isStrictlyEqualTo('POST');\n\
-    assertThat(argOptions.timeout).isStrictlyEqualTo(5000);\nassertThat(argOptions.headers['Content-Type']).isStrictlyEqualTo('application/json');\n\
-    \nconst body = jsonApi.parse(argBody);\nconst expectedBody = {\n  \"testApiKey\"\
-    : \"bvjdbcjkxbckljdbcksjdbc\",\n  \"myContexts\":{\n    \"contexts_com_snowplowanalytics_snowplow_mobile_context_1\"\
-    :[{\n      \"osType\":\"myOsType\",\n      \"osVersion\":\"myOsVersion\",\n  \
-    \    \"deviceManufacturer\":\"myDevMan\",\n      \"deviceModel\":\"myDevModel\"\
-    \n    }],\n    \"testEntityMappedKey\":[{\n      \"id\":\"c000a256-1e13-4cde-a5b4-d7a00cf88003\"\
-    \n    }]\n  },\n  \"myProps\":[\n    {\n      \"viewportMapped\":\"1023x980\"\n\
-    \    }\n  ],\n  \"testEventMappedKey\":{\n    \"foo\":10\n  },\n};\n\nassertThat(body).isEqualTo(expectedBody);\n"
+  code: |
+    // Test imports
+    const jsonApi = require('JSON');
+    const getTypeOf = require('getType');
+
+    // Test event
+    const testEvent = {
+      event_name: 'foo',
+      language: 'en-US',
+      page_encoding: 'UTF-8',
+      page_hostname: 'test.example.com',
+      page_location: 'http://test.example.com',
+      page_path: '/',
+      screen_resolution: '1920x1080',
+      user_id: 'tester',
+      viewport_size: '1023x980',
+      user_agent: 'curl/7.74.0',
+      host: 'engineering-sandbox.appspot.com',
+      'x-sp-app_id': 'testApp',
+      'x-sp-platform': 'srv',
+      'x-sp-dvce_created_tstamp': '1634551546989',
+      'x-sp-name_tracker': 'sptest',
+      'x-sp-v_tracker': 'curl',
+      'x-sp-domain_sessionidx': 1,
+      'x-sp-br_colordepth': '24',
+      'x-sp-br_viewwidth': 1023,
+      'x-sp-br_viewheight': 980,
+      'x-sp-dvce_screenwidth': 1920,
+      'x-sp-dvce_screenheight': 1080,
+      'x-sp-doc_charset': 'UTF-8',
+      'x-sp-doc_width': 1023,
+      'x-sp-doc_height': 980,
+      'x-sp-tp2': {
+        e: 'ue',
+        p: 'srv',
+        tna: 'sptest',
+        aid: 'testApp',
+        cs: 'UTF-8',
+        lang: 'en-US',
+        res: '1920x1080',
+        cd: '24',
+        tz: 'Europe/London',
+        dtm: '1634551546989',
+        vp: '1023x980',
+        ds: '1023x980',
+        vid: '1',
+        uid: 'tester',
+        url: 'http://test.example.com',
+        tv: 'curl',
+        ue_pr:
+          '{"schema": "iglu:com.snowplowanalytics.snowplow/unstruct_event/jsonschema/1-0-0","data":{"schema":"iglu:com.acme.test/foo/jsonschema/1-0-0","data":{"foo_age":10}}}',
+        co: '{"schema":"iglu:com.snowplowanalytics.snowplow/contexts/jsonschema/1-0-0","data":[{"schema":"iglu:com.snowplowanalytics.snowplow/mobile_context/jsonschema/1-0-2","data":{"osType":"myOsType","osVersion":"myOsVersion","deviceManufacturer":"myDevMan","deviceModel":"myDevModel"}},{"schema":"iglu:com.snowplowanalytics.snowplow/web_page/jsonschema/1-0-0","data":{"id":"c000a256-1e13-4cde-a5b4-d7a00cf88003"}}]}',
+      },
+      'x-sp-self_describing_event_com_acme_test_foo_1': {
+        foo_age: 10,
+      },
+      'x-sp-contexts_com_snowplowanalytics_snowplow_mobile_context_1': [
+        {
+          osType: 'myOsType',
+          osVersion: 'myOsVersion',
+          deviceManufacturer: 'myDevMan',
+          deviceModel: 'myDevModel',
+        },
+      ],
+      'x-sp-contexts_com_snowplowanalytics_snowplow_web_page_1': [
+        { id: 'c000a256-1e13-4cde-a5b4-d7a00cf88003' },
+      ],
+      ga_session_number: '1',
+      'x-ga-mp2-seg': '1',
+      'x-ga-protocol_version': '2',
+      'x-ga-page_id': 'c000a256-1e13-4cde-a5b4-d7a00cf88003',
+      ip_override: '1.2.3.4',
+    };
+
+    // Tag config data
+    const testMockData = {
+      url: 'test',
+
+      inArray: false,
+      includeAll: false,
+
+      includeAllAtomicEventProperties: false,
+      includeSelfDescribingEvent: false,
+      extractFromArray: false,
+      includeAllEntities: false,
+      includeUnmappedEntities: true,
+      unmappedEntityNest: 'myContexts',
+      entityMappingRules: [
+        {
+          key: 'iglu:com.snowplowanalytics.snowplow/web_page/jsonschema/1-0-0',
+          mappedKey: 'myContexts.testEntityMappedKey',
+        },
+      ],
+
+      includeCommonEventProperties: false,
+      includeCommonUserProperties: false,
+      eventMappingRules: [
+        {
+          key: 'x-sp-self_describing_event_com_acme_test_foo_1.foo_age',
+          mappedKey: 'testEventMappedKey.foo',
+        },
+        { key: 'viewport_size', mappedKey: 'myProps.0.viewportMapped' },
+      ],
+
+      additionalRequestData: [
+        { key: 'testApiKey', value: 'bvjdbcjkxbckljdbcksjdbc' },
+      ],
+
+      requestMethod: 'post',
+      requestTimeout: '5000',
+    };
+
+    // to assert on
+    let argUrl, argCallback, argOptions, argBody;
+
+    // Mocks
+    mock('sendHttpRequest', function () {
+      argUrl = arguments[0];
+      argOptions = arguments[2];
+      argBody = arguments[3];
+    });
+
+    mock('getAllEventData', function () {
+      return testEvent;
+    });
+
+    const getFromPathMock = (path, obj) => {
+      if (getTypeOf(path) === 'string' && getTypeOf(obj) === 'object') {
+        const splitPath = path.split('.').filter((prop) => !!prop);
+        return splitPath.reduce((acc, curr) => acc && acc[curr], obj);
+      }
+      return undefined;
+    };
+
+    mock('getEventData', function (x) {
+      return getFromPathMock(x, testEvent);
+    });
+
+    // Call runCode to run the template's code
+    runCode(testMockData);
+
+    // Assert
+    assertApi('sendHttpRequest').wasCalled();
+    assertThat(argUrl).isStrictlyEqualTo(testMockData.url);
+
+    assertThat(argOptions.method).isStrictlyEqualTo('POST');
+    assertThat(argOptions.timeout).isStrictlyEqualTo(5000);
+    assertThat(argOptions.headers['Content-Type']).isStrictlyEqualTo(
+      'application/json'
+    );
+
+    const body = jsonApi.parse(argBody);
+    const expectedBody = {
+      testApiKey: 'bvjdbcjkxbckljdbcksjdbc',
+      myContexts: {
+        contexts_com_snowplowanalytics_snowplow_mobile_context_1: [
+          {
+            osType: 'myOsType',
+            osVersion: 'myOsVersion',
+            deviceManufacturer: 'myDevMan',
+            deviceModel: 'myDevModel',
+          },
+        ],
+        testEntityMappedKey: [
+          {
+            id: 'c000a256-1e13-4cde-a5b4-d7a00cf88003',
+          },
+        ],
+      },
+      myProps: [
+        {
+          viewportMapped: '1023x980',
+        },
+      ],
+      testEventMappedKey: {
+        foo: 10,
+      },
+    };
+
+    assertThat(body).isEqualTo(expectedBody);
 - name: Test headers
-  code: "// Test imports\nconst jsonApi = require('JSON');\n\n// Test event\nconst\
-    \ testEvent = {\n  \"event_name\":\"page_view\",\n  \"client_id\":\"d54a1904-7798-401a-be0b-1a83bea73634\"\
-    ,\n  \"user_id\":\"snow123\",\n  \"language\":\"en-GB\",\n  \"page_encoding\"\
-    :\"UTF-8\",\n  \"page_hostname\":\"snowplowanalytics.com\",\n  \"page_location\"\
-    :\"https://snowplowanalytics.com/\",\n  \"page_path\":\"/\",\n  \"page_referrer\"\
-    :\"referer\",\n  \"page_title\":\"Collect, manage and operationalize behavioral\
-    \ data at scale | Snowplow\",\n  \"screen_resolution\":\"1920x1080\",\n  \"viewport_size\"\
-    :\"745x1302\",\n  \"user_agent\":\"user-agent\",\n  \"origin\":\"origin\",\n \
-    \ \"host\":\"host\",\n  \"x-sp-app_id\":\"website\",\n  \"x-sp-platform\":\"web\"\
-    ,\n  \"x-sp-dvce_created_tstamp\":\"1628586512246\",\n  \"x-sp-event_id\":\"8676de79-0eba-4435-ad95-8a41a8a0129c\"\
-    ,\n  \"x-sp-name_tracker\":\"sp\",\n  \"x-sp-v_tracker\":\"js-2.18.1\",\n  \"\
-    x-sp-domain_sessionid\":\"e7580b71-227b-4868-9ea9-322a263ce885\",\n  \"x-sp-domain_sessionidx\"\
-    :1,\n  \"x-sp-br_cookies\":\"1\",\n  \"x-sp-br_colordepth\":\"24\",\n  \"x-sp-br_viewwidth\"\
-    :745,\n  \"x-sp-br_viewheight\":1302,\n  \"x-sp-dvce_screenwidth\":1920,\n  \"\
-    x-sp-dvce_screenheight\":1080,\n  \"x-sp-doc_charset\":\"UTF-8\",\n  \"x-sp-doc_width\"\
-    :730,\n  \"x-sp-doc_height\":12393,\n  \"x-sp-dvce_sent_tstamp\":\"1628586512248\"\
-    ,\n  \"x-sp-tp2\":{\"e\":\"pv\",\"url\":\"https://snowplowanalytics.com/\",\"\
-    page\":\"Collect, manage and operationalize behavioral data at scale | Snowplow\"\
-    ,\"tv\":\"js-2.18.1\",\"tna\":\"sp\",\"aid\":\"website\",\"p\":\"web\",\"tz\"\
-    :\"Europe/London\",\"lang\":\"en-GB\",\"cs\":\"UTF-8\",\"res\":\"1920x1080\",\"\
-    cd\":\"24\",\"cookie\":\"1\",\"eid\":\"8676de79-0eba-4435-ad95-8a41a8a0129c\"\
-    ,\"dtm\":\"1628586512246\",\"cx\":\"ewogICJzY2hlbWEiOiAiaWdsdTpjb20uc25vd3Bsb3dhbmFseXRpY3Muc25vd3Bsb3cvY29udGV4dHMvanNvbnNjaGVtYS8xLTAtMCIsCiAgImRhdGEiOiBbCiAgICB7CiAgICAgICJzY2hlbWEiOiAiaWdsdTpjb20uc25vd3Bsb3dhbmFseXRpY3Muc25vd3Bsb3cvd2ViX3BhZ2UvanNvbnNjaGVtYS8xLTAtMCIsCiAgICAgICJkYXRhIjogeyAiaWQiOiAiYTg2YzQyZTUtYjgzMS00NWM4LWI3MDYtZTIxNGMyNmI0YjNkIiB9CiAgICB9LAogICAgewogICAgICAic2NoZW1hIjogImlnbHU6b3JnLnczL1BlcmZvcm1hbmNlVGltaW5nL2pzb25zY2hlbWEvMS0wLTAiLAogICAgICAiZGF0YSI6IHsKICAgICAgICAibmF2aWdhdGlvblN0YXJ0IjogMTYyODU4NjUwODYxMCwKICAgICAgICAidW5sb2FkRXZlbnRTdGFydCI6IDAsCiAgICAgICAgInVubG9hZEV2ZW50RW5kIjogMCwKICAgICAgICAicmVkaXJlY3RTdGFydCI6IDAsCiAgICAgICAgInJlZGlyZWN0RW5kIjogMCwKICAgICAgICAiZmV0Y2hTdGFydCI6IDE2Mjg1ODY1MDg2MTAsCiAgICAgICAgImRvbWFpbkxvb2t1cFN0YXJ0IjogMTYyODU4NjUwODYzNywKICAgICAgICAiZG9tYWluTG9va3VwRW5kIjogMTYyODU4NjUwODY5MSwKICAgICAgICAiY29ubmVjdFN0YXJ0IjogMTYyODU4NjUwODY5MSwKICAgICAgICAiY29ubmVjdEVuZCI6IDE2Mjg1ODY1MDg3NjMsCiAgICAgICAgInNlY3VyZUNvbm5lY3Rpb25TdGFydCI6IDE2Mjg1ODY1MDg3MjEsCiAgICAgICAgInJlcXVlc3RTdGFydCI6IDE2Mjg1ODY1MDg3NjMsCiAgICAgICAgInJlc3BvbnNlU3RhcnQiOiAxNjI4NTg2NTA4Nzk3LAogICAgICAgICJyZXNwb25zZUVuZCI6IDE2Mjg1ODY1MDg4MjEsCiAgICAgICAgImRvbUxvYWRpbmciOiAxNjI4NTg2NTA5MDc2LAogICAgICAgICJkb21JbnRlcmFjdGl2ZSI6IDE2Mjg1ODY1MDkzODEsCiAgICAgICAgImRvbUNvbnRlbnRMb2FkZWRFdmVudFN0YXJ0IjogMTYyODU4NjUwOTQwOCwKICAgICAgICAiZG9tQ29udGVudExvYWRlZEV2ZW50RW5kIjogMTYyODU4NjUwOTQxNywKICAgICAgICAiZG9tQ29tcGxldGUiOiAxNjI4NTg2NTEwMzMyLAogICAgICAgICJsb2FkRXZlbnRTdGFydCI6IDE2Mjg1ODY1MTAzMzIsCiAgICAgICAgImxvYWRFdmVudEVuZCI6IDE2Mjg1ODY1MTAzMzQKICAgICAgfQogICAgfSwKICAgIHsKICAgICAgInNjaGVtYSI6ICJpZ2x1OmNvbS5nb29nbGUudGFnLW1hbmFnZXIuc2VydmVyLXNpZGUvdXNlcl9kYXRhL2pzb25zY2hlbWEvMS0wLTAiLAogICAgICAiZGF0YSI6IHsgCiAgICAgICAgImVtYWlsX2FkZHJlc3MiOiAiZm9vQGV4YW1wbGUuY29tIiwKICAgICAgICAicGhvbmVfbnVtYmVyIjogIisxNTU1MTIzNDU2NyIsCiAgICAgICAgImFkZHJlc3MiOiB7CiAgICAgICAgICAiZmlyc3RfbmFtZSI6ICJKYW5lIiwKICAgICAgICAgICJsYXN0X25hbWUiOiAiRG9lIiwKICAgICAgICAgICJzdHJlZXQiOiAiMTIzIEZha2UgU3QiLAogICAgICAgICAgImNpdHkiOiAiU2FuIEZyYW5jaXNjbyIsCiAgICAgICAgICAicmVnaW9uIjogIkNBIiwKICAgICAgICAgICJwb3N0YWxfY29kZSI6ICI5NDAxNiIsCiAgICAgICAgICAiY291bnRyeSI6ICJVUyIgCiAgICAgICAgfQogICAgICB9CiAgICB9CiAgXQp9Cg\"\
-    ,\"vp\":\"745x1302\",\"ds\":\"730x12393\",\"vid\":\"1\",\"sid\":\"e7580b71-227b-4868-9ea9-322a263ce885\"\
-    ,\"duid\":\"d54a1904-7798-401a-be0b-1a83bea73634\",\"stm\":\"1628586512248\",\"\
-    uid\":\"snow123\"},\n  \"x-sp-contexts_com_snowplowanalytics_snowplow_web_page_1\"\
-    :[\n    {\n      \"id\":\"a86c42e5-b831-45c8-b706-e214c26b4b3d\"\n    }\n  ],\n\
-    \  \"x-sp-contexts_org_w3_performance_timing_1\":[\n    {\n      \"navigationStart\"\
-    :1628586508610,\n      \"unloadEventStart\":0,\n      \"unloadEventEnd\":0,\n\
-    \      \"redirectStart\":0,\n      \"redirectEnd\":0,\n      \"fetchStart\":1628586508610,\n\
-    \      \"domainLookupStart\":1628586508637,\n      \"domainLookupEnd\":1628586508691,\n\
-    \      \"connectStart\":1628586508691,\n      \"connectEnd\":1628586508763,\n\
-    \      \"secureConnectionStart\":1628586508721,\n      \"requestStart\":1628586508763,\n\
-    \      \"responseStart\":1628586508797,\n      \"responseEnd\":1628586508821,\n\
-    \      \"domLoading\":1628586509076,\n      \"domInteractive\":1628586509381,\n\
-    \      \"domContentLoadedEventStart\":1628586509408,\n      \"domContentLoadedEventEnd\"\
-    :1628586509417,\n      \"domComplete\":1628586510332,\n      \"loadEventStart\"\
-    :1628586510332,\n      \"loadEventEnd\":1628586510334\n    }\n  ],\n  \"x-sp-contexts_com_google_tag-manager_server-side_user_data_1\"\
-    :[\n    {\n      \"email_address\":\"foo@example.com\",\n      \"phone_number\"\
-    :\"+15551234567\",\n      \"address\":{\n        \"first_name\":\"Jane\",\n  \
-    \      \"last_name\":\"Doe\",\n        \"street\":\"123 Fake St\",\n        \"\
-    city\":\"San Francisco\",\n        \"region\":\"CA\",\n        \"postal_code\"\
-    :\"94016\",\n        \"country\":\"US\"\n      }\n    }\n  ],\n  \"user_data\"\
-    :{\n    \"email_address\":\"foo@example.com\",\n    \"phone_number\":\"+15551234567\"\
-    ,\n    \"address\":{\n      \"first_name\":\"Jane\",\n      \"last_name\":\"Doe\"\
-    ,\n      \"street\":\"123 Fake St\",\n      \"city\":\"San Francisco\",\n    \
-    \  \"region\":\"CA\",\n      \"postal_code\":\"94016\",\n      \"country\":\"\
-    US\"\n    }\n  },\n  \"ga_session_id\":\"e7580b71-227b-4868-9ea9-322a263ce885\"\
-    ,\n  \"ga_session_number\":\"1\",\n  \"x-ga-mp2-seg\":\"1\",\n  \"x-ga-protocol_version\"\
-    :\"2\",\n  \"x-ga-page_id\":\"a86c42e5-b831-45c8-b706-e214c26b4b3d\",\n  \"ip_override\"\
-    :\"1.2.3.4\"\n};\n\n// Tag config data\nconst testMockData = {\n  \"url\":\"test\"\
-    ,\n\n  \"inArray\":false,\n  \"includeAll\":false,\n\n  \"includeAllAtomicEventProperties\"\
-    :false,\n  \"includeSelfDescribingEvent\":true,\n  \"extractFromArray\":true,\n\
-    \  \"includeAllEntities\":true,\n\n  \"includeCommonEventProperties\":true,\n\
-    \  \"includeCommonUserProperties\":false,\n  \n  \"headers\":[\n    {\"key\":\"\
-    test-Header-Key\",\"value\":\"testHeaderVal\"}\n  ],\n\n  \"requestMethod\":\"\
-    post\",\n  \"requestTimeout\":\"5000\"\n};\n\n// to assert on\nlet argUrl, argCallback,\
-    \ argOptions, argBody;\n\n// Mocks\nmock('sendHttpRequest', function() { \n  argUrl\
-    \ = arguments[0];\n  argOptions = arguments[2];\n  argBody = arguments[3];\n});\n\
-    \nmock('getAllEventData', function() {\n  return testEvent;\n});\n\n// Call runCode\
-    \ to run the template's code\nrunCode(testMockData);\n\n// Assert\nassertApi('sendHttpRequest').wasCalled();\n\
-    assertThat(argUrl).isStrictlyEqualTo(testMockData.url);\n\nassertThat(argOptions.method).isStrictlyEqualTo('POST');\n\
-    assertThat(argOptions.timeout).isStrictlyEqualTo(5000);\nassertThat(argOptions.headers['Content-Type']).isStrictlyEqualTo('application/json');\n\
-    assertThat(argOptions.headers['test-Header-Key']).isStrictlyEqualTo('testHeaderVal');\n\
-    \n"
+  code: |
+    // Test imports
+    const jsonApi = require('JSON');
+
+    // Test event
+    const testEvent = {
+      event_name: 'page_view',
+      client_id: 'd54a1904-7798-401a-be0b-1a83bea73634',
+      user_id: 'snow123',
+      language: 'en-GB',
+      page_encoding: 'UTF-8',
+      page_hostname: 'snowplowanalytics.com',
+      page_location: 'https://snowplowanalytics.com/',
+      page_path: '/',
+      page_referrer: 'referer',
+      page_title:
+        'Collect, manage and operationalize behavioral data at scale | Snowplow',
+      screen_resolution: '1920x1080',
+      viewport_size: '745x1302',
+      user_agent: 'user-agent',
+      origin: 'origin',
+      host: 'host',
+      'x-sp-app_id': 'website',
+      'x-sp-platform': 'web',
+      'x-sp-dvce_created_tstamp': '1628586512246',
+      'x-sp-event_id': '8676de79-0eba-4435-ad95-8a41a8a0129c',
+      'x-sp-name_tracker': 'sp',
+      'x-sp-v_tracker': 'js-2.18.1',
+      'x-sp-domain_sessionid': 'e7580b71-227b-4868-9ea9-322a263ce885',
+      'x-sp-domain_sessionidx': 1,
+      'x-sp-br_cookies': '1',
+      'x-sp-br_colordepth': '24',
+      'x-sp-br_viewwidth': 745,
+      'x-sp-br_viewheight': 1302,
+      'x-sp-dvce_screenwidth': 1920,
+      'x-sp-dvce_screenheight': 1080,
+      'x-sp-doc_charset': 'UTF-8',
+      'x-sp-doc_width': 730,
+      'x-sp-doc_height': 12393,
+      'x-sp-dvce_sent_tstamp': '1628586512248',
+      'x-sp-tp2': {
+        e: 'pv',
+        url: 'https://snowplowanalytics.com/',
+        page: 'Collect, manage and operationalize behavioral data at scale | Snowplow',
+        tv: 'js-2.18.1',
+        tna: 'sp',
+        aid: 'website',
+        p: 'web',
+        tz: 'Europe/London',
+        lang: 'en-GB',
+        cs: 'UTF-8',
+        res: '1920x1080',
+        cd: '24',
+        cookie: '1',
+        eid: '8676de79-0eba-4435-ad95-8a41a8a0129c',
+        dtm: '1628586512246',
+        cx: 'ewogICJzY2hlbWEiOiAiaWdsdTpjb20uc25vd3Bsb3dhbmFseXRpY3Muc25vd3Bsb3cvY29udGV4dHMvanNvbnNjaGVtYS8xLTAtMCIsCiAgImRhdGEiOiBbCiAgICB7CiAgICAgICJzY2hlbWEiOiAiaWdsdTpjb20uc25vd3Bsb3dhbmFseXRpY3Muc25vd3Bsb3cvd2ViX3BhZ2UvanNvbnNjaGVtYS8xLTAtMCIsCiAgICAgICJkYXRhIjogeyAiaWQiOiAiYTg2YzQyZTUtYjgzMS00NWM4LWI3MDYtZTIxNGMyNmI0YjNkIiB9CiAgICB9LAogICAgewogICAgICAic2NoZW1hIjogImlnbHU6b3JnLnczL1BlcmZvcm1hbmNlVGltaW5nL2pzb25zY2hlbWEvMS0wLTAiLAogICAgICAiZGF0YSI6IHsKICAgICAgICAibmF2aWdhdGlvblN0YXJ0IjogMTYyODU4NjUwODYxMCwKICAgICAgICAidW5sb2FkRXZlbnRTdGFydCI6IDAsCiAgICAgICAgInVubG9hZEV2ZW50RW5kIjogMCwKICAgICAgICAicmVkaXJlY3RTdGFydCI6IDAsCiAgICAgICAgInJlZGlyZWN0RW5kIjogMCwKICAgICAgICAiZmV0Y2hTdGFydCI6IDE2Mjg1ODY1MDg2MTAsCiAgICAgICAgImRvbWFpbkxvb2t1cFN0YXJ0IjogMTYyODU4NjUwODYzNywKICAgICAgICAiZG9tYWluTG9va3VwRW5kIjogMTYyODU4NjUwODY5MSwKICAgICAgICAiY29ubmVjdFN0YXJ0IjogMTYyODU4NjUwODY5MSwKICAgICAgICAiY29ubmVjdEVuZCI6IDE2Mjg1ODY1MDg3NjMsCiAgICAgICAgInNlY3VyZUNvbm5lY3Rpb25TdGFydCI6IDE2Mjg1ODY1MDg3MjEsCiAgICAgICAgInJlcXVlc3RTdGFydCI6IDE2Mjg1ODY1MDg3NjMsCiAgICAgICAgInJlc3BvbnNlU3RhcnQiOiAxNjI4NTg2NTA4Nzk3LAogICAgICAgICJyZXNwb25zZUVuZCI6IDE2Mjg1ODY1MDg4MjEsCiAgICAgICAgImRvbUxvYWRpbmciOiAxNjI4NTg2NTA5MDc2LAogICAgICAgICJkb21JbnRlcmFjdGl2ZSI6IDE2Mjg1ODY1MDkzODEsCiAgICAgICAgImRvbUNvbnRlbnRMb2FkZWRFdmVudFN0YXJ0IjogMTYyODU4NjUwOTQwOCwKICAgICAgICAiZG9tQ29udGVudExvYWRlZEV2ZW50RW5kIjogMTYyODU4NjUwOTQxNywKICAgICAgICAiZG9tQ29tcGxldGUiOiAxNjI4NTg2NTEwMzMyLAogICAgICAgICJsb2FkRXZlbnRTdGFydCI6IDE2Mjg1ODY1MTAzMzIsCiAgICAgICAgImxvYWRFdmVudEVuZCI6IDE2Mjg1ODY1MTAzMzQKICAgICAgfQogICAgfSwKICAgIHsKICAgICAgInNjaGVtYSI6ICJpZ2x1OmNvbS5nb29nbGUudGFnLW1hbmFnZXIuc2VydmVyLXNpZGUvdXNlcl9kYXRhL2pzb25zY2hlbWEvMS0wLTAiLAogICAgICAiZGF0YSI6IHsgCiAgICAgICAgImVtYWlsX2FkZHJlc3MiOiAiZm9vQGV4YW1wbGUuY29tIiwKICAgICAgICAicGhvbmVfbnVtYmVyIjogIisxNTU1MTIzNDU2NyIsCiAgICAgICAgImFkZHJlc3MiOiB7CiAgICAgICAgICAiZmlyc3RfbmFtZSI6ICJKYW5lIiwKICAgICAgICAgICJsYXN0X25hbWUiOiAiRG9lIiwKICAgICAgICAgICJzdHJlZXQiOiAiMTIzIEZha2UgU3QiLAogICAgICAgICAgImNpdHkiOiAiU2FuIEZyYW5jaXNjbyIsCiAgICAgICAgICAicmVnaW9uIjogIkNBIiwKICAgICAgICAgICJwb3N0YWxfY29kZSI6ICI5NDAxNiIsCiAgICAgICAgICAiY291bnRyeSI6ICJVUyIgCiAgICAgICAgfQogICAgICB9CiAgICB9CiAgXQp9Cg',
+        vp: '745x1302',
+        ds: '730x12393',
+        vid: '1',
+        sid: 'e7580b71-227b-4868-9ea9-322a263ce885',
+        duid: 'd54a1904-7798-401a-be0b-1a83bea73634',
+        stm: '1628586512248',
+        uid: 'snow123',
+      },
+      'x-sp-contexts_com_snowplowanalytics_snowplow_web_page_1': [
+        {
+          id: 'a86c42e5-b831-45c8-b706-e214c26b4b3d',
+        },
+      ],
+      'x-sp-contexts_org_w3_performance_timing_1': [
+        {
+          navigationStart: 1628586508610,
+          unloadEventStart: 0,
+          unloadEventEnd: 0,
+          redirectStart: 0,
+          redirectEnd: 0,
+          fetchStart: 1628586508610,
+          domainLookupStart: 1628586508637,
+          domainLookupEnd: 1628586508691,
+          connectStart: 1628586508691,
+          connectEnd: 1628586508763,
+          secureConnectionStart: 1628586508721,
+          requestStart: 1628586508763,
+          responseStart: 1628586508797,
+          responseEnd: 1628586508821,
+          domLoading: 1628586509076,
+          domInteractive: 1628586509381,
+          domContentLoadedEventStart: 1628586509408,
+          domContentLoadedEventEnd: 1628586509417,
+          domComplete: 1628586510332,
+          loadEventStart: 1628586510332,
+          loadEventEnd: 1628586510334,
+        },
+      ],
+      'x-sp-contexts_com_google_tag-manager_server-side_user_data_1': [
+        {
+          email_address: 'foo@example.com',
+          phone_number: '+15551234567',
+          address: {
+            first_name: 'Jane',
+            last_name: 'Doe',
+            street: '123 Fake St',
+            city: 'San Francisco',
+            region: 'CA',
+            postal_code: '94016',
+            country: 'US',
+          },
+        },
+      ],
+      user_data: {
+        email_address: 'foo@example.com',
+        phone_number: '+15551234567',
+        address: {
+          first_name: 'Jane',
+          last_name: 'Doe',
+          street: '123 Fake St',
+          city: 'San Francisco',
+          region: 'CA',
+          postal_code: '94016',
+          country: 'US',
+        },
+      },
+      ga_session_id: 'e7580b71-227b-4868-9ea9-322a263ce885',
+      ga_session_number: '1',
+      'x-ga-mp2-seg': '1',
+      'x-ga-protocol_version': '2',
+      'x-ga-page_id': 'a86c42e5-b831-45c8-b706-e214c26b4b3d',
+      ip_override: '1.2.3.4',
+    };
+
+    // Tag config data
+    const testMockData = {
+      url: 'test',
+
+      inArray: false,
+      includeAll: false,
+
+      includeAllAtomicEventProperties: false,
+      includeSelfDescribingEvent: true,
+      extractFromArray: true,
+      includeAllEntities: true,
+
+      includeCommonEventProperties: true,
+      includeCommonUserProperties: false,
+
+      headers: [{ key: 'test-Header-Key', value: 'testHeaderVal' }],
+
+      requestMethod: 'post',
+      requestTimeout: '5000',
+    };
+
+    // to assert on
+    let argUrl, argCallback, argOptions, argBody;
+
+    // Mocks
+    mock('sendHttpRequest', function () {
+      argUrl = arguments[0];
+      argOptions = arguments[2];
+      argBody = arguments[3];
+    });
+
+    mock('getAllEventData', function () {
+      return testEvent;
+    });
+
+    // Call runCode to run the template's code
+    runCode(testMockData);
+
+    // Assert
+    assertApi('sendHttpRequest').wasCalled();
+    assertThat(argUrl).isStrictlyEqualTo(testMockData.url);
+
+    assertThat(argOptions.method).isStrictlyEqualTo('POST');
+    assertThat(argOptions.timeout).isStrictlyEqualTo(5000);
+    assertThat(argOptions.headers['Content-Type']).isStrictlyEqualTo(
+      'application/json'
+    );
+    assertThat(argOptions.headers['test-Header-Key']).isStrictlyEqualTo(
+      'testHeaderVal'
+    );
 setup: ''
 
 
 ___NOTES___
 
 Created on 07/11/2021, 21:19:43
-
-
