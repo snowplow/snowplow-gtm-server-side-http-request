@@ -806,7 +806,8 @@ const parseSchemaToMajorKeyValue = (schema) => {
  * Returns whether a property name is a Snowplow event property.
  */
 const isSpEventProp = (prop) => {
-  return prop.indexOf('x-sp-') === 0 && prop !== 'x-sp-tp2';
+  const excludeKeys = ['x-sp-tp2', 'x-sp-contexts'];
+  return prop.indexOf('x-sp-') === 0 && excludeKeys.indexOf(prop) < 0;
 };
 
 /*
@@ -820,7 +821,7 @@ const isSpSelfDescProp = (prop) => {
  * Returns whether a property name is a Snowplow context/entity property.
  */
 const isSpContextsProp = (prop) => {
-  return prop.indexOf('x-sp-contexts') === 0;
+  return prop.indexOf('x-sp-contexts_') === 0;
 };
 
 /*
@@ -1551,7 +1552,6 @@ scenarios:
           doc_width: 1044,
           doc_height: 975,
           dvce_sent_tstamp: '1658567928427',
-          contexts: testEvent['x-sp-contexts'],
           // assert from entity mapping
           test_youtube: testEvent['x-sp-contexts_com_youtube_youtube_1'],
 
@@ -1719,7 +1719,6 @@ scenarios:
           testEvent[
             'x-sp-contexts_com_snowplowanalytics_snowplow_client_session_1'
           ][0],
-        contexts: testEvent['x-sp-contexts'],
       },
       myCommonEventProps: {
         client_id: 'fd0e5288-e89b-45df-aad5-6d0c6eda6198',
@@ -1859,7 +1858,6 @@ scenarios:
             testEvent[
               'x-sp-contexts_com_snowplowanalytics_snowplow_client_session_1'
             ][0],
-          contexts: testEvent['x-sp-contexts'],
         },
       },
     };
@@ -1972,7 +1970,6 @@ scenarios:
           testEvent[
             'x-sp-contexts_com_snowplowanalytics_snowplow_client_session_1'
           ],
-        contexts: testEvent['x-sp-contexts'],
         testEntityMappedKey:
           testEvent['x-sp-contexts_com_snowplowanalytics_snowplow_web_page_1'],
       },
