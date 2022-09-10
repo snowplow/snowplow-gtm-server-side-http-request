@@ -141,60 +141,41 @@ ___TEMPLATE_PARAMETERS___
             "enablingConditions": []
           },
           {
-            "type": "CHECKBOX",
-            "name": "includeAllEntities",
-            "checkboxText": "Include all Entities in request body",
+            "type": "SELECT",
+            "name": "includeEntities",
+            "displayName": "Include Snowplow Entities in request body",
+            "macrosInSelect": false,
+            "selectItems": [
+              {
+                "value": "all",
+                "displayValue": "All"
+              },
+              {
+                "value": "none",
+                "displayValue": "None"
+              }
+            ],
             "simpleValueType": true,
-            "defaultValue": true,
-            "alwaysInSummary": true
+            "defaultValue": "all"
           },
           {
             "type": "TEXT",
-            "name": "allEntityNest",
-            "displayName": "Nest all Entities under key (optional)",
+            "name": "allUnmappedEntityNest",
+            "displayName": "Nest all unmapped Entities under key (optional)",
             "simpleValueType": true,
             "enablingConditions": [
               {
-                "paramName": "includeAllEntities",
-                "paramValue": true,
+                "paramName": "includeEntities",
+                "paramValue": "all",
                 "type": "EQUALS"
               }
             ],
-            "help": "Specify a key under which the Snowplow event\u0027s contexts will be nested. Alternatively, leaving it blank adds all entities in the request body without nesting. You can also use dot notation in this value."
-          },
-          {
-            "type": "CHECKBOX",
-            "name": "includeUnmappedEntities",
-            "checkboxText": "Include unmapped entities in request body",
-            "simpleValueType": true,
-            "defaultValue": false,
-            "help": "Any entites not found by the below mapping rules will be included in the request body.",
-            "enablingConditions": [
-              {
-                "paramName": "includeAllEntities",
-                "paramValue": false,
-                "type": "EQUALS"
-              }
-            ]
-          },
-          {
-            "type": "TEXT",
-            "name": "unmappedEntityNest",
-            "displayName": "Nest unmapped Entities under key (optional)",
-            "simpleValueType": true,
-            "enablingConditions": [
-              {
-                "paramName": "includeUnmappedEntities",
-                "paramValue": true,
-                "type": "EQUALS"
-              }
-            ],
-            "help": "Specify a key under which the Snowplow event\u0027s unmapped entities will be nested. Alternatively, leaving it blank adds the unmapped entities in the request body without nesting. You can also use dot notation in this value."
+            "help": "Specify a key under which the Snowplow event\u0027s unmapped entities will be nested. Alternatively, leaving it blank adds the unmapped entities in the request body without nesting. You can also use dot notation in this value. This setting applies only to unmapped entities, i.e. all entities whose mapping is not edited in the following table."
           },
           {
             "type": "SIMPLE_TABLE",
             "name": "entityMappingRules",
-            "displayName": "Snowplow Entity Mapping",
+            "displayName": "Snowplow Entities to Add/Edit mapping",
             "simpleTableColumns": [
               {
                 "defaultValue": "",
@@ -217,17 +198,80 @@ ___TEMPLATE_PARAMETERS___
                 "isUnique": false,
                 "valueHint": "The key name which is sent to Destination",
                 "valueValidators": []
+              },
+              {
+                "defaultValue": "control",
+                "displayName": "Apply to all versions",
+                "name": "version",
+                "type": "SELECT",
+                "valueValidators": [
+                  {
+                    "type": "NON_EMPTY"
+                  }
+                ],
+                "selectItems": [
+                  {
+                    "value": "control",
+                    "displayValue": "False"
+                  },
+                  {
+                    "value": "free",
+                    "displayValue": "True"
+                  }
+                ]
               }
             ],
             "alwaysInSummary": false,
-            "help": "Specify the Entity name from the GTM Event, and then key you could like to map it to or leave it blank to keep the same mapping. You can also use dot notation in the Destination Mapped Name values.",
+            "help": "Specify the Entity name from the GTM Event, and then key you could like to map it to or leave it blank to keep the same mapping. You can also use dot notation in the Destination Mapped Name values. Additionally specify whether you wish the mapping to apply to all versions of the entity.",
+            "enablingConditions": []
+          },
+          {
+            "type": "SIMPLE_TABLE",
+            "name": "entityExclusionRules",
+            "displayName": "Snowplow Entities to Exclude",
+            "simpleTableColumns": [
+              {
+                "defaultValue": "",
+                "displayName": "Entity Name",
+                "name": "key",
+                "type": "TEXT",
+                "isUnique": true,
+                "valueValidators": [
+                  {
+                    "type": "NON_EMPTY"
+                  }
+                ]
+              },
+              {
+                "defaultValue": "control",
+                "displayName": "Apply to all versions",
+                "name": "version",
+                "type": "SELECT",
+                "selectItems": [
+                  {
+                    "value": "control",
+                    "displayValue": "False"
+                  },
+                  {
+                    "value": "free",
+                    "displayValue": "True"
+                  }
+                ],
+                "valueValidators": [
+                  {
+                    "type": "NON_EMPTY"
+                  }
+                ]
+              }
+            ],
             "enablingConditions": [
               {
-                "paramName": "includeAllEntities",
-                "paramValue": false,
+                "paramName": "includeEntities",
+                "paramValue": "all",
                 "type": "EQUALS"
               }
-            ]
+            ],
+            "help": "Specify the Entity name you want to exclude from the request body. Additionally, you can also set whether the exclusion applies to all versions of the entity."
           }
         ]
       }
@@ -489,6 +533,7 @@ const getType = require('getType');
 const JSON = require('JSON');
 const log = require('logToConsole');
 const makeInteger = require('makeInteger');
+const makeNumber = require('makeNumber');
 const Math = require('Math');
 const sendHttpRequest = require('sendHttpRequest');
 
@@ -515,8 +560,7 @@ const COMMON_EVENT_PROPS = [
 const NEST = {
   atomic: 'atomicNest',
   selfDesc: 'selfDescNest',
-  allCtx: 'allEntityNest',
-  unmappedCtx: 'unmappedEntityNest',
+  allUnmappedCtx: 'allUnmappedEntityNest',
   commonEvent: 'commonEventNest',
   userData: 'userDataNest',
 };
@@ -834,20 +878,94 @@ const isSpAtomicProp = (prop) => {
 };
 
 /*
- * Parses the entity rules from the tag configuration.
+ * Given a list of entity references and an entity name,
+ * returns the index of a matching reference.
+ * Matching reference means whether the entity name starts with ref.
+ *
+ * @param entity {string} - the entity name to match
+ * @param refsList {Array} - an array of strings
+ */
+const getReferenceIdx = (entity, refsList) => {
+  for (let i = 0; i < refsList.length; i++) {
+    if (entity.indexOf(refsList[i]) === 0) {
+      return i;
+    }
+  }
+  return -1;
+};
+
+/*
+ * Filters out invalid rules to avoid unintended behavior.
+ * (e.g. version control being ignored if version num is not included in name)
+ * Assumes that a rule contains 'key' and 'version' properties.
+ */
+const cleanRules = (rules) => {
+  return rules.filter((row) => {
+    if (row.version === 'control') {
+      // last char can't be null or empty string so fine for makeNumber
+      const lastCharAsNum = makeNumber(row.key.slice(-1));
+      if (!lastCharAsNum && lastCharAsNum !== 0) {
+        // was not a digit, so invalid rule
+        return false;
+      }
+      return true;
+    }
+    return true;
+  });
+};
+
+/*
+ * Parses the entity exclusion rules from the tag configuration.
+ */
+const parseEntityExclusionRules = (tagConfig) => {
+  const rules = tagConfig.entityExclusionRules;
+  if (rules) {
+    const validRules = cleanRules(rules);
+    const excludedEntities = validRules.map((row) => {
+      const entityRef = parseSchemaToMajorKeyValue(row.key);
+      const versionFreeRef = entityRef.slice(0, -2);
+      return {
+        ref: row.version === 'control' ? entityRef : versionFreeRef,
+        version: row.version,
+      };
+    });
+    return excludedEntities;
+  }
+  return [];
+};
+
+/*
+ * Parses the entity inclusion rules from the tag configuration.
  */
 const parseEntityRules = (tagConfig) => {
-  if (tagConfig.entityMappingRules) {
-    const parsedRules = tagConfig.entityMappingRules.map((row) => {
+  const rules = tagConfig.entityMappingRules;
+  if (rules) {
+    const validRules = cleanRules(rules);
+    const parsedRules = validRules.map((row) => {
       const parsedKey = parseSchemaToMajorKeyValue(row.key);
+      const versionFreeKey = parsedKey.slice(0, -2);
       return {
+        ref: row.version === 'control' ? parsedKey : versionFreeKey,
         parsedKey: parsedKey,
         mappedKey: row.mappedKey || cleanPropertyName(parsedKey),
+        version: row.version,
       };
     });
     return parsedRules;
   }
   return [];
+};
+
+/*
+ * Given the inclusion rules and the excluded entity references,
+ * returns the final entity mapping rules.
+ */
+const finalizeEntityRules = (inclusionRules, excludedRefs) => {
+  const finalEntities = inclusionRules.filter((row) => {
+    const refIdx = getReferenceIdx(row.ref, excludedRefs);
+    return refIdx < 0;
+  });
+  return finalEntities;
 };
 
 /*
@@ -880,29 +998,41 @@ const addProperty = (prop, setVal, tagConfig, nestId, obj) => {
  * @returns - the mutated payload with the selected Snowplow properties added
  */
 const parseSnowplowEvent = (evData, tagConfig, payload) => {
+  const inclusionRules = parseEntityRules(tagConfig);
+  const exclusionRules = parseEntityExclusionRules(tagConfig);
+  const excludedRefs = exclusionRules.map((r) => r.ref);
+  const finalEntityRules = finalizeEntityRules(inclusionRules, excludedRefs);
+  const finalEntityRefs = finalEntityRules.map((r) => r.ref);
+
   const returnObj = payload;
-  const entityRules = parseEntityRules(tagConfig);
-  const mappedContexts = entityRules.map((r) => r.parsedKey);
   for (let prop in eventData) {
     if (eventData.hasOwnProperty(prop) && isSpEventProp(prop)) {
       if (isSpAtomicProp(prop) && tagConfig.includeAllAtomicEventProperties) {
         addProperty(prop, evData[prop], tagConfig, NEST.atomic, returnObj);
+        continue;
       }
+
       if (isSpSelfDescProp(prop) && tagConfig.includeSelfDescribingEvent) {
         addProperty(prop, evData[prop], tagConfig, NEST.selfDesc, returnObj);
+        continue;
       }
+
       if (isSpContextsProp(prop)) {
+        if (getReferenceIdx(prop, excludedRefs) >= 0) {
+          continue;
+        }
+
         const ctxVal = extractFromArrayIfSingleElement(evData[prop], tagConfig);
-        if (tagConfig.includeAllEntities) {
-          addProperty(prop, ctxVal, tagConfig, NEST.allCtx, returnObj);
+        const refIdx = getReferenceIdx(prop, finalEntityRefs);
+        if (refIdx >= 0) {
+          const rule = finalEntityRules[refIdx];
+          setFromPath(rule.mappedKey, ctxVal, returnObj);
         } else {
-          const ruleIdx = mappedContexts.indexOf(prop);
-          if (ruleIdx >= 0) {
-            const setCtxKey = entityRules[ruleIdx].mappedKey;
-            setFromPath(setCtxKey, ctxVal, returnObj);
-          } else if (tagConfig.includeUnmappedEntities) {
-            addProperty(prop, ctxVal, tagConfig, NEST.unmappedCtx, returnObj);
+          if (tagConfig.includeEntities === 'none') {
+            continue;
           }
+          // here includedEntities is 'all' and prop is not excluded
+          addProperty(prop, ctxVal, tagConfig, NEST.allUnmappedCtx, returnObj);
         }
       }
     }
@@ -1216,7 +1346,7 @@ scenarios:
       includeAllAtomicEventProperties: false,
       includeSelfDescribingEvent: true,
       extractFromArray: true,
-      includeAllEntities: true,
+      includeEntities: 'all',
 
       includeCommonEventProperties: true,
       includeCommonUserProperties: false,
@@ -1368,6 +1498,470 @@ scenarios:
 
     // assert 'no' does not log in prod
     assertApi('logToConsole').wasNotCalled();
+- name: Test entity rules - include all - edit
+  code: |
+    // Tag config data
+    const testMockData = {
+      url: 'test',
+
+      inArray: false,
+      includeAll: false,
+
+      includeAllAtomicEventProperties: false,
+      includeSelfDescribingEvent: false,
+      extractFromArray: false,
+      includeEntities: 'all',
+      allUnmappedEntityNest: 'the_rest',
+      entityMappingRules: [
+        {
+          key: 'x-sp-contexts_com_snowplowanalytics_snowplow_mobile_context_1',
+          mappedKey: 'mobile_context',
+          version: 'control',
+        },
+        {
+          key: 'iglu:com.youtube/youtube/jsonschema/1-0-0',
+          mappedKey: 'youtube',
+          version: 'control',
+        },
+        {
+          key: 'contexts_com_snowplowanalytics_snowplow_media_player_1',
+          mappedKey: 'media_player',
+          version: 'control',
+        },
+        {
+          key: 'contexts_com_google_tag-manager_server-side_user_data_1',
+          mappedKey: 'user_data_by_rule.a.0.b',
+          version: 'control',
+        },
+      ],
+
+      includeCommonEventProperties: false,
+      includeCommonUserProperties: false,
+
+      requestMethod: 'post',
+      requestTimeout: '5000',
+      logType: 'no',
+    };
+
+    const testEvent = mockEventObjectSelfDesc;
+    const expectedBody = {
+      mobile_context:
+        testEvent['x-sp-contexts_com_snowplowanalytics_snowplow_mobile_context_1'],
+      youtube: testEvent['x-sp-contexts_com_youtube_youtube_1'],
+      media_player:
+        testEvent['x-sp-contexts_com_snowplowanalytics_snowplow_media_player_1'],
+      user_data_by_rule: {
+        a: [
+          {
+            b: testEvent[
+              'x-sp-contexts_com_google_tag-manager_server-side_user_data_1'
+            ],
+          },
+        ],
+      },
+      the_rest: {
+        contexts_com_snowplowanalytics_snowplow_web_page_1:
+          testEvent['x-sp-contexts_com_snowplowanalytics_snowplow_web_page_1'],
+        contexts_com_snowplowanalytics_snowplow_client_session_1:
+          testEvent[
+            'x-sp-contexts_com_snowplowanalytics_snowplow_client_session_1'
+          ],
+      },
+    };
+
+    // to assert on
+    let argUrl, argCallback, argOptions, argBody;
+
+    // Mocks
+    mock('sendHttpRequest', function () {
+      argUrl = arguments[0];
+      argOptions = arguments[2];
+      argBody = arguments[3];
+    });
+
+    mock('getAllEventData', function () {
+      return testEvent;
+    });
+
+    // Call runCode to run the template's code
+    runCode(testMockData);
+
+    // Assert
+    assertApi('sendHttpRequest').wasCalled();
+
+    const body = jsonApi.parse(argBody);
+    assertThat(body).isEqualTo(expectedBody);
+- name: Test entity rules - include none - version control
+  code: |
+    // Tag config data
+    const testMockData = {
+      url: 'test',
+
+      inArray: false,
+      includeAll: false,
+
+      includeAllAtomicEventProperties: false,
+      includeSelfDescribingEvent: false,
+      extractFromArray: true,
+      includeEntities: 'none',
+      entityMappingRules: [
+        {
+          key: 'iglu:com.youtube/youtube/jsonschema/1-5-0',
+          mappedKey: 'youtube.0',
+          version: 'free',
+        },
+        {
+          key: 'contexts_com_snowplowanalytics_snowplow_media_player_1',
+          mappedKey: 'media_player',
+          version: 'control',
+        },
+        {
+          key: 'contexts_com_google_tag-manager_server-side_user_data_5',
+          mappedKey: 'user_data',
+          version: 'free',
+        },
+      ],
+
+      includeCommonEventProperties: false,
+      includeCommonUserProperties: false,
+
+      requestMethod: 'post',
+      requestTimeout: '5000',
+      logType: 'no',
+    };
+
+    const testEvent = mockEventObjectSelfDesc;
+    const expectedBody = {
+      youtube: [testEvent['x-sp-contexts_com_youtube_youtube_1'][0]],
+      media_player:
+        testEvent['x-sp-contexts_com_snowplowanalytics_snowplow_media_player_1'][0],
+      user_data:
+        testEvent[
+          'x-sp-contexts_com_google_tag-manager_server-side_user_data_1'
+        ][0],
+    };
+
+    // to assert on
+    let argUrl, argCallback, argOptions, argBody;
+
+    // Mocks
+    mock('sendHttpRequest', function () {
+      argUrl = arguments[0];
+      argOptions = arguments[2];
+      argBody = arguments[3];
+    });
+
+    mock('getAllEventData', function () {
+      return testEvent;
+    });
+
+    // Call runCode to run the template's code
+    runCode(testMockData);
+
+    // Assert
+    assertApi('sendHttpRequest').wasCalled();
+
+    const body = jsonApi.parse(argBody);
+    assertThat(body).isEqualTo(expectedBody);
+- name: Test entity rules - exclude - version control
+  code: |
+    // Tag config data
+    const testMockData = {
+      url: 'test',
+
+      inArray: false,
+      includeAll: false,
+
+      includeAllAtomicEventProperties: false,
+      includeSelfDescribingEvent: false,
+      extractFromArray: false,
+      includeEntities: 'all',
+      entityMappingRules: [
+        {
+          key: 'iglu:com.youtube/youtube/jsonschema/1-0-0',
+          mappedKey: 'foo.0.youtube',
+          version: 'control',
+        },
+        {
+          key: 'contexts_com_snowplowanalytics_snowplow_media_player_1',
+          mappedKey: 'foo.1.media_player',
+          version: 'control',
+        },
+        {
+          key: 'contexts_com_google_tag-manager_server-side_user_data_1',
+          mappedKey: 'foo.2.user_data',
+          version: 'control',
+        },
+      ],
+      entityExclusionRules: [
+        {
+          key: 'contexts_com_snowplowanalytics_snowplow_web_page_1',
+          version: 'control',
+        },
+        {
+          key: 'iglu:com.snowplowanalytics.snowplow/client_session/jsonschema/1-0-2',
+          version: 'control',
+        },
+        {
+          key: 'x-sp-contexts_com_snowplowanalytics_snowplow_mobile_context_1',
+          version: 'control',
+        },
+      ],
+
+      includeCommonEventProperties: false,
+      includeCommonUserProperties: false,
+
+      requestMethod: 'post',
+      requestTimeout: '5000',
+      logType: 'no',
+    };
+
+    const testEvent = mockEventObjectSelfDesc;
+    const expectedBody = {
+      foo: [
+        {
+          youtube: testEvent['x-sp-contexts_com_youtube_youtube_1'],
+        },
+        {
+          media_player:
+            testEvent[
+              'x-sp-contexts_com_snowplowanalytics_snowplow_media_player_1'
+            ],
+        },
+        {
+          user_data:
+            testEvent[
+              'x-sp-contexts_com_google_tag-manager_server-side_user_data_1'
+            ],
+        },
+      ],
+    };
+
+    // to assert on
+    let argUrl, argCallback, argOptions, argBody;
+
+    // Mocks
+    mock('sendHttpRequest', function () {
+      argUrl = arguments[0];
+      argOptions = arguments[2];
+      argBody = arguments[3];
+    });
+
+    mock('getAllEventData', function () {
+      return testEvent;
+    });
+
+    // Call runCode to run the template's code
+    runCode(testMockData);
+
+    // Assert
+    assertApi('sendHttpRequest').wasCalled();
+
+    const body = jsonApi.parse(argBody);
+    assertThat(body).isEqualTo(expectedBody);
+- name: Test entity rules - versioning cases - 1
+  code: |
+    // Tag config data
+    const testMockData = {
+      url: 'test',
+
+      inArray: false,
+      includeAll: false,
+
+      includeAllAtomicEventProperties: false,
+      includeSelfDescribingEvent: false,
+      extractFromArray: false,
+      includeEntities: 'all',
+      entityMappingRules: [
+        {
+          key: 'x-sp-contexts_com_snowplowanalytics_snowplow_client_session_1',
+          mappedKey: 'client_session_context',
+          version: 'control', // control include
+        },
+        {
+          key: 'iglu:com.youtube/youtube/jsonschema/1-0-0',
+          mappedKey: 'youtube',
+          version: 'control', // control include
+        },
+        {
+          key: 'contexts_com_snowplowanalytics_snowplow_media_player_1',
+          mappedKey: 'media_player',
+          version: 'free', // free include
+        },
+        {
+          key: 'contexts_com_google_tag-manager_server-side_user_data',
+          mappedKey: 'user_data',
+          version: 'free', // free include
+        },
+      ],
+      entityExclusionRules: [
+        {
+          key: 'contexts_com_snowplowanalytics_snowplow_web_page_1',
+          version: 'control',
+        },
+        {
+          key: 'x-sp-contexts_com_snowplowanalytics_snowplow_mobile_context_1',
+          version: 'control',
+        },
+        // below we exclude entities also included
+        {
+          key: 'iglu:com.snowplowanalytics.snowplow/client_session/jsonschema/1-0-2',
+          version: 'control', // control exclude
+        },
+        {
+          key: 'contexts_com_youtube_youtube_1',
+          version: 'free', // free exclude
+        },
+        {
+          key: 'contexts_com_snowplowanalytics_snowplow_media_player_1',
+          version: 'control', // control exclude
+        },
+        {
+          key: 'contexts_com_google_tag-manager_server-side_user_data',
+          version: 'free', // free exclude
+        },
+      ],
+
+      includeCommonEventProperties: false,
+      includeCommonUserProperties: false,
+
+      requestMethod: 'post',
+      requestTimeout: '5000',
+      logType: 'no',
+    };
+
+    const testEvent = mockEventObjectSelfDesc;
+    const expectedBody = {};
+
+    // to assert on
+    let argUrl, argCallback, argOptions, argBody;
+
+    // Mocks
+    mock('sendHttpRequest', function () {
+      argUrl = arguments[0];
+      argOptions = arguments[2];
+      argBody = arguments[3];
+    });
+
+    mock('getAllEventData', function () {
+      return testEvent;
+    });
+
+    // Call runCode to run the template's code
+    runCode(testMockData);
+
+    // Assert
+    assertApi('sendHttpRequest').wasCalled();
+
+    const body = jsonApi.parse(argBody);
+    assertThat(body).isEqualTo(expectedBody);
+- name: Test entity rules - versioning cases - 2
+  code: |
+    // Tag config data
+    const testMockData = {
+      url: 'test',
+
+      inArray: false,
+      includeAll: false,
+
+      includeAllAtomicEventProperties: false,
+      includeSelfDescribingEvent: false,
+      extractFromArray: false,
+      includeEntities: 'all',
+      allUnmappedEntityNest: 'the_rest',
+      entityMappingRules: [
+        {
+          key: 'x-sp-contexts_com_snowplowanalytics_snowplow_client_session_2',
+          mappedKey: 'client_session_context',
+          version: 'control', // control include
+        },
+        {
+          key: 'iglu:com.youtube/youtube/jsonschema/2-0-0',
+          mappedKey: 'youtube',
+          version: 'control', // control include
+        },
+        {
+          key: 'contexts_com_snowplowanalytics_snowplow_media_player_2',
+          mappedKey: 'media_player.0',
+          version: 'free', // free include
+        },
+        {
+          key: 'contexts_com_google_tag-manager_server-side_user_data_2',
+          mappedKey: 'user_data',
+          version: 'free', // free include
+        },
+      ],
+      entityExclusionRules: [
+        {
+          key: 'contexts_com_snowplowanalytics_snowplow_web_page_1',
+          version: 'control',
+        },
+        {
+          key: 'x-sp-contexts_com_snowplowanalytics_snowplow_mobile_context_1',
+          version: 'control',
+        },
+        // below we exclude entities also included
+        {
+          key: 'iglu:com.snowplowanalytics.snowplow/client_session/jsonschema/2-0-2',
+          version: 'control', // control exclude
+        },
+        {
+          key: 'contexts_com_youtube_youtube_2',
+          version: 'free', // free exclude
+        },
+        {
+          key: 'contexts_com_snowplowanalytics_snowplow_media_player_2',
+          version: 'control', // control exclude
+        },
+        {
+          key: 'contexts_com_google_tag-manager_server-side_user_data_2',
+          version: 'free', // free exclude
+        },
+      ],
+
+      includeCommonEventProperties: false,
+      includeCommonUserProperties: false,
+
+      requestMethod: 'post',
+      requestTimeout: '5000',
+      logType: 'no',
+    };
+
+    const testEvent = mockEventObjectSelfDesc;
+    const expectedBody = {
+      media_player: [
+        testEvent['x-sp-contexts_com_snowplowanalytics_snowplow_media_player_1'],
+      ],
+      the_rest: {
+        contexts_com_snowplowanalytics_snowplow_client_session_1:
+          testEvent[
+            'x-sp-contexts_com_snowplowanalytics_snowplow_client_session_1'
+          ],
+      },
+    };
+
+    // to assert on
+    let argUrl, argCallback, argOptions, argBody;
+
+    // Mocks
+    mock('sendHttpRequest', function () {
+      argUrl = arguments[0];
+      argOptions = arguments[2];
+      argBody = arguments[3];
+    });
+
+    mock('getAllEventData', function () {
+      return testEvent;
+    });
+
+    // Call runCode to run the template's code
+    runCode(testMockData);
+
+    // Assert
+    assertApi('sendHttpRequest').wasCalled();
+
+    const body = jsonApi.parse(argBody);
+    assertThat(body).isEqualTo(expectedBody);
 - name: Test mappings 0
   code: |
     // Tag config data
@@ -1380,12 +1974,12 @@ scenarios:
       includeAllAtomicEventProperties: false,
       includeSelfDescribingEvent: true,
       extractFromArray: true,
-      includeAllEntities: false,
-      includeUnmappedEntities: false,
+      includeEntities: 'none',
       entityMappingRules: [
         {
           key: 'iglu:com.snowplowanalytics.snowplow/web_page/jsonschema/1-0-0',
           mappedKey: 'testEntityMappedKey',
+          version: 'control',
         },
       ],
 
@@ -1484,13 +2078,13 @@ scenarios:
       includeSelfDescribingEvent: false,
       selfDescNest: 'data.0',
       extractFromArray: false,
-      includeAllEntities: false,
-      includeUnmappedEntities: true,
-      unmappedEntityNest: 'data.0',
+      includeEntities: 'all',
+      allUnmappedEntityNest: 'data.0',
       entityMappingRules: [
         {
           key: 'iglu:com.youtube/youtube/jsonschema/1-0-0',
           mappedKey: 'data.0.test_youtube',
+          version: 'control',
         },
       ],
 
@@ -1658,8 +2252,8 @@ scenarios:
       includeSelfDescribingEvent: true,
       selfDescNest: 'mySelfDescEvent',
       extractFromArray: true,
-      includeAllEntities: true,
-      allEntityNest: 'myContexts',
+      includeEntities: 'all',
+      allUnmappedEntityNest: 'myContexts',
 
       includeCommonEventProperties: true,
       commonEventNest: 'myCommonEventProps',
@@ -1801,8 +2395,8 @@ scenarios:
       includeSelfDescribingEvent: true,
       selfDescNest: 'snowplow.snowplow',
       extractFromArray: true,
-      includeAllEntities: true,
-      allEntityNest: 'snowplow.snowplow',
+      includeEntities: 'all',
+      allUnmappedEntityNest: 'snowplow.snowplow',
 
       includeCommonEventProperties: false,
       includeCommonUserProperties: false,
@@ -1923,13 +2517,13 @@ scenarios:
       includeAllAtomicEventProperties: false,
       includeSelfDescribingEvent: false,
       extractFromArray: false,
-      includeAllEntities: false,
-      includeUnmappedEntities: true,
-      unmappedEntityNest: 'myContexts',
+      includeEntities: 'all',
+      allUnmappedEntityNest: 'myContexts',
       entityMappingRules: [
         {
           key: 'iglu:com.snowplowanalytics.snowplow/web_page/jsonschema/1-0-0',
           mappedKey: 'myContexts.testEntityMappedKey',
+          version: 'control',
         },
       ],
 
@@ -2027,7 +2621,7 @@ scenarios:
       includeAllAtomicEventProperties: false,
       includeSelfDescribingEvent: true,
       extractFromArray: true,
-      includeAllEntities: true,
+      includeEntities: 'all',
 
       includeCommonEventProperties: true,
       includeCommonUserProperties: false,
