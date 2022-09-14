@@ -1,7 +1,16 @@
-homepage: "https://www.snowplowanalytics.com"
-documentation: "https://docs.snowplowanalytics.com/docs/forwarding-events-to-destinations/forwarding-events/google-tag-manager-server-side/http-request-tag-for-gtm-ss/"
+homepage: "https://www.snowplow.io"
+documentation: "https://docs.snowplow.io/docs/forwarding-events-to-destinations/forwarding-events/google-tag-manager-server-side/http-request-tag-for-gtm-ss"
 versions:
   # Latest version
+  - sha: eb6802147e1b8cf19d5aeb9cfe11523f05fc1cf5
+    changeNotes: |2
+      Add option to include or exclude an entity (#9)
+      Fix x-sp-contexts being included as an entity (#8)
+      Standardize logs (#5)
+      Switch to snowplow.io domain (#3)
+      Extend copyright to 2022 (#4)
+      Reduce duplication in tests (#7)
+      Run template through prettier (#6)
+  # Older versions
   - sha: 28f1a2b7fe8cc08e5aa79b8c839e301624523247
     changeNotes: Initial Version
-  # Older versions
