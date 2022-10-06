@@ -1090,11 +1090,18 @@ const addRequestData = (tagConfig, payload) => {
 };
 
 /*
+ * Does any final post-processing on the given payload.
+ */
+const postProcess = (payload, tagConfig) => {
+  return tagConfig.inArray ? [payload] : payload;
+};
+
+/*
  * Given the event data and the tag configuration, constructs the request body.
  */
 const mkRequestPayload = (evData, tagConfig) => {
   if (tagConfig.includeAll) {
-    return addRequestData(tagConfig, evData);
+    return postProcess(addRequestData(tagConfig, evData), tagConfig);
   }
 
   const target = {};
@@ -1109,7 +1116,7 @@ const mkRequestPayload = (evData, tagConfig) => {
     )
   );
 
-  return tagConfig.inArray ? [requestPayload] : requestPayload;
+  return postProcess(requestPayload, tagConfig);
 };
 
 /*
@@ -1498,6 +1505,55 @@ scenarios:
 
     // assert 'no' does not log in prod
     assertApi('logToConsole').wasNotCalled();
+- name: Test includeAll inArray
+  code: |
+    // Tag config data
+    const testMockData = {
+      url: 'test',
+      inArray: true,
+      includeAll: true,
+      additionalRequestData: [{ key: 'testExtraRequestData', value: 'extra' }],
+      requestMethod: 'post',
+      requestTimeout: '5000',
+      logType: 'no',
+    };
+
+    const testEvent = mockEventObjectPageView;
+    const expectedArrayElt = jsonApi.parse(jsonApi.stringify(testEvent));
+    expectedArrayElt.testExtraRequestData = 'extra';
+    const expectedBody = [expectedArrayElt];
+
+    // to assert on
+    let argUrl, argCallback, argOptions, argBody;
+
+    // Mocks
+    mock('sendHttpRequest', function () {
+      // mock response
+      const respStatusCode = 200;
+      const respHeaders = { foo: 'bar' };
+      const respBody = 'ok';
+
+      argUrl = arguments[0];
+      argCallback = arguments[1];
+      argOptions = arguments[2];
+      argBody = arguments[3];
+
+      // and call the callback with mock response
+      argCallback(respStatusCode, respHeaders, respBody);
+    });
+
+    mock('getAllEventData', function () {
+      return testEvent;
+    });
+
+    // Call runCode to run the template's code
+    runCode(testMockData);
+
+    // Assert
+    assertApi('sendHttpRequest').wasCalled();
+
+    const body = jsonApi.parse(argBody);
+    assertThat(body).isEqualTo(expectedBody);
 - name: Test entity rules - include all - edit
   code: |
     // Tag config data
