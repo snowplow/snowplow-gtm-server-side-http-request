@@ -421,6 +421,70 @@ ___TEMPLATE_PARAMETERS___
   },
   {
     "type": "GROUP",
+    "name": "postProcessingGroup",
+    "displayName": "Post-processing",
+    "groupStyle": "ZIPPY_CLOSED",
+    "subParams": [
+      {
+        "type": "GROUP",
+        "name": "jsonStringifyGroup",
+        "displayName": "JSON Stringify",
+        "groupStyle": "ZIPPY_OPEN",
+        "subParams": [
+          {
+            "type": "SIMPLE_TABLE",
+            "name": "jsonStringify",
+            "displayName": "Apply JSON.stringify to:",
+            "simpleTableColumns": [
+              {
+                "defaultValue": "",
+                "displayName": "Property Name or Nested Path",
+                "name": "path",
+                "type": "TEXT",
+                "isUnique": true,
+                "valueValidators": [
+                  {
+                    "type": "NON_EMPTY"
+                  }
+                ]
+              }
+            ],
+            "help": "In this table you can specify the properties of the HTTP request payload whose values you want to transform into JSON strings. Dot notation can also be used to denote nested paths."
+          }
+        ]
+      },
+      {
+        "type": "GROUP",
+        "name": "b64Group",
+        "displayName": "Encode base64url",
+        "groupStyle": "ZIPPY_OPEN",
+        "subParams": [
+          {
+            "type": "SIMPLE_TABLE",
+            "name": "toBase64",
+            "displayName": "Apply base64url encoding to:",
+            "simpleTableColumns": [
+              {
+                "defaultValue": "",
+                "displayName": "Property Name or Nested Path",
+                "name": "path",
+                "type": "TEXT",
+                "isUnique": true,
+                "valueValidators": [
+                  {
+                    "type": "NON_EMPTY"
+                  }
+                ]
+              }
+            ],
+            "help": "In this table you can specify the properties of the HTTP request payload whose values you want to encode to base64url. Encoding is only applied to string values. Dot notation can also be used to denote nested paths."
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "type": "GROUP",
     "name": "requestHeaders",
     "displayName": "Request Headers",
     "groupStyle": "ZIPPY_CLOSED",
@@ -527,7 +591,6 @@ ___SANDBOXED_JS_FOR_SERVER___
 
 const getAllEventData = require('getAllEventData');
 const getContainerVersion = require('getContainerVersion');
-const getEventData = require('getEventData');
 const getRequestHeader = require('getRequestHeader');
 const getType = require('getType');
 const JSON = require('JSON');
@@ -536,6 +599,7 @@ const makeInteger = require('makeInteger');
 const makeNumber = require('makeNumber');
 const Math = require('Math');
 const sendHttpRequest = require('sendHttpRequest');
+const toBase64 = require('toBase64');
 
 // Constants
 const tagName = 'HTTP Request';
@@ -1066,11 +1130,13 @@ const addEventMappings = (evData, tagConfig, payload) => {
     }
   }
   if (tagConfig.eventMappingRules) {
-    tagConfig.eventMappingRules.forEach((row) => {
-      const setVal = getEventData(row.key);
-      const mappedKey = row.mappedKey || row.key;
-      setFromPath(mappedKey, setVal, returnObj);
-    });
+    tagConfig.eventMappingRules
+      .filter((r) => !!r.key)
+      .forEach((row) => {
+        const setVal = getFromPath(row.key, evData);
+        const mappedKey = row.mappedKey || row.key;
+        setFromPath(mappedKey, setVal, returnObj);
+      });
   }
   return returnObj;
 };
@@ -1094,10 +1160,85 @@ const addRequestData = (tagConfig, payload) => {
 };
 
 /*
- * Does any final post-processing on the given payload.
+ * Given a string value, returns it base64 encoded, else as is.
+ */
+const base64urlencode = (val) => {
+  if (getType(val) !== 'string') {
+    return val;
+  }
+  const base64Enc = toBase64(val);
+  const urlBase64Enc = replaceAll(
+    replaceAll(replaceAll(base64Enc, '=', ''), '+', '-'),
+    '/',
+    '_'
+  );
+  return urlBase64Enc;
+};
+
+/*
+ * Fills the post-processing rules with the given applyFunction.
+ * [ { path: 'x', applyFunction: f } ]
+ *
+ * @param bareRules {Object} - "bare" post-processing rules specifying only the path
+ * @param applyFunction {function} - the function to apply to the value on given path
+ * @returns {Object} - the complete post-processing rules
+ */
+const initProcessingRules = (bareRules, applyFunction) => {
+  const rules = bareRules || [];
+  const finalizedRules = rules
+    .filter((r) => !!r.path)
+    .map((r) => {
+      const finalRule = {
+        path: r.path,
+        applyFunction: applyFunction,
+      };
+      return finalRule;
+    });
+
+  return finalizedRules;
+};
+
+/*
+ * Constructs the final array of post-processing rules.
+ */
+const mkProcessingRules = (tagConfig) => {
+  const stringifyRules = initProcessingRules(
+    tagConfig.jsonStringify,
+    JSON.stringify
+  );
+  const encodeRules = initProcessingRules(tagConfig.toBase64, base64urlencode);
+
+  // order matters
+  const finalProcRules = stringifyRules.concat(encodeRules);
+  return finalProcRules;
+};
+
+/*
+ * Applies post-processing to given payload.
+ */
+const applyPostProcessing = (payload, tagConfig) => {
+  const procRules = mkProcessingRules(tagConfig);
+  if (procRules && procRules.length > 0) {
+    procRules.forEach((rule) => {
+      const path = rule.path;
+      const currentVal = getFromPath(path, payload);
+      if (currentVal !== undefined) {
+        const newVal = rule.applyFunction(currentVal);
+        setFromPath(path, newVal, payload);
+      }
+    });
+  }
+
+  return payload;
+};
+
+/*
+ * Post-processes given payload.
  */
 const postProcess = (payload, tagConfig) => {
-  return tagConfig.inArray ? [payload] : payload;
+  const finalPayload = applyPostProcessing(payload, tagConfig);
+
+  return tagConfig.inArray ? [finalPayload] : finalPayload;
 };
 
 /*
@@ -2283,9 +2424,6 @@ scenarios:
     mock('getAllEventData', function () {
       return testEvent;
     });
-    mock('getEventData', function (x) {
-      return getFromPath(x, testEvent);
-    });
 
     // Call runCode to run the template's code
     runCode(testMockData);
@@ -2657,9 +2795,6 @@ scenarios:
     mock('getAllEventData', function () {
       return testEvent;
     });
-    mock('getEventData', function (x) {
-      return getFromPath(x, testEvent);
-    });
 
     // Call runCode to run the template's code
     runCode(testMockData);
@@ -2731,7 +2866,155 @@ scenarios:
     assertThat(argOptions.headers['test-Header-Key']).isStrictlyEqualTo(
       'testHeaderVal'
     );
-setup: |
+- name: Test postProcessing
+  code: |
+    // Tag config data
+    const testMockData = {
+      url: 'http://localhost:9090/com.snowplowanalytics.snowplow/tp2',
+
+      inArray: false,
+      includeAll: false,
+
+      includeAllAtomicEventProperties: false,
+      includeSelfDescribingEvent: false,
+      extractFromArray: true,
+      includeEntities: 'none',
+      entityMappingRules: [
+        {
+          key: 'x-sp-contexts_com_snowplowanalytics_snowplow_web_page_1',
+          mappedKey: 'data.0.cx.data.0.data',
+          version: 'control',
+        },
+      ],
+
+      includeCommonEventProperties: false,
+      includeCommonUserProperties: false,
+
+      eventMappingRules: [
+        {
+          key: 'x-sp-platform',
+          mappedKey: 'data.0.p',
+        },
+        {
+          key: 'x-sp-v_tracker',
+          mappedKey: 'data.0.tv',
+        },
+        {
+          key: 'x-sp-self_describing_event_com_snowplowanalytics_snowplow_media_player_event_1',
+          mappedKey: 'data.0.ue_px.data.data',
+        },
+        {
+          key: 'x-sp-contexts_com_snowplowanalytics_snowplow_client_session_1.0.userId',
+          mappedKey: 'data.0.cx.data.1.data.userId',
+        },
+        {
+          key: 'x-sp-contexts_com_snowplowanalytics_snowplow_client_session_1.0.sessionId',
+          mappedKey: 'data.0.cx.data.1.data.sessionId',
+        },
+        {
+          key: 'x-sp-contexts_com_snowplowanalytics_snowplow_client_session_1.0.sessionIndex',
+          mappedKey: 'data.0.cx.data.1.data.sessionIndex',
+        },
+        {
+          key: 'x-sp-contexts_com_snowplowanalytics_snowplow_client_session_1.0.previousSessionId',
+          mappedKey: 'data.0.cx.data.1.data.previousSessionId',
+        },
+        {
+          key: 'x-sp-contexts_com_snowplowanalytics_snowplow_client_session_1.0.storageMechanism',
+          mappedKey: 'data.0.cx.data.1.data.storageMechanism',
+        },
+      ],
+
+      additionalRequestData: [
+        {
+          key: 'data.0.e',
+          value: 'ue',
+        },
+        {
+          key: 'schema',
+          value:
+            'iglu:com.snowplowanalytics.snowplow/payload_data/jsonschema/1-0-4',
+        },
+        {
+          key: 'data.0.ue_px.schema',
+          value:
+            'iglu:com.snowplowanalytics.snowplow/unstruct_event/jsonschema/1-0-0',
+        },
+        {
+          key: 'data.0.ue_px.data.schema',
+          value:
+            'iglu:com.snowplowanalytics.snowplow/media_player_event/jsonschema/1-0-0',
+        },
+        {
+          key: 'data.0.cx.schema',
+          value: 'iglu:com.snowplowanalytics.snowplow/contexts/jsonschema/1-0-0',
+        },
+        {
+          key: 'data.0.cx.data.0.schema',
+          value: 'iglu:com.snowplowanalytics.snowplow/web_page/jsonschema/1-0-0',
+        },
+        {
+          key: 'data.0.cx.data.1.schema',
+          value:
+            'iglu:com.snowplowanalytics.snowplow/client_session/jsonschema/1-0-2',
+        },
+      ],
+
+      jsonStringify: [{ path: 'data.0.ue_px' }, { path: 'data.0.cx' }],
+      toBase64: [{ path: 'data.0.ue_px' }, { path: 'data.0.cx' }],
+
+      requestMethod: 'post',
+      requestTimeout: '5000',
+      logType: 'always',
+    };
+
+    const testEvent = mockEventObjectSelfDesc;
+    const expectedBody = {
+      schema: 'iglu:com.snowplowanalytics.snowplow/payload_data/jsonschema/1-0-4',
+      data: [
+        {
+          e: 'ue',
+          p: testEvent['x-sp-platform'],
+          tv: testEvent['x-sp-v_tracker'],
+          ue_px:
+            'eyJkYXRhIjp7ImRhdGEiOnsidHlwZSI6InBsYXkifSwic2NoZW1hIjoiaWdsdTpjb20uc25vd3Bsb3dhbmFseXRpY3Muc25vd3Bsb3cvbWVkaWFfcGxheWVyX2V2ZW50L2pzb25zY2hlbWEvMS0wLTAifSwic2NoZW1hIjoiaWdsdTpjb20uc25vd3Bsb3dhbmFseXRpY3Muc25vd3Bsb3cvdW5zdHJ1Y3RfZXZlbnQvanNvbnNjaGVtYS8xLTAtMCJ9',
+          cx: 'eyJkYXRhIjpbeyJkYXRhIjp7ImlkIjoiODJmOTNhMDAtMjM0NC00MzY3LTlhMmQtYTJkY2YwMzhkNWUxIn0sInNjaGVtYSI6ImlnbHU6Y29tLnNub3dwbG93YW5hbHl0aWNzLnNub3dwbG93L3dlYl9wYWdlL2pzb25zY2hlbWEvMS0wLTAifSx7ImRhdGEiOnsidXNlcklkIjoiZWU3YjY0ZTctYmVlMi00YjE2LWFhZjUtNTA1N2U2YmI0YWYzIiwic2Vzc2lvbklkIjoiMzM5MDEzYzMtZWM2Yi00OTM1LWI0NmUtNDg3MDY0YmIxY2UwIiwic2Vzc2lvbkluZGV4IjoyLCJwcmV2aW91c1Nlc3Npb25JZCI6IjY2NjA5Y2NmLWM2NjEtNGYxMC05N2NlLWFmMzgyMjBmNWViNSIsInN0b3JhZ2VNZWNoYW5pc20iOiJDT09LSUVfMSJ9LCJzY2hlbWEiOiJpZ2x1OmNvbS5zbm93cGxvd2FuYWx5dGljcy5zbm93cGxvdy9jbGllbnRfc2Vzc2lvbi9qc29uc2NoZW1hLzEtMC0yIn1dLCJzY2hlbWEiOiJpZ2x1OmNvbS5zbm93cGxvd2FuYWx5dGljcy5zbm93cGxvdy9jb250ZXh0cy9qc29uc2NoZW1hLzEtMC0wIn0',
+        },
+      ],
+    };
+
+    // to assert on
+    let argUrl, argCallback, argOptions, argBody;
+
+    // Mocks
+    mock('sendHttpRequest', function () {
+      // mock response
+      const respStatusCode = 200;
+      const respHeaders = { foo: 'bar' };
+      const respBody = 'ok';
+
+      argUrl = arguments[0];
+      argCallback = arguments[1];
+      argOptions = arguments[2];
+      argBody = arguments[3];
+
+      // and call the callback with mock response
+      argCallback(respStatusCode, respHeaders, respBody);
+    });
+
+    mock('getAllEventData', function () {
+      return testEvent;
+    });
+
+    // Call runCode to run the template's code
+    runCode(testMockData);
+
+    // Assert
+    assertApi('sendHttpRequest').wasCalled();
+
+    const body = jsonApi.parse(argBody);
+    assertThat(body).isEqualTo(expectedBody);
+setup: |-
   const jsonApi = require('JSON');
   const getTypeOf = require('getType');
   const logToConsole = require('logToConsole');
@@ -3040,14 +3323,6 @@ setup: |
     'x-ga-mp2-seg': '1',
     'x-ga-protocol_version': '2',
     'x-ga-page_id': '82f93a00-2344-4367-9a2d-a2dcf038d5e1',
-  };
-  // Helper for mocking
-  const getFromPath = (path, obj) => {
-    if (getTypeOf(path) === 'string' && getTypeOf(obj) === 'object') {
-      const splitPath = path.split('.').filter((prop) => !!prop);
-      return splitPath.reduce((acc, curr) => acc && acc[curr], obj);
-    }
-    return undefined;
   };
 
 
