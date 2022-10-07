@@ -45,16 +45,44 @@ ___TEMPLATE_PARAMETERS___
   {
     "type": "CHECKBOX",
     "name": "inArray",
-    "checkboxText": "Wrap the request body inside an array.",
+    "checkboxText": "Wrap the request body inside an array",
     "simpleValueType": true,
     "defaultValue": false
   },
   {
     "type": "CHECKBOX",
     "name": "includeAll",
-    "checkboxText": "Include all event data in the request body.",
+    "checkboxText": "Include all event data in the request body",
     "simpleValueType": true,
     "defaultValue": false
+  },
+  {
+    "type": "CHECKBOX",
+    "name": "altSeparator",
+    "checkboxText": "Use alternative separator to dot notation",
+    "simpleValueType": true,
+    "help": "Enable this option to use an alternative separator to dot notation when specifying possibly nested object paths. This setting applies everywhere dot notation can be used.",
+    "defaultValue": false,
+    "subParams": [
+      {
+        "type": "TEXT",
+        "name": "separator",
+        "displayName": "Separator",
+        "simpleValueType": true,
+        "valueValidators": [
+          {
+            "type": "NON_EMPTY"
+          }
+        ],
+        "enablingConditions": [
+          {
+            "paramName": "altSeparator",
+            "paramValue": true,
+            "type": "EQUALS"
+          }
+        ]
+      }
+    ]
   },
   {
     "type": "GROUP",
@@ -790,28 +818,34 @@ const isInt = (x) => {
 };
 
 /*
- * Splits a string as a path where path components are separated by dots.
+ * Splits a string as a path according to configuration.
  * (used by both getFromPath and setFromPath)
  *
  * @param stringPath {string} - the string to split
+ * @param cfg {Object} - tag configuration object
+ * @param cfg.altSeparator {boolean} - whether use alternative separator
+ * @param cfg.separator {string} - the alternative separator to use
  * @returns - the array of path components
  */
-const splitStringPath = (stringPath) => {
-  return stringPath.split('.').filter((p) => !!p);
+const splitStringPath = (stringPath, cfg) => {
+  const defaultSep = '.';
+  const separator = cfg.altSeparator ? cfg.separator : defaultSep;
+  return stringPath.split(separator).filter((p) => !!p);
 };
 
 /*
  * Gets the value in obj from path.
- * Path must be a string denoting a (nested) property path separated by '.'
+ * Path must be a string denoting a (nested) property path.
  *  e.g. getFromPath('a.b', {a: {b: 2}}) => 2
  *
  * @param path {string} - the string to replace into
+ * @param tagConfig {Object} - tag configuration object
  * @param obj {Object} - the object to look into
  * @returns - the corresponding value or undefined
  */
-const getFromPath = (path, obj) => {
+const getFromPath = (path, tagConfig, obj) => {
   if (getType(path) === 'string') {
-    const splitPath = splitStringPath(path);
+    const splitPath = splitStringPath(path, tagConfig);
     return splitPath.reduce((acc, curr) => acc && acc[curr], obj);
   }
   return undefined;
@@ -821,24 +855,25 @@ const getFromPath = (path, obj) => {
  * Sets the value in obj from path (side-effects).
  * Overwrites if encounters existing properties, and creates nesting if needed.
  * Examples:
- *  e.g. setFromPath('a.b.c', 3, {a: {b: 0}}) => {a: {b: {c: 3}}}
- *       setFromPath('a.0.x', 4, {a: {b: 0}}) => {a: [{x: 4}]}
- *       setFromPath('a.0',   4, {a: {b: 0}}) => {a: [4]}
- *       setFromPath('a.2',   5, {a: [1,1,1]}) => {a: [1,1,5]}
+ *  e.g. setFromPath('a.b.c', cfg, 3, {a: {b: 0}}) => {a: {b: {c: 3}}}
+ *       setFromPath('a.0.x', cfg, 4, {a: {b: 0}}) => {a: [{x: 4}]}
+ *       setFromPath('a.0',   cfg, 4, {a: {b: 0}}) => {a: [4]}
+ *       setFromPath('a.2',   cfg, 5, {a: [1,1,1]}) => {a: [1,1,5]}
  *
  * @param path {string | array} - the string to replace into
+ * @param tagConfig {Object} - tag configuration object
  * @param val {string} - the substring to replace
  * @param obj {Object} - the object to mutate
  * @param target {Object} - (optional) the object that the path refers to
  * @returns - the object mutated with the value set
  */
-const setFromPath = (path, val, obj, target) => {
+const setFromPath = (path, tagConfig, val, obj, target) => {
   const numAsIdx = true;
   if (!target) {
     target = obj;
   }
   if (getType(path) === 'string') {
-    path = splitStringPath(path);
+    path = splitStringPath(path, tagConfig);
   }
   if (path.length === 1) {
     target[path[0]] = val;
@@ -856,7 +891,7 @@ const setFromPath = (path, val, obj, target) => {
     } else if (isNextNum && numAsIdx && currType !== 'array') {
       target[currKey] = [];
     }
-    return setFromPath(path.slice(1), val, obj, target[currKey]);
+    return setFromPath(path.slice(1), tagConfig, val, obj, target[currKey]);
   }
   return obj;
 };
@@ -1046,12 +1081,13 @@ const addProperty = (prop, setVal, tagConfig, nestId, obj) => {
   const setPath = cleanPropertyName(prop);
   const nest = tagConfig[nestId];
   if (nest && getType(nest) === 'string') {
-    if (['object', 'array'].indexOf(getType(getFromPath(nest, obj))) < 0) {
-      setFromPath(nest, {}, obj);
+    const valType = getType(getFromPath(nest, tagConfig, obj));
+    if (['object', 'array'].indexOf(valType) < 0) {
+      setFromPath(nest, tagConfig, {}, obj);
     }
-    setFromPath(setPath, setVal, getFromPath(nest, obj));
+    setFromPath(setPath, tagConfig, setVal, getFromPath(nest, tagConfig, obj));
   } else {
-    setFromPath(setPath, setVal, obj);
+    setFromPath(setPath, tagConfig, setVal, obj);
   }
   return obj;
 };
@@ -1094,7 +1130,7 @@ const parseSnowplowEvent = (evData, tagConfig, payload) => {
         const refIdx = getReferenceIdx(prop, finalEntityRefs);
         if (refIdx >= 0) {
           const rule = finalEntityRules[refIdx];
-          setFromPath(rule.mappedKey, ctxVal, returnObj);
+          setFromPath(rule.mappedKey, tagConfig, ctxVal, returnObj);
         } else {
           if (tagConfig.includeEntities === 'none') {
             continue;
@@ -1133,9 +1169,9 @@ const addEventMappings = (evData, tagConfig, payload) => {
     tagConfig.eventMappingRules
       .filter((r) => !!r.key)
       .forEach((row) => {
-        const setVal = getFromPath(row.key, evData);
+        const setVal = getFromPath(row.key, tagConfig, evData);
         const mappedKey = row.mappedKey || row.key;
-        setFromPath(mappedKey, setVal, returnObj);
+        setFromPath(mappedKey, tagConfig, setVal, returnObj);
       });
   }
   return returnObj;
@@ -1153,7 +1189,7 @@ const addRequestData = (tagConfig, payload) => {
   const returnObj = payload;
   if (tagConfig.additionalRequestData) {
     tagConfig.additionalRequestData.forEach((row) => {
-      setFromPath(row.key, row.value, returnObj);
+      setFromPath(row.key, tagConfig, row.value, returnObj);
     });
   }
   return returnObj;
@@ -1221,10 +1257,10 @@ const applyPostProcessing = (payload, tagConfig) => {
   if (procRules && procRules.length > 0) {
     procRules.forEach((rule) => {
       const path = rule.path;
-      const currentVal = getFromPath(path, payload);
+      const currentVal = getFromPath(path, tagConfig, payload);
       if (currentVal !== undefined) {
         const newVal = rule.applyFunction(currentVal);
-        setFromPath(path, newVal, payload);
+        setFromPath(path, tagConfig, newVal, payload);
       }
     });
   }
@@ -1494,6 +1530,7 @@ scenarios:
 
       inArray: false,
       includeAll: false,
+      altSeparator: false,
 
       includeAllAtomicEventProperties: false,
       includeSelfDescribingEvent: true,
@@ -1591,6 +1628,7 @@ scenarios:
       url: 'test',
       inArray: false,
       includeAll: true,
+      altSeparator: false,
       additionalRequestData: [{ key: 'testExtraRequestData', value: 'extra' }],
       requestMethod: 'post',
       requestTimeout: '5000',
@@ -1657,6 +1695,7 @@ scenarios:
       url: 'test',
       inArray: true,
       includeAll: true,
+      altSeparator: false,
       additionalRequestData: [{ key: 'testExtraRequestData', value: 'extra' }],
       requestMethod: 'post',
       requestTimeout: '5000',
@@ -1707,6 +1746,7 @@ scenarios:
 
       inArray: false,
       includeAll: false,
+      altSeparator: false,
 
       includeAllAtomicEventProperties: false,
       includeSelfDescribingEvent: false,
@@ -1800,6 +1840,7 @@ scenarios:
 
       inArray: false,
       includeAll: false,
+      altSeparator: false,
 
       includeAllAtomicEventProperties: false,
       includeSelfDescribingEvent: false,
@@ -1872,6 +1913,7 @@ scenarios:
 
       inArray: false,
       includeAll: false,
+      altSeparator: false,
 
       includeAllAtomicEventProperties: false,
       includeSelfDescribingEvent: false,
@@ -1968,6 +2010,7 @@ scenarios:
 
       inArray: false,
       includeAll: false,
+      altSeparator: false,
 
       includeAllAtomicEventProperties: false,
       includeSelfDescribingEvent: false,
@@ -2064,6 +2107,7 @@ scenarios:
 
       inArray: false,
       includeAll: false,
+      altSeparator: false,
 
       includeAllAtomicEventProperties: false,
       includeSelfDescribingEvent: false,
@@ -2171,6 +2215,7 @@ scenarios:
 
       inArray: false,
       includeAll: false,
+      altSeparator: false,
 
       includeAllAtomicEventProperties: false,
       includeSelfDescribingEvent: true,
@@ -2274,6 +2319,7 @@ scenarios:
 
       inArray: false,
       includeAll: false,
+      altSeparator: false,
 
       includeAllAtomicEventProperties: true,
       atomicNest: 'data.0',
@@ -2451,6 +2497,7 @@ scenarios:
 
       inArray: false,
       includeAll: false,
+      altSeparator: false,
 
       includeAllAtomicEventProperties: true,
       atomicNest: 'mySpAtomicProps',
@@ -2594,6 +2641,7 @@ scenarios:
 
       inArray: false,
       includeAll: false,
+      altSeparator: false,
 
       includeAllAtomicEventProperties: true,
       atomicNest: 'snowplow.snowplow',
@@ -2718,6 +2766,7 @@ scenarios:
 
       inArray: false,
       includeAll: false,
+      altSeparator: false,
 
       includeAllAtomicEventProperties: false,
       includeSelfDescribingEvent: false,
@@ -2819,6 +2868,7 @@ scenarios:
 
       inArray: false,
       includeAll: false,
+      altSeparator: false,
 
       includeAllAtomicEventProperties: false,
       includeSelfDescribingEvent: true,
@@ -2874,6 +2924,7 @@ scenarios:
 
       inArray: false,
       includeAll: false,
+      altSeparator: false,
 
       includeAllAtomicEventProperties: false,
       includeSelfDescribingEvent: false,
@@ -2976,6 +3027,362 @@ scenarios:
           e: 'ue',
           p: testEvent['x-sp-platform'],
           tv: testEvent['x-sp-v_tracker'],
+          ue_px:
+            'eyJkYXRhIjp7ImRhdGEiOnsidHlwZSI6InBsYXkifSwic2NoZW1hIjoiaWdsdTpjb20uc25vd3Bsb3dhbmFseXRpY3Muc25vd3Bsb3cvbWVkaWFfcGxheWVyX2V2ZW50L2pzb25zY2hlbWEvMS0wLTAifSwic2NoZW1hIjoiaWdsdTpjb20uc25vd3Bsb3dhbmFseXRpY3Muc25vd3Bsb3cvdW5zdHJ1Y3RfZXZlbnQvanNvbnNjaGVtYS8xLTAtMCJ9',
+          cx: 'eyJkYXRhIjpbeyJkYXRhIjp7ImlkIjoiODJmOTNhMDAtMjM0NC00MzY3LTlhMmQtYTJkY2YwMzhkNWUxIn0sInNjaGVtYSI6ImlnbHU6Y29tLnNub3dwbG93YW5hbHl0aWNzLnNub3dwbG93L3dlYl9wYWdlL2pzb25zY2hlbWEvMS0wLTAifSx7ImRhdGEiOnsidXNlcklkIjoiZWU3YjY0ZTctYmVlMi00YjE2LWFhZjUtNTA1N2U2YmI0YWYzIiwic2Vzc2lvbklkIjoiMzM5MDEzYzMtZWM2Yi00OTM1LWI0NmUtNDg3MDY0YmIxY2UwIiwic2Vzc2lvbkluZGV4IjoyLCJwcmV2aW91c1Nlc3Npb25JZCI6IjY2NjA5Y2NmLWM2NjEtNGYxMC05N2NlLWFmMzgyMjBmNWViNSIsInN0b3JhZ2VNZWNoYW5pc20iOiJDT09LSUVfMSJ9LCJzY2hlbWEiOiJpZ2x1OmNvbS5zbm93cGxvd2FuYWx5dGljcy5zbm93cGxvdy9jbGllbnRfc2Vzc2lvbi9qc29uc2NoZW1hLzEtMC0yIn1dLCJzY2hlbWEiOiJpZ2x1OmNvbS5zbm93cGxvd2FuYWx5dGljcy5zbm93cGxvdy9jb250ZXh0cy9qc29uc2NoZW1hLzEtMC0wIn0',
+        },
+      ],
+    };
+
+    // to assert on
+    let argUrl, argCallback, argOptions, argBody;
+
+    // Mocks
+    mock('sendHttpRequest', function () {
+      // mock response
+      const respStatusCode = 200;
+      const respHeaders = { foo: 'bar' };
+      const respBody = 'ok';
+
+      argUrl = arguments[0];
+      argCallback = arguments[1];
+      argOptions = arguments[2];
+      argBody = arguments[3];
+
+      // and call the callback with mock response
+      argCallback(respStatusCode, respHeaders, respBody);
+    });
+
+    mock('getAllEventData', function () {
+      return testEvent;
+    });
+
+    // Call runCode to run the template's code
+    runCode(testMockData);
+
+    // Assert
+    assertApi('sendHttpRequest').wasCalled();
+
+    const body = jsonApi.parse(argBody);
+    assertThat(body).isEqualTo(expectedBody);
+- name: Test alt separator 0
+  code: |
+    // Tag config data
+    const testMockData = {
+      url: 'test',
+
+      inArray: false,
+      includeAll: false,
+      altSeparator: true,
+      separator: '.', // the default
+
+      includeAllAtomicEventProperties: false,
+      includeSelfDescribingEvent: false,
+      extractFromArray: false,
+      includeEntities: 'all',
+      allUnmappedEntityNest: 'myContexts',
+      entityMappingRules: [
+        {
+          key: 'iglu:com.snowplowanalytics.snowplow/web_page/jsonschema/1-0-0',
+          mappedKey: 'myContexts.testEntityMappedKey',
+          version: 'control',
+        },
+      ],
+
+      includeCommonEventProperties: false,
+      includeCommonUserProperties: false,
+      eventMappingRules: [
+        {
+          key: 'x-sp-self_describing_event_com_snowplowanalytics_snowplow_media_player_event_1.type',
+          mappedKey: 'testEventMappedKey.fooType',
+        },
+        { key: 'viewport_size', mappedKey: 'myProps.0.viewportMapped' },
+      ],
+
+      additionalRequestData: [
+        { key: 'testApiKey', value: 'bvjdbcjkxbckljdbcksjdbc' },
+      ],
+
+      requestMethod: 'post',
+      requestTimeout: '5000',
+      logType: 'no',
+    };
+
+    const testEvent = mockEventObjectSelfDesc;
+    const expectedBody = {
+      testApiKey: 'bvjdbcjkxbckljdbcksjdbc',
+      myContexts: {
+        contexts_com_snowplowanalytics_snowplow_mobile_context_1:
+          testEvent[
+            'x-sp-contexts_com_snowplowanalytics_snowplow_mobile_context_1'
+          ],
+        contexts_com_youtube_youtube_1:
+          testEvent['x-sp-contexts_com_youtube_youtube_1'],
+        contexts_com_snowplowanalytics_snowplow_media_player_1:
+          testEvent['x-sp-contexts_com_snowplowanalytics_snowplow_media_player_1'],
+        'contexts_com_google_tag-manager_server-side_user_data_1':
+          testEvent['x-sp-contexts_com_google_tag-manager_server-side_user_data_1'],
+        contexts_com_snowplowanalytics_snowplow_client_session_1:
+          testEvent[
+            'x-sp-contexts_com_snowplowanalytics_snowplow_client_session_1'
+          ],
+        testEntityMappedKey:
+          testEvent['x-sp-contexts_com_snowplowanalytics_snowplow_web_page_1'],
+      },
+      myProps: [
+        {
+          viewportMapped: testEvent.viewport_size,
+        },
+      ],
+      testEventMappedKey: {
+        fooType: 'play',
+      },
+    };
+
+    // to assert on
+    let argUrl, argCallback, argOptions, argBody;
+
+    // Mocks
+    mock('sendHttpRequest', function () {
+      argUrl = arguments[0];
+      argOptions = arguments[2];
+      argBody = arguments[3];
+    });
+
+    mock('getAllEventData', function () {
+      return testEvent;
+    });
+
+    // Call runCode to run the template's code
+    runCode(testMockData);
+
+    // Assert
+    assertApi('sendHttpRequest').wasCalled();
+    assertThat(argUrl).isStrictlyEqualTo(testMockData.url);
+
+    assertThat(argOptions.method).isStrictlyEqualTo('POST');
+    assertThat(argOptions.timeout).isStrictlyEqualTo(5000);
+    assertThat(argOptions.headers['Content-Type']).isStrictlyEqualTo(
+      'application/json'
+    );
+
+    const body = jsonApi.parse(argBody);
+    assertThat(body).isEqualTo(expectedBody);
+- name: Test alt separator 1
+  code: |
+    // Tag config data
+    const testMockData = {
+      url: 'test',
+
+      inArray: false,
+      includeAll: false,
+      altSeparator: true,
+      separator: '~',
+
+      includeAllAtomicEventProperties: false,
+      includeSelfDescribingEvent: false,
+      extractFromArray: false,
+      includeEntities: 'all',
+      allUnmappedEntityNest: 'myContexts.dotName',
+      entityMappingRules: [
+        {
+          key: 'iglu:com.snowplowanalytics.snowplow/web_page/jsonschema/1-0-0',
+          mappedKey: 'myContexts.dotName~testEntity.MappedKey',
+          version: 'control',
+        },
+      ],
+
+      includeCommonEventProperties: false,
+      includeCommonUserProperties: false,
+      eventMappingRules: [
+        {
+          key: 'x-sp-self_describing_event_com_snowplowanalytics_snowplow_media_player_event_1~type',
+          mappedKey: 'testEventMappedKey~fooType',
+        },
+        { key: 'viewport_size', mappedKey: 'myProps~0~viewportMapped' },
+      ],
+
+      additionalRequestData: [
+        { key: 'testApiKey', value: 'bvjdbcjkxbckljdbcksjdbc' },
+      ],
+
+      requestMethod: 'post',
+      requestTimeout: '5000',
+      logType: 'no',
+    };
+
+    const testEvent = mockEventObjectSelfDesc;
+    const expectedBody = {
+      testApiKey: 'bvjdbcjkxbckljdbcksjdbc',
+      'myContexts.dotName' : {
+        contexts_com_snowplowanalytics_snowplow_mobile_context_1:
+          testEvent[
+            'x-sp-contexts_com_snowplowanalytics_snowplow_mobile_context_1'
+          ],
+        contexts_com_youtube_youtube_1:
+          testEvent['x-sp-contexts_com_youtube_youtube_1'],
+        contexts_com_snowplowanalytics_snowplow_media_player_1:
+          testEvent['x-sp-contexts_com_snowplowanalytics_snowplow_media_player_1'],
+        'contexts_com_google_tag-manager_server-side_user_data_1':
+          testEvent['x-sp-contexts_com_google_tag-manager_server-side_user_data_1'],
+        contexts_com_snowplowanalytics_snowplow_client_session_1:
+          testEvent[
+            'x-sp-contexts_com_snowplowanalytics_snowplow_client_session_1'
+          ],
+        'testEntity.MappedKey':
+          testEvent['x-sp-contexts_com_snowplowanalytics_snowplow_web_page_1'],
+      },
+      myProps: [
+        {
+          viewportMapped: testEvent.viewport_size,
+        },
+      ],
+      testEventMappedKey: {
+        fooType: 'play',
+      },
+    };
+
+    // to assert on
+    let argUrl, argCallback, argOptions, argBody;
+
+    // Mocks
+    mock('sendHttpRequest', function () {
+      argUrl = arguments[0];
+      argOptions = arguments[2];
+      argBody = arguments[3];
+    });
+
+    mock('getAllEventData', function () {
+      return testEvent;
+    });
+
+    // Call runCode to run the template's code
+    runCode(testMockData);
+
+    // Assert
+    assertApi('sendHttpRequest').wasCalled();
+    assertThat(argUrl).isStrictlyEqualTo(testMockData.url);
+
+    assertThat(argOptions.method).isStrictlyEqualTo('POST');
+    assertThat(argOptions.timeout).isStrictlyEqualTo(5000);
+    assertThat(argOptions.headers['Content-Type']).isStrictlyEqualTo(
+      'application/json'
+    );
+
+    const body = jsonApi.parse(argBody);
+    assertThat(body).isEqualTo(expectedBody);
+- name: Test alt separator 2
+  code: |
+    // Tag config data
+    const testMockData = {
+      url: 'http://localhost:9090/com.snowplowanalytics.snowplow/tp2',
+
+      inArray: false,
+      includeAll: false,
+      altSeparator: true,
+      separator: '..',
+
+      includeAllAtomicEventProperties: false,
+      includeSelfDescribingEvent: false,
+      extractFromArray: true,
+      includeEntities: 'none',
+      entityMappingRules: [
+        {
+          key: 'x-sp-contexts_com_snowplowanalytics_snowplow_web_page_1',
+          mappedKey: 'data..0..cx..data..0..data',
+          version: 'control',
+        },
+      ],
+
+      includeCommonEventProperties: false,
+      includeCommonUserProperties: false,
+
+      eventMappingRules: [
+        {
+          key: 'x-sp-platform',
+          mappedKey: 'data..0..p',
+        },
+        {
+          key: 'x-sp-v_tracker',
+          mappedKey: 'data..0..tv',
+        },
+        {
+          key: 'x-sp-self_describing_event_com_snowplowanalytics_snowplow_media_player_event_1',
+          mappedKey: 'data..0..ue_px..data..data',
+        },
+        {
+          key: 'x-sp-contexts_com_snowplowanalytics_snowplow_client_session_1..0..userId',
+          mappedKey: 'data..0..cx..data..1..data..userId',
+        },
+        {
+          key: 'x-sp-contexts_com_snowplowanalytics_snowplow_client_session_1..0..sessionId',
+          mappedKey: 'data..0..cx..data..1..data..sessionId',
+        },
+        {
+          key: 'x-sp-contexts_com_snowplowanalytics_snowplow_client_session_1..0..sessionIndex',
+          mappedKey: 'data..0..cx..data..1..data..sessionIndex',
+        },
+        {
+          key: 'x-sp-contexts_com_snowplowanalytics_snowplow_client_session_1..0..previousSessionId',
+          mappedKey: 'data..0..cx..data..1..data..previousSessionId',
+        },
+        {
+          key: 'x-sp-contexts_com_snowplowanalytics_snowplow_client_session_1..0..storageMechanism',
+          mappedKey: 'data..0..cx..data..1..data..storageMechanism',
+        },
+      ],
+
+      additionalRequestData: [
+        {
+          key: 'data..0..e',
+          value: 'ue',
+        },
+        {
+          key: 'schema',
+          value:
+            'iglu:com.snowplowanalytics.snowplow/payload_data/jsonschema/1-0-4',
+        },
+        {
+          key: 'data..0..ue_px..schema',
+          value:
+            'iglu:com.snowplowanalytics.snowplow/unstruct_event/jsonschema/1-0-0',
+        },
+        {
+          key: 'data..0..ue_px..data..schema',
+          value:
+            'iglu:com.snowplowanalytics.snowplow/media_player_event/jsonschema/1-0-0',
+        },
+        {
+          key: 'data..0..cx..schema',
+          value: 'iglu:com.snowplowanalytics.snowplow/contexts/jsonschema/1-0-0',
+        },
+        {
+          key: 'data..0..cx..data..0..schema',
+          value: 'iglu:com.snowplowanalytics.snowplow/web_page/jsonschema/1-0-0',
+        },
+        {
+          key: 'data..0..cx..data..1..schema',
+          value:
+            'iglu:com.snowplowanalytics.snowplow/client_session/jsonschema/1-0-2',
+        },
+      ],
+
+      jsonStringify: [{ path: 'data..0..ue_px' }, { path: 'data..0..cx' }],
+      toBase64: [{ path: 'data..0..ue_px' }, { path: 'data..0..cx' }],
+
+      requestMethod: 'post',
+      requestTimeout: '5000',
+      logType: 'always',
+    };
+
+    const testEvent = mockEventObjectSelfDesc;
+    const expectedBody = {
+      schema: 'iglu:com.snowplowanalytics.snowplow/payload_data/jsonschema/1-0-4',
+      data: [
+        {
+          e: 'ue',
+          p: 'web',
+          tv: 'js-3.5.0',
           ue_px:
             'eyJkYXRhIjp7ImRhdGEiOnsidHlwZSI6InBsYXkifSwic2NoZW1hIjoiaWdsdTpjb20uc25vd3Bsb3dhbmFseXRpY3Muc25vd3Bsb3cvbWVkaWFfcGxheWVyX2V2ZW50L2pzb25zY2hlbWEvMS0wLTAifSwic2NoZW1hIjoiaWdsdTpjb20uc25vd3Bsb3dhbmFseXRpY3Muc25vd3Bsb3cvdW5zdHJ1Y3RfZXZlbnQvanNvbnNjaGVtYS8xLTAtMCJ9',
           cx: 'eyJkYXRhIjpbeyJkYXRhIjp7ImlkIjoiODJmOTNhMDAtMjM0NC00MzY3LTlhMmQtYTJkY2YwMzhkNWUxIn0sInNjaGVtYSI6ImlnbHU6Y29tLnNub3dwbG93YW5hbHl0aWNzLnNub3dwbG93L3dlYl9wYWdlL2pzb25zY2hlbWEvMS0wLTAifSx7ImRhdGEiOnsidXNlcklkIjoiZWU3YjY0ZTctYmVlMi00YjE2LWFhZjUtNTA1N2U2YmI0YWYzIiwic2Vzc2lvbklkIjoiMzM5MDEzYzMtZWM2Yi00OTM1LWI0NmUtNDg3MDY0YmIxY2UwIiwic2Vzc2lvbkluZGV4IjoyLCJwcmV2aW91c1Nlc3Npb25JZCI6IjY2NjA5Y2NmLWM2NjEtNGYxMC05N2NlLWFmMzgyMjBmNWViNSIsInN0b3JhZ2VNZWNoYW5pc20iOiJDT09LSUVfMSJ9LCJzY2hlbWEiOiJpZ2x1OmNvbS5zbm93cGxvd2FuYWx5dGljcy5zbm93cGxvdy9jbGllbnRfc2Vzc2lvbi9qc29uc2NoZW1hLzEtMC0yIn1dLCJzY2hlbWEiOiJpZ2x1OmNvbS5zbm93cGxvd2FuYWx5dGljcy5zbm93cGxvdy9jb250ZXh0cy9qc29uc2NoZW1hLzEtMC0wIn0',
