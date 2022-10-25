@@ -850,7 +850,11 @@ const parseSchemaToMajorKeyValue = (schema) => {
  * Returns whether a property name is a Snowplow event property.
  */
 const isSpEventProp = (prop) => {
-  const excludeKeys = ['x-sp-tp2', 'x-sp-contexts'];
+  const excludeKeys = [
+    'x-sp-tp2',
+    'x-sp-contexts',
+    'x-sp-self_describing_event',
+  ];
   return prop.indexOf('x-sp-') === 0 && excludeKeys.indexOf(prop) < 0;
 };
 
@@ -858,7 +862,7 @@ const isSpEventProp = (prop) => {
  * Returns whether a property name is a Snowplow self-describing event property.
  */
 const isSpSelfDescProp = (prop) => {
-  return prop.indexOf('x-sp-self_describing_event') === 0;
+  return prop.indexOf('x-sp-self_describing_event_') === 0;
 };
 
 /*
@@ -2054,20 +2058,21 @@ scenarios:
         type: 'play',
       },
       testEntityMappedKey: {
-        id: '68027aa2-34b1-4018-95e3-7176c62dbc84',
+        id: testEvent['x-sp-contexts_com_snowplowanalytics_snowplow_web_page_1'][0]
+          .id,
       },
-      event_name: 'media_player_event',
-      client_id: 'fd0e5288-e89b-45df-aad5-6d0c6eda6198',
-      language: 'en-US',
-      page_encoding: 'windows-1252',
-      page_hostname: 'localhost',
-      page_location: 'http://localhost:8000/',
-      page_path: '/',
-      screen_resolution: '1920x1080',
-      user_agent: 'curl/7.81.0',
-      user_id: 'tester',
-      viewport_size: '1044x975',
-      user_data: { email_address: 'foo@test.io' },
+      event_name: testEvent.event_name,
+      client_id: testEvent.client_id,
+      language: testEvent.language,
+      page_encoding: testEvent.page_encoding,
+      page_hostname: testEvent.page_hostname,
+      page_location: testEvent.page_location,
+      page_path: testEvent.page_path,
+      screen_resolution: testEvent.screen_resolution,
+      user_agent: testEvent.user_agent,
+      user_id: testEvent.user_id,
+      viewport_size: testEvent.viewport_size,
+      user_data: testEvent.user_data,
     };
 
     // to assert on
@@ -2183,25 +2188,25 @@ scenarios:
       schema: 'iglu:com.foo.bar/test_fun/jsonschema/1-0-0',
       data: [
         {
-          app_id: 'media-test',
-          platform: 'web',
-          dvce_created_tstamp: '1658567928426',
-          event: 'media_player_event',
-          event_id: 'c2084e30-5e4f-4d9c-86b2-e0bc3781509a',
-          name_tracker: 'spTest',
-          v_tracker: 'js-3.5.0',
-          domain_sessionidx: 1,
-          domain_sessionid: '1ab28b79-bfdd-4855-9bf1-5199ce15beac',
-          br_cookies: '1',
-          br_colordepth: '24',
-          br_viewwidth: 1044,
-          br_viewheight: 975,
-          dvce_screenwidth: 1920,
-          dvce_screenheight: 1080,
-          doc_charset: 'windows-1252',
-          doc_width: 1044,
-          doc_height: 975,
-          dvce_sent_tstamp: '1658567928427',
+          app_id: testEvent['x-sp-app_id'],
+          platform: testEvent['x-sp-platform'],
+          dvce_created_tstamp: testEvent['x-sp-dvce_created_tstamp'],
+          event: testEvent.event_name,
+          event_id: testEvent['x-sp-event_id'],
+          name_tracker: testEvent['x-sp-name_tracker'],
+          v_tracker: testEvent['x-sp-v_tracker'],
+          domain_sessionidx: testEvent['x-sp-domain_sessionidx'],
+          domain_sessionid: testEvent['x-sp-domain_sessionid'],
+          br_cookies: testEvent['x-sp-br_cookies'],
+          br_colordepth: testEvent['x-sp-br_colordepth'],
+          br_viewwidth: testEvent['x-sp-br_viewwidth'],
+          br_viewheight: testEvent['x-sp-br_viewheight'],
+          dvce_screenwidth: testEvent['x-sp-dvce_screenwidth'],
+          dvce_screenheight: testEvent['x-sp-dvce_screenheight'],
+          doc_charset: testEvent['x-sp-doc_charset'],
+          doc_width: testEvent['x-sp-doc_width'],
+          doc_height: testEvent['x-sp-doc_height'],
+          dvce_sent_tstamp: testEvent['x-sp-dvce_sent_tstamp'],
           // assert from entity mapping
           test_youtube: testEvent['x-sp-contexts_com_youtube_youtube_1'],
 
@@ -2226,7 +2231,13 @@ scenarios:
             ],
 
           // assert on additional event mapping
-          contexts_com_acme_test_media_1: [{ time: 0.015303093460083008 }],
+          contexts_com_acme_test_media_1: [
+            {
+              time: testEvent[
+                'x-sp-contexts_com_snowplowanalytics_snowplow_media_player_1'
+              ][0].currentTime,
+            },
+          ],
           contexts_com_acme_test_youtube_1: [
             {
               quality_levels:
@@ -2324,24 +2335,24 @@ scenarios:
     const testEvent = mockEventObjectSelfDesc;
     const expectedBody = {
       mySpAtomicProps: {
-        app_id: 'media-test',
-        platform: 'web',
-        dvce_created_tstamp: '1658567928426',
-        event_id: 'c2084e30-5e4f-4d9c-86b2-e0bc3781509a',
-        name_tracker: 'spTest',
-        v_tracker: 'js-3.5.0',
-        domain_sessionidx: 1,
-        domain_sessionid: '1ab28b79-bfdd-4855-9bf1-5199ce15beac',
-        br_cookies: '1',
-        br_colordepth: '24',
-        br_viewwidth: 1044,
-        br_viewheight: 975,
-        dvce_screenwidth: 1920,
-        dvce_screenheight: 1080,
-        doc_charset: 'windows-1252',
-        doc_width: 1044,
-        doc_height: 975,
-        dvce_sent_tstamp: '1658567928427',
+        app_id: testEvent['x-sp-app_id'],
+        platform: testEvent['x-sp-platform'],
+        dvce_created_tstamp: testEvent['x-sp-dvce_created_tstamp'],
+        event_id: testEvent['x-sp-event_id'],
+        name_tracker: testEvent['x-sp-name_tracker'],
+        v_tracker: testEvent['x-sp-v_tracker'],
+        domain_sessionidx: testEvent['x-sp-domain_sessionidx'],
+        domain_sessionid: testEvent['x-sp-domain_sessionid'],
+        br_cookies: testEvent['x-sp-br_cookies'],
+        br_colordepth: testEvent['x-sp-br_colordepth'],
+        br_viewwidth: testEvent['x-sp-br_viewwidth'],
+        br_viewheight: testEvent['x-sp-br_viewheight'],
+        dvce_screenwidth: testEvent['x-sp-dvce_screenwidth'],
+        dvce_screenheight: testEvent['x-sp-dvce_screenheight'],
+        doc_charset: testEvent['x-sp-doc_charset'],
+        doc_width: testEvent['x-sp-doc_width'],
+        doc_height: testEvent['x-sp-doc_height'],
+        dvce_sent_tstamp: testEvent['x-sp-dvce_sent_tstamp'],
       },
       mySelfDescEvent: {
         self_describing_event_com_snowplowanalytics_snowplow_media_player_event_1: {
@@ -2371,20 +2382,20 @@ scenarios:
           ][0],
       },
       myCommonEventProps: {
-        client_id: 'fd0e5288-e89b-45df-aad5-6d0c6eda6198',
-        event_name: 'media_player_event',
-        language: 'en-US',
-        page_encoding: 'windows-1252',
-        page_hostname: 'localhost',
-        page_location: 'http://localhost:8000/',
-        page_path: '/',
-        screen_resolution: '1920x1080',
-        user_agent: 'curl/7.81.0',
-        user_id: 'tester',
-        viewport_size: '1044x975',
+        client_id: testEvent.client_id,
+        event_name: testEvent.event_name,
+        language: testEvent.language,
+        page_encoding: testEvent.page_encoding,
+        page_hostname: testEvent.page_hostname,
+        page_location: testEvent.page_location,
+        page_path: testEvent.page_path,
+        screen_resolution: testEvent.screen_resolution,
+        user_agent: testEvent.user_agent,
+        user_id: testEvent.user_id,
+        viewport_size: testEvent.viewport_size,
       },
       myUserData: {
-        user_data: { email_address: 'foo@test.io' },
+        user_data: testEvent.user_data,
       },
     };
 
@@ -2466,24 +2477,24 @@ scenarios:
     const expectedBody = {
       snowplow: {
         snowplow: {
-          app_id: 'media-test',
-          platform: 'web',
-          dvce_created_tstamp: '1658567928426',
-          event_id: 'c2084e30-5e4f-4d9c-86b2-e0bc3781509a',
-          name_tracker: 'spTest',
-          v_tracker: 'js-3.5.0',
-          domain_sessionidx: 1,
-          domain_sessionid: '1ab28b79-bfdd-4855-9bf1-5199ce15beac',
-          br_cookies: '1',
-          br_colordepth: '24',
-          br_viewwidth: 1044,
-          br_viewheight: 975,
-          dvce_screenwidth: 1920,
-          dvce_screenheight: 1080,
-          doc_charset: 'windows-1252',
-          doc_width: 1044,
-          doc_height: 975,
-          dvce_sent_tstamp: '1658567928427',
+          app_id: testEvent['x-sp-app_id'],
+          platform: testEvent['x-sp-platform'],
+          dvce_created_tstamp: testEvent['x-sp-dvce_created_tstamp'],
+          event_id: testEvent['x-sp-event_id'],
+          name_tracker: testEvent['x-sp-name_tracker'],
+          v_tracker: testEvent['x-sp-v_tracker'],
+          domain_sessionidx: testEvent['x-sp-domain_sessionidx'],
+          domain_sessionid: testEvent['x-sp-domain_sessionid'],
+          br_cookies: testEvent['x-sp-br_cookies'],
+          br_colordepth: testEvent['x-sp-br_colordepth'],
+          br_viewwidth: testEvent['x-sp-br_viewwidth'],
+          br_viewheight: testEvent['x-sp-br_viewheight'],
+          dvce_screenwidth: testEvent['x-sp-dvce_screenwidth'],
+          dvce_screenheight: testEvent['x-sp-dvce_screenheight'],
+          doc_charset: testEvent['x-sp-doc_charset'],
+          doc_width: testEvent['x-sp-doc_width'],
+          doc_height: testEvent['x-sp-doc_height'],
+          dvce_sent_tstamp: testEvent['x-sp-dvce_sent_tstamp'],
           self_describing_event_com_snowplowanalytics_snowplow_media_player_event_1:
             {
               type: 'play',
@@ -2625,7 +2636,7 @@ scenarios:
       },
       myProps: [
         {
-          viewportMapped: '1044x975',
+          viewportMapped: testEvent.viewport_size,
         },
       ],
       testEventMappedKey: {
@@ -2720,7 +2731,7 @@ scenarios:
     assertThat(argOptions.headers['test-Header-Key']).isStrictlyEqualTo(
       'testHeaderVal'
     );
-setup: |-
+setup: |
   const jsonApi = require('JSON');
   const getTypeOf = require('getType');
   const logToConsole = require('logToConsole');
@@ -2827,45 +2838,68 @@ setup: |-
   };
   const mockEventObjectSelfDesc = {
     event_name: 'media_player_event',
-    client_id: 'fd0e5288-e89b-45df-aad5-6d0c6eda6198',
+    client_id: 'ee7b64e7-bee2-4b16-aaf5-5057e6bb4af3',
     language: 'en-US',
-    page_encoding: 'windows-1252',
+    page_encoding: 'UTF-8',
     page_hostname: 'localhost',
-    page_location: 'http://localhost:8000/',
+    page_location: 'http://localhost:8080/',
     page_path: '/',
     screen_resolution: '1920x1080',
     user_id: 'tester',
-    viewport_size: '1044x975',
+    viewport_size: '779x975',
     user_agent: 'curl/7.81.0',
     host: 'host',
     'x-sp-app_id': 'media-test',
     'x-sp-platform': 'web',
-    'x-sp-dvce_created_tstamp': '1658567928426',
-    'x-sp-event_id': 'c2084e30-5e4f-4d9c-86b2-e0bc3781509a',
+    'x-sp-dvce_created_tstamp': '1665409698511',
+    'x-sp-event_id': '2fa64700-fce2-4e81-afdf-1d0660d34025',
     'x-sp-name_tracker': 'spTest',
     'x-sp-v_tracker': 'js-3.5.0',
-    'x-sp-domain_sessionid': '1ab28b79-bfdd-4855-9bf1-5199ce15beac',
-    'x-sp-domain_sessionidx': 1,
+    'x-sp-domain_sessionid': '339013c3-ec6b-4935-b46e-487064bb1ce0',
+    'x-sp-domain_sessionidx': 2,
     'x-sp-br_cookies': '1',
     'x-sp-br_colordepth': '24',
-    'x-sp-br_viewwidth': 1044,
+    'x-sp-br_viewwidth': 779,
     'x-sp-br_viewheight': 975,
     'x-sp-dvce_screenwidth': 1920,
     'x-sp-dvce_screenheight': 1080,
-    'x-sp-doc_charset': 'windows-1252',
-    'x-sp-doc_width': 1044,
-    'x-sp-doc_height': 975,
-    'x-sp-dvce_sent_tstamp': '1658567928427',
+    'x-sp-doc_charset': 'UTF-8',
+    'x-sp-doc_width': 764,
+    'x-sp-doc_height': 1211,
+    'x-sp-dvce_sent_tstamp': '1665409698512',
+    'x-sp-tp2': {
+      e: 'ue',
+      eid: '2fa64700-fce2-4e81-afdf-1d0660d34025',
+      tv: 'js-3.5.0',
+      tna: 'spTest',
+      aid: 'media-test',
+      p: 'web',
+      cookie: '1',
+      cs: 'UTF-8',
+      lang: 'en-US',
+      res: '1920x1080',
+      cd: '24',
+      tz: 'Europe/Athens',
+      dtm: '1665409698511',
+      vp: '779x975',
+      ds: '764x1211',
+      vid: '2',
+      sid: '339013c3-ec6b-4935-b46e-487064bb1ce0',
+      duid: 'ee7b64e7-bee2-4b16-aaf5-5057e6bb4af3',
+      uid: 'tester',
+      url: 'http://localhost:8080/',
+      ue_pr:
+        '{"schema":"iglu:com.snowplowanalytics.snowplow/unstruct_event/jsonschema/1-0-0","data":{"schema":"iglu:com.snowplowanalytics.snowplow/media_player_event/jsonschema/1-0-0","data":{"type":"play"}}}',
+      co: '{"schema":"iglu:com.snowplowanalytics.snowplow/contexts/jsonschema/1-0-0","data":[{"schema":"iglu:com.youtube/youtube/jsonschema/1-0-0","data":{"autoPlay":false,"avaliablePlaybackRates":[0.25,0.5,0.75,1,1.25,1.5,1.75,2],"buffering":false,"controls":true,"cued":false,"loaded":6,"playbackQuality":"medium","playerId":"youtube-song","unstarted":false,"url":"https://www.youtube.com/watch?v=foobarbaz","avaliableQualityLevels":["hd1080","hd720","large","medium","small","tiny","auto"]}},{"schema":"iglu:com.snowplowanalytics.snowplow/media_player/jsonschema/1-0-0","data":{"currentTime":0.04796292752075195,"duration":190.301,"ended":false,"loop":false,"muted":false,"paused":false,"playbackRate":1,"volume":100}},{"schema":"iglu:com.snowplowanalytics.snowplow/web_page/jsonschema/1-0-0","data":{"id":"82f93a00-2344-4367-9a2d-a2dcf038d5e1"}},{"schema":"iglu:com.google.tag-manager.server-side/user_data/jsonschema/1-0-0","data":{"email_address":"foo@test.io"}},{"schema":"iglu:com.snowplowanalytics.snowplow/mobile_context/jsonschema/1-0-2","data":{"osType":"myOsType","osVersion":"myOsVersion","deviceManufacturer":"myDevMan","deviceModel":"myDevModel"}},{"schema":"iglu:com.snowplowanalytics.snowplow/client_session/jsonschema/1-0-2","data":{"userId":"ee7b64e7-bee2-4b16-aaf5-5057e6bb4af3","sessionId":"339013c3-ec6b-4935-b46e-487064bb1ce0","eventIndex":2,"sessionIndex":2,"previousSessionId":"66609ccf-c661-4f10-97ce-af38220f5eb5","storageMechanism":"COOKIE_1","firstEventId":"6bf091b9-db2f-4753-a844-51d72f6d8210","firstEventTimestamp":"2022-10-10T13:48:18.208Z"}}]}',
+      stm: '1665409698512',
+    },
     'x-sp-self_describing_event_com_snowplowanalytics_snowplow_media_player_event_1':
       { type: 'play' },
-    'x-sp-contexts_com_snowplowanalytics_snowplow_mobile_context_1': [
-      {
-        osType: 'myOsType',
-        osVersion: 'myOsVersion',
-        deviceManufacturer: 'myDevMan',
-        deviceModel: 'myDevModel',
-      },
-    ],
+    'x-sp-self_describing_event': {
+      schema:
+        'iglu:com.snowplowanalytics.snowplow/media_player_event/jsonschema/1-0-0',
+      data: { type: 'play' },
+    },
     'x-sp-contexts_com_youtube_youtube_1': [
       {
         autoPlay: false,
@@ -2873,7 +2907,7 @@ setup: |-
         buffering: false,
         controls: true,
         cued: false,
-        loaded: 3,
+        loaded: 6,
         playbackQuality: 'medium',
         playerId: 'youtube-song',
         unstarted: false,
@@ -2891,7 +2925,7 @@ setup: |-
     ],
     'x-sp-contexts_com_snowplowanalytics_snowplow_media_player_1': [
       {
-        currentTime: 0.015303093460083008,
+        currentTime: 0.04796292752075195,
         duration: 190.301,
         ended: false,
         loop: false,
@@ -2902,21 +2936,29 @@ setup: |-
       },
     ],
     'x-sp-contexts_com_snowplowanalytics_snowplow_web_page_1': [
-      { id: '68027aa2-34b1-4018-95e3-7176c62dbc84' },
+      { id: '82f93a00-2344-4367-9a2d-a2dcf038d5e1' },
     ],
     'x-sp-contexts_com_google_tag-manager_server-side_user_data_1': [
       { email_address: 'foo@test.io' },
     ],
+    'x-sp-contexts_com_snowplowanalytics_snowplow_mobile_context_1': [
+      {
+        osType: 'myOsType',
+        osVersion: 'myOsVersion',
+        deviceManufacturer: 'myDevMan',
+        deviceModel: 'myDevModel',
+      },
+    ],
     'x-sp-contexts_com_snowplowanalytics_snowplow_client_session_1': [
       {
-        userId: 'fd0e5288-e89b-45df-aad5-6d0c6eda6198',
-        sessionId: '1ab28b79-bfdd-4855-9bf1-5199ce15beac',
-        eventIndex: 24,
-        sessionIndex: 1,
-        previousSessionId: null,
+        userId: 'ee7b64e7-bee2-4b16-aaf5-5057e6bb4af3',
+        sessionId: '339013c3-ec6b-4935-b46e-487064bb1ce0',
+        eventIndex: 2,
+        sessionIndex: 2,
+        previousSessionId: '66609ccf-c661-4f10-97ce-af38220f5eb5',
         storageMechanism: 'COOKIE_1',
-        firstEventId: '40fbdb30-1b99-42a3-99f7-850dacf5be43',
-        firstEventTimestamp: '2022-07-23T09:08:04.451Z',
+        firstEventId: '6bf091b9-db2f-4753-a844-51d72f6d8210',
+        firstEventTimestamp: '2022-10-10T13:48:18.208Z',
       },
     ],
     'x-sp-contexts': [
@@ -2928,7 +2970,7 @@ setup: |-
           buffering: false,
           controls: true,
           cued: false,
-          loaded: 3,
+          loaded: 6,
           playbackQuality: 'medium',
           playerId: 'youtube-song',
           unstarted: false,
@@ -2948,7 +2990,7 @@ setup: |-
         schema:
           'iglu:com.snowplowanalytics.snowplow/media_player/jsonschema/1-0-0',
         data: {
-          currentTime: 0.015303093460083008,
+          currentTime: 0.04796292752075195,
           duration: 190.301,
           ended: false,
           loop: false,
@@ -2960,7 +3002,7 @@ setup: |-
       },
       {
         schema: 'iglu:com.snowplowanalytics.snowplow/web_page/jsonschema/1-0-0',
-        data: { id: '68027aa2-34b1-4018-95e3-7176c62dbc84' },
+        data: { id: '82f93a00-2344-4367-9a2d-a2dcf038d5e1' },
       },
       {
         schema:
@@ -2969,25 +3011,35 @@ setup: |-
       },
       {
         schema:
+          'iglu:com.snowplowanalytics.snowplow/mobile_context/jsonschema/1-0-2',
+        data: {
+          osType: 'myOsType',
+          osVersion: 'myOsVersion',
+          deviceManufacturer: 'myDevMan',
+          deviceModel: 'myDevModel',
+        },
+      },
+      {
+        schema:
           'iglu:com.snowplowanalytics.snowplow/client_session/jsonschema/1-0-2',
         data: {
-          userId: 'fd0e5288-e89b-45df-aad5-6d0c6eda6198',
-          sessionId: '1ab28b79-bfdd-4855-9bf1-5199ce15beac',
-          eventIndex: 24,
-          sessionIndex: 1,
-          previousSessionId: null,
+          userId: 'ee7b64e7-bee2-4b16-aaf5-5057e6bb4af3',
+          sessionId: '339013c3-ec6b-4935-b46e-487064bb1ce0',
+          eventIndex: 2,
+          sessionIndex: 2,
+          previousSessionId: '66609ccf-c661-4f10-97ce-af38220f5eb5',
           storageMechanism: 'COOKIE_1',
-          firstEventId: '40fbdb30-1b99-42a3-99f7-850dacf5be43',
-          firstEventTimestamp: '2022-07-23T09:08:04.451Z',
+          firstEventId: '6bf091b9-db2f-4753-a844-51d72f6d8210',
+          firstEventTimestamp: '2022-10-10T13:48:18.208Z',
         },
       },
     ],
     user_data: { email_address: 'foo@test.io' },
-    ga_session_id: '1ab28b79-bfdd-4855-9bf1-5199ce15beac',
-    ga_session_number: '1',
+    ga_session_id: '339013c3-ec6b-4935-b46e-487064bb1ce0',
+    ga_session_number: '2',
     'x-ga-mp2-seg': '1',
     'x-ga-protocol_version': '2',
-    'x-ga-page_id': '68027aa2-34b1-4018-95e3-7176c62dbc84',
+    'x-ga-page_id': '82f93a00-2344-4367-9a2d-a2dcf038d5e1',
   };
   // Helper for mocking
   const getFromPath = (path, obj) => {
