@@ -45,14 +45,14 @@ ___TEMPLATE_PARAMETERS___
   {
     "type": "CHECKBOX",
     "name": "inArray",
-    "checkboxText": "Wrap the request body inside an array.",
+    "checkboxText": "Wrap the request body inside an array",
     "simpleValueType": true,
     "defaultValue": false
   },
   {
     "type": "CHECKBOX",
     "name": "includeAll",
-    "checkboxText": "Include all event data in the request body.",
+    "checkboxText": "Include all event data in the request body",
     "simpleValueType": true,
     "defaultValue": false
   },
