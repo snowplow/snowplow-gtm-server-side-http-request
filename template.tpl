@@ -45,16 +45,44 @@ ___TEMPLATE_PARAMETERS___
   {
     "type": "CHECKBOX",
     "name": "inArray",
-    "checkboxText": "Wrap the request body inside an array.",
+    "checkboxText": "Wrap the request body inside an array",
     "simpleValueType": true,
     "defaultValue": false
   },
   {
     "type": "CHECKBOX",
     "name": "includeAll",
-    "checkboxText": "Include all event data in the request body.",
+    "checkboxText": "Include all event data in the request body",
     "simpleValueType": true,
     "defaultValue": false
+  },
+  {
+    "type": "CHECKBOX",
+    "name": "altSeparator",
+    "checkboxText": "Use alternative separator to dot notation",
+    "simpleValueType": true,
+    "help": "Enable this option to use an alternative separator to dot notation when specifying possibly nested object paths. This setting applies everywhere dot notation can be used.",
+    "defaultValue": false,
+    "subParams": [
+      {
+        "type": "TEXT",
+        "name": "separator",
+        "displayName": "Separator",
+        "simpleValueType": true,
+        "valueValidators": [
+          {
+            "type": "NON_EMPTY"
+          }
+        ],
+        "enablingConditions": [
+          {
+            "paramName": "altSeparator",
+            "paramValue": true,
+            "type": "EQUALS"
+          }
+        ]
+      }
+    ]
   },
   {
     "type": "GROUP",
@@ -421,6 +449,70 @@ ___TEMPLATE_PARAMETERS___
   },
   {
     "type": "GROUP",
+    "name": "postProcessingGroup",
+    "displayName": "Post-processing",
+    "groupStyle": "ZIPPY_CLOSED",
+    "subParams": [
+      {
+        "type": "GROUP",
+        "name": "jsonStringifyGroup",
+        "displayName": "JSON Stringify",
+        "groupStyle": "ZIPPY_OPEN",
+        "subParams": [
+          {
+            "type": "SIMPLE_TABLE",
+            "name": "jsonStringify",
+            "displayName": "Apply JSON.stringify to:",
+            "simpleTableColumns": [
+              {
+                "defaultValue": "",
+                "displayName": "Property Name or Nested Path",
+                "name": "path",
+                "type": "TEXT",
+                "isUnique": true,
+                "valueValidators": [
+                  {
+                    "type": "NON_EMPTY"
+                  }
+                ]
+              }
+            ],
+            "help": "In this table you can specify the properties of the HTTP request payload whose values you want to transform into JSON strings. Dot notation can also be used to denote nested paths."
+          }
+        ]
+      },
+      {
+        "type": "GROUP",
+        "name": "b64Group",
+        "displayName": "Encode base64url",
+        "groupStyle": "ZIPPY_OPEN",
+        "subParams": [
+          {
+            "type": "SIMPLE_TABLE",
+            "name": "toBase64",
+            "displayName": "Apply base64url encoding to:",
+            "simpleTableColumns": [
+              {
+                "defaultValue": "",
+                "displayName": "Property Name or Nested Path",
+                "name": "path",
+                "type": "TEXT",
+                "isUnique": true,
+                "valueValidators": [
+                  {
+                    "type": "NON_EMPTY"
+                  }
+                ]
+              }
+            ],
+            "help": "In this table you can specify the properties of the HTTP request payload whose values you want to encode to base64url. Encoding is only applied to string values. Dot notation can also be used to denote nested paths."
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "type": "GROUP",
     "name": "requestHeaders",
     "displayName": "Request Headers",
     "groupStyle": "ZIPPY_CLOSED",
@@ -527,7 +619,6 @@ ___SANDBOXED_JS_FOR_SERVER___
 
 const getAllEventData = require('getAllEventData');
 const getContainerVersion = require('getContainerVersion');
-const getEventData = require('getEventData');
 const getRequestHeader = require('getRequestHeader');
 const getType = require('getType');
 const JSON = require('JSON');
@@ -536,6 +627,7 @@ const makeInteger = require('makeInteger');
 const makeNumber = require('makeNumber');
 const Math = require('Math');
 const sendHttpRequest = require('sendHttpRequest');
+const toBase64 = require('toBase64');
 
 // Constants
 const tagName = 'HTTP Request';
@@ -726,28 +818,34 @@ const isInt = (x) => {
 };
 
 /*
- * Splits a string as a path where path components are separated by dots.
+ * Splits a string as a path according to configuration.
  * (used by both getFromPath and setFromPath)
  *
  * @param stringPath {string} - the string to split
+ * @param cfg {Object} - tag configuration object
+ * @param cfg.altSeparator {boolean} - whether use alternative separator
+ * @param cfg.separator {string} - the alternative separator to use
  * @returns - the array of path components
  */
-const splitStringPath = (stringPath) => {
-  return stringPath.split('.').filter((p) => !!p);
+const splitStringPath = (stringPath, cfg) => {
+  const defaultSep = '.';
+  const separator = cfg.altSeparator ? cfg.separator : defaultSep;
+  return stringPath.split(separator).filter((p) => !!p);
 };
 
 /*
  * Gets the value in obj from path.
- * Path must be a string denoting a (nested) property path separated by '.'
+ * Path must be a string denoting a (nested) property path.
  *  e.g. getFromPath('a.b', {a: {b: 2}}) => 2
  *
  * @param path {string} - the string to replace into
+ * @param tagConfig {Object} - tag configuration object
  * @param obj {Object} - the object to look into
  * @returns - the corresponding value or undefined
  */
-const getFromPath = (path, obj) => {
+const getFromPath = (path, tagConfig, obj) => {
   if (getType(path) === 'string') {
-    const splitPath = splitStringPath(path);
+    const splitPath = splitStringPath(path, tagConfig);
     return splitPath.reduce((acc, curr) => acc && acc[curr], obj);
   }
   return undefined;
@@ -757,24 +855,25 @@ const getFromPath = (path, obj) => {
  * Sets the value in obj from path (side-effects).
  * Overwrites if encounters existing properties, and creates nesting if needed.
  * Examples:
- *  e.g. setFromPath('a.b.c', 3, {a: {b: 0}}) => {a: {b: {c: 3}}}
- *       setFromPath('a.0.x', 4, {a: {b: 0}}) => {a: [{x: 4}]}
- *       setFromPath('a.0',   4, {a: {b: 0}}) => {a: [4]}
- *       setFromPath('a.2',   5, {a: [1,1,1]}) => {a: [1,1,5]}
+ *  e.g. setFromPath('a.b.c', cfg, 3, {a: {b: 0}}) => {a: {b: {c: 3}}}
+ *       setFromPath('a.0.x', cfg, 4, {a: {b: 0}}) => {a: [{x: 4}]}
+ *       setFromPath('a.0',   cfg, 4, {a: {b: 0}}) => {a: [4]}
+ *       setFromPath('a.2',   cfg, 5, {a: [1,1,1]}) => {a: [1,1,5]}
  *
  * @param path {string | array} - the string to replace into
+ * @param tagConfig {Object} - tag configuration object
  * @param val {string} - the substring to replace
  * @param obj {Object} - the object to mutate
  * @param target {Object} - (optional) the object that the path refers to
  * @returns - the object mutated with the value set
  */
-const setFromPath = (path, val, obj, target) => {
+const setFromPath = (path, tagConfig, val, obj, target) => {
   const numAsIdx = true;
   if (!target) {
     target = obj;
   }
   if (getType(path) === 'string') {
-    path = splitStringPath(path);
+    path = splitStringPath(path, tagConfig);
   }
   if (path.length === 1) {
     target[path[0]] = val;
@@ -792,7 +891,7 @@ const setFromPath = (path, val, obj, target) => {
     } else if (isNextNum && numAsIdx && currType !== 'array') {
       target[currKey] = [];
     }
-    return setFromPath(path.slice(1), val, obj, target[currKey]);
+    return setFromPath(path.slice(1), tagConfig, val, obj, target[currKey]);
   }
   return obj;
 };
@@ -850,7 +949,11 @@ const parseSchemaToMajorKeyValue = (schema) => {
  * Returns whether a property name is a Snowplow event property.
  */
 const isSpEventProp = (prop) => {
-  const excludeKeys = ['x-sp-tp2', 'x-sp-contexts'];
+  const excludeKeys = [
+    'x-sp-tp2',
+    'x-sp-contexts',
+    'x-sp-self_describing_event',
+  ];
   return prop.indexOf('x-sp-') === 0 && excludeKeys.indexOf(prop) < 0;
 };
 
@@ -858,7 +961,7 @@ const isSpEventProp = (prop) => {
  * Returns whether a property name is a Snowplow self-describing event property.
  */
 const isSpSelfDescProp = (prop) => {
-  return prop.indexOf('x-sp-self_describing_event') === 0;
+  return prop.indexOf('x-sp-self_describing_event_') === 0;
 };
 
 /*
@@ -978,12 +1081,13 @@ const addProperty = (prop, setVal, tagConfig, nestId, obj) => {
   const setPath = cleanPropertyName(prop);
   const nest = tagConfig[nestId];
   if (nest && getType(nest) === 'string') {
-    if (['object', 'array'].indexOf(getType(getFromPath(nest, obj))) < 0) {
-      setFromPath(nest, {}, obj);
+    const valType = getType(getFromPath(nest, tagConfig, obj));
+    if (['object', 'array'].indexOf(valType) < 0) {
+      setFromPath(nest, tagConfig, {}, obj);
     }
-    setFromPath(setPath, setVal, getFromPath(nest, obj));
+    setFromPath(setPath, tagConfig, setVal, getFromPath(nest, tagConfig, obj));
   } else {
-    setFromPath(setPath, setVal, obj);
+    setFromPath(setPath, tagConfig, setVal, obj);
   }
   return obj;
 };
@@ -1026,7 +1130,7 @@ const parseSnowplowEvent = (evData, tagConfig, payload) => {
         const refIdx = getReferenceIdx(prop, finalEntityRefs);
         if (refIdx >= 0) {
           const rule = finalEntityRules[refIdx];
-          setFromPath(rule.mappedKey, ctxVal, returnObj);
+          setFromPath(rule.mappedKey, tagConfig, ctxVal, returnObj);
         } else {
           if (tagConfig.includeEntities === 'none') {
             continue;
@@ -1062,11 +1166,13 @@ const addEventMappings = (evData, tagConfig, payload) => {
     }
   }
   if (tagConfig.eventMappingRules) {
-    tagConfig.eventMappingRules.forEach((row) => {
-      const setVal = getEventData(row.key);
-      const mappedKey = row.mappedKey || row.key;
-      setFromPath(mappedKey, setVal, returnObj);
-    });
+    tagConfig.eventMappingRules
+      .filter((r) => !!r.key)
+      .forEach((row) => {
+        const setVal = getFromPath(row.key, tagConfig, evData);
+        const mappedKey = row.mappedKey || row.key;
+        setFromPath(mappedKey, tagConfig, setVal, returnObj);
+      });
   }
   return returnObj;
 };
@@ -1083,10 +1189,92 @@ const addRequestData = (tagConfig, payload) => {
   const returnObj = payload;
   if (tagConfig.additionalRequestData) {
     tagConfig.additionalRequestData.forEach((row) => {
-      setFromPath(row.key, row.value, returnObj);
+      setFromPath(row.key, tagConfig, row.value, returnObj);
     });
   }
   return returnObj;
+};
+
+/*
+ * Given a string value, returns it base64 encoded, else as is.
+ */
+const base64urlencode = (val) => {
+  if (getType(val) !== 'string') {
+    return val;
+  }
+  const base64Enc = toBase64(val);
+  const urlBase64Enc = replaceAll(
+    replaceAll(replaceAll(base64Enc, '=', ''), '+', '-'),
+    '/',
+    '_'
+  );
+  return urlBase64Enc;
+};
+
+/*
+ * Fills the post-processing rules with the given applyFunction.
+ * [ { path: 'x', applyFunction: f } ]
+ *
+ * @param bareRules {Object} - "bare" post-processing rules specifying only the path
+ * @param applyFunction {function} - the function to apply to the value on given path
+ * @returns {Object} - the complete post-processing rules
+ */
+const initProcessingRules = (bareRules, applyFunction) => {
+  const rules = bareRules || [];
+  const finalizedRules = rules
+    .filter((r) => !!r.path)
+    .map((r) => {
+      const finalRule = {
+        path: r.path,
+        applyFunction: applyFunction,
+      };
+      return finalRule;
+    });
+
+  return finalizedRules;
+};
+
+/*
+ * Constructs the final array of post-processing rules.
+ */
+const mkProcessingRules = (tagConfig) => {
+  const stringifyRules = initProcessingRules(
+    tagConfig.jsonStringify,
+    JSON.stringify
+  );
+  const encodeRules = initProcessingRules(tagConfig.toBase64, base64urlencode);
+
+  // order matters
+  const finalProcRules = stringifyRules.concat(encodeRules);
+  return finalProcRules;
+};
+
+/*
+ * Applies post-processing to given payload.
+ */
+const applyPostProcessing = (payload, tagConfig) => {
+  const procRules = mkProcessingRules(tagConfig);
+  if (procRules && procRules.length > 0) {
+    procRules.forEach((rule) => {
+      const path = rule.path;
+      const currentVal = getFromPath(path, tagConfig, payload);
+      if (currentVal !== undefined) {
+        const newVal = rule.applyFunction(currentVal);
+        setFromPath(path, tagConfig, newVal, payload);
+      }
+    });
+  }
+
+  return payload;
+};
+
+/*
+ * Post-processes given payload.
+ */
+const postProcess = (payload, tagConfig) => {
+  const finalPayload = applyPostProcessing(payload, tagConfig);
+
+  return tagConfig.inArray ? [finalPayload] : finalPayload;
 };
 
 /*
@@ -1094,7 +1282,7 @@ const addRequestData = (tagConfig, payload) => {
  */
 const mkRequestPayload = (evData, tagConfig) => {
   if (tagConfig.includeAll) {
-    return addRequestData(tagConfig, evData);
+    return postProcess(addRequestData(tagConfig, evData), tagConfig);
   }
 
   const target = {};
@@ -1109,7 +1297,7 @@ const mkRequestPayload = (evData, tagConfig) => {
     )
   );
 
-  return tagConfig.inArray ? [requestPayload] : requestPayload;
+  return postProcess(requestPayload, tagConfig);
 };
 
 /*
@@ -1342,6 +1530,7 @@ scenarios:
 
       inArray: false,
       includeAll: false,
+      altSeparator: false,
 
       includeAllAtomicEventProperties: false,
       includeSelfDescribingEvent: true,
@@ -1439,6 +1628,7 @@ scenarios:
       url: 'test',
       inArray: false,
       includeAll: true,
+      altSeparator: false,
       additionalRequestData: [{ key: 'testExtraRequestData', value: 'extra' }],
       requestMethod: 'post',
       requestTimeout: '5000',
@@ -1498,6 +1688,56 @@ scenarios:
 
     // assert 'no' does not log in prod
     assertApi('logToConsole').wasNotCalled();
+- name: Test includeAll inArray
+  code: |
+    // Tag config data
+    const testMockData = {
+      url: 'test',
+      inArray: true,
+      includeAll: true,
+      altSeparator: false,
+      additionalRequestData: [{ key: 'testExtraRequestData', value: 'extra' }],
+      requestMethod: 'post',
+      requestTimeout: '5000',
+      logType: 'no',
+    };
+
+    const testEvent = mockEventObjectPageView;
+    const expectedArrayElt = jsonApi.parse(jsonApi.stringify(testEvent));
+    expectedArrayElt.testExtraRequestData = 'extra';
+    const expectedBody = [expectedArrayElt];
+
+    // to assert on
+    let argUrl, argCallback, argOptions, argBody;
+
+    // Mocks
+    mock('sendHttpRequest', function () {
+      // mock response
+      const respStatusCode = 200;
+      const respHeaders = { foo: 'bar' };
+      const respBody = 'ok';
+
+      argUrl = arguments[0];
+      argCallback = arguments[1];
+      argOptions = arguments[2];
+      argBody = arguments[3];
+
+      // and call the callback with mock response
+      argCallback(respStatusCode, respHeaders, respBody);
+    });
+
+    mock('getAllEventData', function () {
+      return testEvent;
+    });
+
+    // Call runCode to run the template's code
+    runCode(testMockData);
+
+    // Assert
+    assertApi('sendHttpRequest').wasCalled();
+
+    const body = jsonApi.parse(argBody);
+    assertThat(body).isEqualTo(expectedBody);
 - name: Test entity rules - include all - edit
   code: |
     // Tag config data
@@ -1506,6 +1746,7 @@ scenarios:
 
       inArray: false,
       includeAll: false,
+      altSeparator: false,
 
       includeAllAtomicEventProperties: false,
       includeSelfDescribingEvent: false,
@@ -1599,6 +1840,7 @@ scenarios:
 
       inArray: false,
       includeAll: false,
+      altSeparator: false,
 
       includeAllAtomicEventProperties: false,
       includeSelfDescribingEvent: false,
@@ -1671,6 +1913,7 @@ scenarios:
 
       inArray: false,
       includeAll: false,
+      altSeparator: false,
 
       includeAllAtomicEventProperties: false,
       includeSelfDescribingEvent: false,
@@ -1767,6 +2010,7 @@ scenarios:
 
       inArray: false,
       includeAll: false,
+      altSeparator: false,
 
       includeAllAtomicEventProperties: false,
       includeSelfDescribingEvent: false,
@@ -1863,6 +2107,7 @@ scenarios:
 
       inArray: false,
       includeAll: false,
+      altSeparator: false,
 
       includeAllAtomicEventProperties: false,
       includeSelfDescribingEvent: false,
@@ -1970,6 +2215,7 @@ scenarios:
 
       inArray: false,
       includeAll: false,
+      altSeparator: false,
 
       includeAllAtomicEventProperties: false,
       includeSelfDescribingEvent: true,
@@ -1998,20 +2244,21 @@ scenarios:
         type: 'play',
       },
       testEntityMappedKey: {
-        id: '68027aa2-34b1-4018-95e3-7176c62dbc84',
+        id: testEvent['x-sp-contexts_com_snowplowanalytics_snowplow_web_page_1'][0]
+          .id,
       },
-      event_name: 'media_player_event',
-      client_id: 'fd0e5288-e89b-45df-aad5-6d0c6eda6198',
-      language: 'en-US',
-      page_encoding: 'windows-1252',
-      page_hostname: 'localhost',
-      page_location: 'http://localhost:8000/',
-      page_path: '/',
-      screen_resolution: '1920x1080',
-      user_agent: 'curl/7.81.0',
-      user_id: 'tester',
-      viewport_size: '1044x975',
-      user_data: { email_address: 'foo@test.io' },
+      event_name: testEvent.event_name,
+      client_id: testEvent.client_id,
+      language: testEvent.language,
+      page_encoding: testEvent.page_encoding,
+      page_hostname: testEvent.page_hostname,
+      page_location: testEvent.page_location,
+      page_path: testEvent.page_path,
+      screen_resolution: testEvent.screen_resolution,
+      user_agent: testEvent.user_agent,
+      user_id: testEvent.user_id,
+      viewport_size: testEvent.viewport_size,
+      user_data: testEvent.user_data,
     };
 
     // to assert on
@@ -2072,6 +2319,7 @@ scenarios:
 
       inArray: false,
       includeAll: false,
+      altSeparator: false,
 
       includeAllAtomicEventProperties: true,
       atomicNest: 'data.0',
@@ -2127,25 +2375,25 @@ scenarios:
       schema: 'iglu:com.foo.bar/test_fun/jsonschema/1-0-0',
       data: [
         {
-          app_id: 'media-test',
-          platform: 'web',
-          dvce_created_tstamp: '1658567928426',
-          event: 'media_player_event',
-          event_id: 'c2084e30-5e4f-4d9c-86b2-e0bc3781509a',
-          name_tracker: 'spTest',
-          v_tracker: 'js-3.5.0',
-          domain_sessionidx: 1,
-          domain_sessionid: '1ab28b79-bfdd-4855-9bf1-5199ce15beac',
-          br_cookies: '1',
-          br_colordepth: '24',
-          br_viewwidth: 1044,
-          br_viewheight: 975,
-          dvce_screenwidth: 1920,
-          dvce_screenheight: 1080,
-          doc_charset: 'windows-1252',
-          doc_width: 1044,
-          doc_height: 975,
-          dvce_sent_tstamp: '1658567928427',
+          app_id: testEvent['x-sp-app_id'],
+          platform: testEvent['x-sp-platform'],
+          dvce_created_tstamp: testEvent['x-sp-dvce_created_tstamp'],
+          event: testEvent.event_name,
+          event_id: testEvent['x-sp-event_id'],
+          name_tracker: testEvent['x-sp-name_tracker'],
+          v_tracker: testEvent['x-sp-v_tracker'],
+          domain_sessionidx: testEvent['x-sp-domain_sessionidx'],
+          domain_sessionid: testEvent['x-sp-domain_sessionid'],
+          br_cookies: testEvent['x-sp-br_cookies'],
+          br_colordepth: testEvent['x-sp-br_colordepth'],
+          br_viewwidth: testEvent['x-sp-br_viewwidth'],
+          br_viewheight: testEvent['x-sp-br_viewheight'],
+          dvce_screenwidth: testEvent['x-sp-dvce_screenwidth'],
+          dvce_screenheight: testEvent['x-sp-dvce_screenheight'],
+          doc_charset: testEvent['x-sp-doc_charset'],
+          doc_width: testEvent['x-sp-doc_width'],
+          doc_height: testEvent['x-sp-doc_height'],
+          dvce_sent_tstamp: testEvent['x-sp-dvce_sent_tstamp'],
           // assert from entity mapping
           test_youtube: testEvent['x-sp-contexts_com_youtube_youtube_1'],
 
@@ -2170,7 +2418,13 @@ scenarios:
             ],
 
           // assert on additional event mapping
-          contexts_com_acme_test_media_1: [{ time: 0.015303093460083008 }],
+          contexts_com_acme_test_media_1: [
+            {
+              time: testEvent[
+                'x-sp-contexts_com_snowplowanalytics_snowplow_media_player_1'
+              ][0].currentTime,
+            },
+          ],
           contexts_com_acme_test_youtube_1: [
             {
               quality_levels:
@@ -2216,9 +2470,6 @@ scenarios:
     mock('getAllEventData', function () {
       return testEvent;
     });
-    mock('getEventData', function (x) {
-      return getFromPath(x, testEvent);
-    });
 
     // Call runCode to run the template's code
     runCode(testMockData);
@@ -2246,6 +2497,7 @@ scenarios:
 
       inArray: false,
       includeAll: false,
+      altSeparator: false,
 
       includeAllAtomicEventProperties: true,
       atomicNest: 'mySpAtomicProps',
@@ -2268,24 +2520,24 @@ scenarios:
     const testEvent = mockEventObjectSelfDesc;
     const expectedBody = {
       mySpAtomicProps: {
-        app_id: 'media-test',
-        platform: 'web',
-        dvce_created_tstamp: '1658567928426',
-        event_id: 'c2084e30-5e4f-4d9c-86b2-e0bc3781509a',
-        name_tracker: 'spTest',
-        v_tracker: 'js-3.5.0',
-        domain_sessionidx: 1,
-        domain_sessionid: '1ab28b79-bfdd-4855-9bf1-5199ce15beac',
-        br_cookies: '1',
-        br_colordepth: '24',
-        br_viewwidth: 1044,
-        br_viewheight: 975,
-        dvce_screenwidth: 1920,
-        dvce_screenheight: 1080,
-        doc_charset: 'windows-1252',
-        doc_width: 1044,
-        doc_height: 975,
-        dvce_sent_tstamp: '1658567928427',
+        app_id: testEvent['x-sp-app_id'],
+        platform: testEvent['x-sp-platform'],
+        dvce_created_tstamp: testEvent['x-sp-dvce_created_tstamp'],
+        event_id: testEvent['x-sp-event_id'],
+        name_tracker: testEvent['x-sp-name_tracker'],
+        v_tracker: testEvent['x-sp-v_tracker'],
+        domain_sessionidx: testEvent['x-sp-domain_sessionidx'],
+        domain_sessionid: testEvent['x-sp-domain_sessionid'],
+        br_cookies: testEvent['x-sp-br_cookies'],
+        br_colordepth: testEvent['x-sp-br_colordepth'],
+        br_viewwidth: testEvent['x-sp-br_viewwidth'],
+        br_viewheight: testEvent['x-sp-br_viewheight'],
+        dvce_screenwidth: testEvent['x-sp-dvce_screenwidth'],
+        dvce_screenheight: testEvent['x-sp-dvce_screenheight'],
+        doc_charset: testEvent['x-sp-doc_charset'],
+        doc_width: testEvent['x-sp-doc_width'],
+        doc_height: testEvent['x-sp-doc_height'],
+        dvce_sent_tstamp: testEvent['x-sp-dvce_sent_tstamp'],
       },
       mySelfDescEvent: {
         self_describing_event_com_snowplowanalytics_snowplow_media_player_event_1: {
@@ -2315,20 +2567,20 @@ scenarios:
           ][0],
       },
       myCommonEventProps: {
-        client_id: 'fd0e5288-e89b-45df-aad5-6d0c6eda6198',
-        event_name: 'media_player_event',
-        language: 'en-US',
-        page_encoding: 'windows-1252',
-        page_hostname: 'localhost',
-        page_location: 'http://localhost:8000/',
-        page_path: '/',
-        screen_resolution: '1920x1080',
-        user_agent: 'curl/7.81.0',
-        user_id: 'tester',
-        viewport_size: '1044x975',
+        client_id: testEvent.client_id,
+        event_name: testEvent.event_name,
+        language: testEvent.language,
+        page_encoding: testEvent.page_encoding,
+        page_hostname: testEvent.page_hostname,
+        page_location: testEvent.page_location,
+        page_path: testEvent.page_path,
+        screen_resolution: testEvent.screen_resolution,
+        user_agent: testEvent.user_agent,
+        user_id: testEvent.user_id,
+        viewport_size: testEvent.viewport_size,
       },
       myUserData: {
-        user_data: { email_address: 'foo@test.io' },
+        user_data: testEvent.user_data,
       },
     };
 
@@ -2389,6 +2641,7 @@ scenarios:
 
       inArray: false,
       includeAll: false,
+      altSeparator: false,
 
       includeAllAtomicEventProperties: true,
       atomicNest: 'snowplow.snowplow',
@@ -2410,24 +2663,24 @@ scenarios:
     const expectedBody = {
       snowplow: {
         snowplow: {
-          app_id: 'media-test',
-          platform: 'web',
-          dvce_created_tstamp: '1658567928426',
-          event_id: 'c2084e30-5e4f-4d9c-86b2-e0bc3781509a',
-          name_tracker: 'spTest',
-          v_tracker: 'js-3.5.0',
-          domain_sessionidx: 1,
-          domain_sessionid: '1ab28b79-bfdd-4855-9bf1-5199ce15beac',
-          br_cookies: '1',
-          br_colordepth: '24',
-          br_viewwidth: 1044,
-          br_viewheight: 975,
-          dvce_screenwidth: 1920,
-          dvce_screenheight: 1080,
-          doc_charset: 'windows-1252',
-          doc_width: 1044,
-          doc_height: 975,
-          dvce_sent_tstamp: '1658567928427',
+          app_id: testEvent['x-sp-app_id'],
+          platform: testEvent['x-sp-platform'],
+          dvce_created_tstamp: testEvent['x-sp-dvce_created_tstamp'],
+          event_id: testEvent['x-sp-event_id'],
+          name_tracker: testEvent['x-sp-name_tracker'],
+          v_tracker: testEvent['x-sp-v_tracker'],
+          domain_sessionidx: testEvent['x-sp-domain_sessionidx'],
+          domain_sessionid: testEvent['x-sp-domain_sessionid'],
+          br_cookies: testEvent['x-sp-br_cookies'],
+          br_colordepth: testEvent['x-sp-br_colordepth'],
+          br_viewwidth: testEvent['x-sp-br_viewwidth'],
+          br_viewheight: testEvent['x-sp-br_viewheight'],
+          dvce_screenwidth: testEvent['x-sp-dvce_screenwidth'],
+          dvce_screenheight: testEvent['x-sp-dvce_screenheight'],
+          doc_charset: testEvent['x-sp-doc_charset'],
+          doc_width: testEvent['x-sp-doc_width'],
+          doc_height: testEvent['x-sp-doc_height'],
+          dvce_sent_tstamp: testEvent['x-sp-dvce_sent_tstamp'],
           self_describing_event_com_snowplowanalytics_snowplow_media_player_event_1:
             {
               type: 'play',
@@ -2513,6 +2766,7 @@ scenarios:
 
       inArray: false,
       includeAll: false,
+      altSeparator: false,
 
       includeAllAtomicEventProperties: false,
       includeSelfDescribingEvent: false,
@@ -2569,7 +2823,7 @@ scenarios:
       },
       myProps: [
         {
-          viewportMapped: '1044x975',
+          viewportMapped: testEvent.viewport_size,
         },
       ],
       testEventMappedKey: {
@@ -2589,9 +2843,6 @@ scenarios:
 
     mock('getAllEventData', function () {
       return testEvent;
-    });
-    mock('getEventData', function (x) {
-      return getFromPath(x, testEvent);
     });
 
     // Call runCode to run the template's code
@@ -2617,6 +2868,7 @@ scenarios:
 
       inArray: false,
       includeAll: false,
+      altSeparator: false,
 
       includeAllAtomicEventProperties: false,
       includeSelfDescribingEvent: true,
@@ -2664,6 +2916,511 @@ scenarios:
     assertThat(argOptions.headers['test-Header-Key']).isStrictlyEqualTo(
       'testHeaderVal'
     );
+- name: Test postProcessing
+  code: |
+    // Tag config data
+    const testMockData = {
+      url: 'http://localhost:9090/com.snowplowanalytics.snowplow/tp2',
+
+      inArray: false,
+      includeAll: false,
+      altSeparator: false,
+
+      includeAllAtomicEventProperties: false,
+      includeSelfDescribingEvent: false,
+      extractFromArray: true,
+      includeEntities: 'none',
+      entityMappingRules: [
+        {
+          key: 'x-sp-contexts_com_snowplowanalytics_snowplow_web_page_1',
+          mappedKey: 'data.0.cx.data.0.data',
+          version: 'control',
+        },
+      ],
+
+      includeCommonEventProperties: false,
+      includeCommonUserProperties: false,
+
+      eventMappingRules: [
+        {
+          key: 'x-sp-platform',
+          mappedKey: 'data.0.p',
+        },
+        {
+          key: 'x-sp-v_tracker',
+          mappedKey: 'data.0.tv',
+        },
+        {
+          key: 'x-sp-self_describing_event_com_snowplowanalytics_snowplow_media_player_event_1',
+          mappedKey: 'data.0.ue_px.data.data',
+        },
+        {
+          key: 'x-sp-contexts_com_snowplowanalytics_snowplow_client_session_1.0.userId',
+          mappedKey: 'data.0.cx.data.1.data.userId',
+        },
+        {
+          key: 'x-sp-contexts_com_snowplowanalytics_snowplow_client_session_1.0.sessionId',
+          mappedKey: 'data.0.cx.data.1.data.sessionId',
+        },
+        {
+          key: 'x-sp-contexts_com_snowplowanalytics_snowplow_client_session_1.0.sessionIndex',
+          mappedKey: 'data.0.cx.data.1.data.sessionIndex',
+        },
+        {
+          key: 'x-sp-contexts_com_snowplowanalytics_snowplow_client_session_1.0.previousSessionId',
+          mappedKey: 'data.0.cx.data.1.data.previousSessionId',
+        },
+        {
+          key: 'x-sp-contexts_com_snowplowanalytics_snowplow_client_session_1.0.storageMechanism',
+          mappedKey: 'data.0.cx.data.1.data.storageMechanism',
+        },
+      ],
+
+      additionalRequestData: [
+        {
+          key: 'data.0.e',
+          value: 'ue',
+        },
+        {
+          key: 'schema',
+          value:
+            'iglu:com.snowplowanalytics.snowplow/payload_data/jsonschema/1-0-4',
+        },
+        {
+          key: 'data.0.ue_px.schema',
+          value:
+            'iglu:com.snowplowanalytics.snowplow/unstruct_event/jsonschema/1-0-0',
+        },
+        {
+          key: 'data.0.ue_px.data.schema',
+          value:
+            'iglu:com.snowplowanalytics.snowplow/media_player_event/jsonschema/1-0-0',
+        },
+        {
+          key: 'data.0.cx.schema',
+          value: 'iglu:com.snowplowanalytics.snowplow/contexts/jsonschema/1-0-0',
+        },
+        {
+          key: 'data.0.cx.data.0.schema',
+          value: 'iglu:com.snowplowanalytics.snowplow/web_page/jsonschema/1-0-0',
+        },
+        {
+          key: 'data.0.cx.data.1.schema',
+          value:
+            'iglu:com.snowplowanalytics.snowplow/client_session/jsonschema/1-0-2',
+        },
+      ],
+
+      jsonStringify: [{ path: 'data.0.ue_px' }, { path: 'data.0.cx' }],
+      toBase64: [{ path: 'data.0.ue_px' }, { path: 'data.0.cx' }],
+
+      requestMethod: 'post',
+      requestTimeout: '5000',
+      logType: 'always',
+    };
+
+    const testEvent = mockEventObjectSelfDesc;
+    const expectedBody = {
+      schema: 'iglu:com.snowplowanalytics.snowplow/payload_data/jsonschema/1-0-4',
+      data: [
+        {
+          e: 'ue',
+          p: testEvent['x-sp-platform'],
+          tv: testEvent['x-sp-v_tracker'],
+          ue_px:
+            'eyJkYXRhIjp7ImRhdGEiOnsidHlwZSI6InBsYXkifSwic2NoZW1hIjoiaWdsdTpjb20uc25vd3Bsb3dhbmFseXRpY3Muc25vd3Bsb3cvbWVkaWFfcGxheWVyX2V2ZW50L2pzb25zY2hlbWEvMS0wLTAifSwic2NoZW1hIjoiaWdsdTpjb20uc25vd3Bsb3dhbmFseXRpY3Muc25vd3Bsb3cvdW5zdHJ1Y3RfZXZlbnQvanNvbnNjaGVtYS8xLTAtMCJ9',
+          cx: 'eyJkYXRhIjpbeyJkYXRhIjp7ImlkIjoiODJmOTNhMDAtMjM0NC00MzY3LTlhMmQtYTJkY2YwMzhkNWUxIn0sInNjaGVtYSI6ImlnbHU6Y29tLnNub3dwbG93YW5hbHl0aWNzLnNub3dwbG93L3dlYl9wYWdlL2pzb25zY2hlbWEvMS0wLTAifSx7ImRhdGEiOnsidXNlcklkIjoiZWU3YjY0ZTctYmVlMi00YjE2LWFhZjUtNTA1N2U2YmI0YWYzIiwic2Vzc2lvbklkIjoiMzM5MDEzYzMtZWM2Yi00OTM1LWI0NmUtNDg3MDY0YmIxY2UwIiwic2Vzc2lvbkluZGV4IjoyLCJwcmV2aW91c1Nlc3Npb25JZCI6IjY2NjA5Y2NmLWM2NjEtNGYxMC05N2NlLWFmMzgyMjBmNWViNSIsInN0b3JhZ2VNZWNoYW5pc20iOiJDT09LSUVfMSJ9LCJzY2hlbWEiOiJpZ2x1OmNvbS5zbm93cGxvd2FuYWx5dGljcy5zbm93cGxvdy9jbGllbnRfc2Vzc2lvbi9qc29uc2NoZW1hLzEtMC0yIn1dLCJzY2hlbWEiOiJpZ2x1OmNvbS5zbm93cGxvd2FuYWx5dGljcy5zbm93cGxvdy9jb250ZXh0cy9qc29uc2NoZW1hLzEtMC0wIn0',
+        },
+      ],
+    };
+
+    // to assert on
+    let argUrl, argCallback, argOptions, argBody;
+
+    // Mocks
+    mock('sendHttpRequest', function () {
+      // mock response
+      const respStatusCode = 200;
+      const respHeaders = { foo: 'bar' };
+      const respBody = 'ok';
+
+      argUrl = arguments[0];
+      argCallback = arguments[1];
+      argOptions = arguments[2];
+      argBody = arguments[3];
+
+      // and call the callback with mock response
+      argCallback(respStatusCode, respHeaders, respBody);
+    });
+
+    mock('getAllEventData', function () {
+      return testEvent;
+    });
+
+    // Call runCode to run the template's code
+    runCode(testMockData);
+
+    // Assert
+    assertApi('sendHttpRequest').wasCalled();
+
+    const body = jsonApi.parse(argBody);
+    assertThat(body).isEqualTo(expectedBody);
+- name: Test alt separator 0
+  code: |
+    // Tag config data
+    const testMockData = {
+      url: 'test',
+
+      inArray: false,
+      includeAll: false,
+      altSeparator: true,
+      separator: '.', // the default
+
+      includeAllAtomicEventProperties: false,
+      includeSelfDescribingEvent: false,
+      extractFromArray: false,
+      includeEntities: 'all',
+      allUnmappedEntityNest: 'myContexts',
+      entityMappingRules: [
+        {
+          key: 'iglu:com.snowplowanalytics.snowplow/web_page/jsonschema/1-0-0',
+          mappedKey: 'myContexts.testEntityMappedKey',
+          version: 'control',
+        },
+      ],
+
+      includeCommonEventProperties: false,
+      includeCommonUserProperties: false,
+      eventMappingRules: [
+        {
+          key: 'x-sp-self_describing_event_com_snowplowanalytics_snowplow_media_player_event_1.type',
+          mappedKey: 'testEventMappedKey.fooType',
+        },
+        { key: 'viewport_size', mappedKey: 'myProps.0.viewportMapped' },
+      ],
+
+      additionalRequestData: [
+        { key: 'testApiKey', value: 'bvjdbcjkxbckljdbcksjdbc' },
+      ],
+
+      requestMethod: 'post',
+      requestTimeout: '5000',
+      logType: 'no',
+    };
+
+    const testEvent = mockEventObjectSelfDesc;
+    const expectedBody = {
+      testApiKey: 'bvjdbcjkxbckljdbcksjdbc',
+      myContexts: {
+        contexts_com_snowplowanalytics_snowplow_mobile_context_1:
+          testEvent[
+            'x-sp-contexts_com_snowplowanalytics_snowplow_mobile_context_1'
+          ],
+        contexts_com_youtube_youtube_1:
+          testEvent['x-sp-contexts_com_youtube_youtube_1'],
+        contexts_com_snowplowanalytics_snowplow_media_player_1:
+          testEvent['x-sp-contexts_com_snowplowanalytics_snowplow_media_player_1'],
+        'contexts_com_google_tag-manager_server-side_user_data_1':
+          testEvent['x-sp-contexts_com_google_tag-manager_server-side_user_data_1'],
+        contexts_com_snowplowanalytics_snowplow_client_session_1:
+          testEvent[
+            'x-sp-contexts_com_snowplowanalytics_snowplow_client_session_1'
+          ],
+        testEntityMappedKey:
+          testEvent['x-sp-contexts_com_snowplowanalytics_snowplow_web_page_1'],
+      },
+      myProps: [
+        {
+          viewportMapped: testEvent.viewport_size,
+        },
+      ],
+      testEventMappedKey: {
+        fooType: 'play',
+      },
+    };
+
+    // to assert on
+    let argUrl, argCallback, argOptions, argBody;
+
+    // Mocks
+    mock('sendHttpRequest', function () {
+      argUrl = arguments[0];
+      argOptions = arguments[2];
+      argBody = arguments[3];
+    });
+
+    mock('getAllEventData', function () {
+      return testEvent;
+    });
+
+    // Call runCode to run the template's code
+    runCode(testMockData);
+
+    // Assert
+    assertApi('sendHttpRequest').wasCalled();
+    assertThat(argUrl).isStrictlyEqualTo(testMockData.url);
+
+    assertThat(argOptions.method).isStrictlyEqualTo('POST');
+    assertThat(argOptions.timeout).isStrictlyEqualTo(5000);
+    assertThat(argOptions.headers['Content-Type']).isStrictlyEqualTo(
+      'application/json'
+    );
+
+    const body = jsonApi.parse(argBody);
+    assertThat(body).isEqualTo(expectedBody);
+- name: Test alt separator 1
+  code: |
+    // Tag config data
+    const testMockData = {
+      url: 'test',
+
+      inArray: false,
+      includeAll: false,
+      altSeparator: true,
+      separator: '~',
+
+      includeAllAtomicEventProperties: false,
+      includeSelfDescribingEvent: false,
+      extractFromArray: false,
+      includeEntities: 'all',
+      allUnmappedEntityNest: 'myContexts.dotName',
+      entityMappingRules: [
+        {
+          key: 'iglu:com.snowplowanalytics.snowplow/web_page/jsonschema/1-0-0',
+          mappedKey: 'myContexts.dotName~testEntity.MappedKey',
+          version: 'control',
+        },
+      ],
+
+      includeCommonEventProperties: false,
+      includeCommonUserProperties: false,
+      eventMappingRules: [
+        {
+          key: 'x-sp-self_describing_event_com_snowplowanalytics_snowplow_media_player_event_1~type',
+          mappedKey: 'testEventMappedKey~fooType',
+        },
+        { key: 'viewport_size', mappedKey: 'myProps~0~viewportMapped' },
+      ],
+
+      additionalRequestData: [
+        { key: 'testApiKey', value: 'bvjdbcjkxbckljdbcksjdbc' },
+      ],
+
+      requestMethod: 'post',
+      requestTimeout: '5000',
+      logType: 'no',
+    };
+
+    const testEvent = mockEventObjectSelfDesc;
+    const expectedBody = {
+      testApiKey: 'bvjdbcjkxbckljdbcksjdbc',
+      'myContexts.dotName' : {
+        contexts_com_snowplowanalytics_snowplow_mobile_context_1:
+          testEvent[
+            'x-sp-contexts_com_snowplowanalytics_snowplow_mobile_context_1'
+          ],
+        contexts_com_youtube_youtube_1:
+          testEvent['x-sp-contexts_com_youtube_youtube_1'],
+        contexts_com_snowplowanalytics_snowplow_media_player_1:
+          testEvent['x-sp-contexts_com_snowplowanalytics_snowplow_media_player_1'],
+        'contexts_com_google_tag-manager_server-side_user_data_1':
+          testEvent['x-sp-contexts_com_google_tag-manager_server-side_user_data_1'],
+        contexts_com_snowplowanalytics_snowplow_client_session_1:
+          testEvent[
+            'x-sp-contexts_com_snowplowanalytics_snowplow_client_session_1'
+          ],
+        'testEntity.MappedKey':
+          testEvent['x-sp-contexts_com_snowplowanalytics_snowplow_web_page_1'],
+      },
+      myProps: [
+        {
+          viewportMapped: testEvent.viewport_size,
+        },
+      ],
+      testEventMappedKey: {
+        fooType: 'play',
+      },
+    };
+
+    // to assert on
+    let argUrl, argCallback, argOptions, argBody;
+
+    // Mocks
+    mock('sendHttpRequest', function () {
+      argUrl = arguments[0];
+      argOptions = arguments[2];
+      argBody = arguments[3];
+    });
+
+    mock('getAllEventData', function () {
+      return testEvent;
+    });
+
+    // Call runCode to run the template's code
+    runCode(testMockData);
+
+    // Assert
+    assertApi('sendHttpRequest').wasCalled();
+    assertThat(argUrl).isStrictlyEqualTo(testMockData.url);
+
+    assertThat(argOptions.method).isStrictlyEqualTo('POST');
+    assertThat(argOptions.timeout).isStrictlyEqualTo(5000);
+    assertThat(argOptions.headers['Content-Type']).isStrictlyEqualTo(
+      'application/json'
+    );
+
+    const body = jsonApi.parse(argBody);
+    assertThat(body).isEqualTo(expectedBody);
+- name: Test alt separator 2
+  code: |
+    // Tag config data
+    const testMockData = {
+      url: 'http://localhost:9090/com.snowplowanalytics.snowplow/tp2',
+
+      inArray: false,
+      includeAll: false,
+      altSeparator: true,
+      separator: '..',
+
+      includeAllAtomicEventProperties: false,
+      includeSelfDescribingEvent: false,
+      extractFromArray: true,
+      includeEntities: 'none',
+      entityMappingRules: [
+        {
+          key: 'x-sp-contexts_com_snowplowanalytics_snowplow_web_page_1',
+          mappedKey: 'data..0..cx..data..0..data',
+          version: 'control',
+        },
+      ],
+
+      includeCommonEventProperties: false,
+      includeCommonUserProperties: false,
+
+      eventMappingRules: [
+        {
+          key: 'x-sp-platform',
+          mappedKey: 'data..0..p',
+        },
+        {
+          key: 'x-sp-v_tracker',
+          mappedKey: 'data..0..tv',
+        },
+        {
+          key: 'x-sp-self_describing_event_com_snowplowanalytics_snowplow_media_player_event_1',
+          mappedKey: 'data..0..ue_px..data..data',
+        },
+        {
+          key: 'x-sp-contexts_com_snowplowanalytics_snowplow_client_session_1..0..userId',
+          mappedKey: 'data..0..cx..data..1..data..userId',
+        },
+        {
+          key: 'x-sp-contexts_com_snowplowanalytics_snowplow_client_session_1..0..sessionId',
+          mappedKey: 'data..0..cx..data..1..data..sessionId',
+        },
+        {
+          key: 'x-sp-contexts_com_snowplowanalytics_snowplow_client_session_1..0..sessionIndex',
+          mappedKey: 'data..0..cx..data..1..data..sessionIndex',
+        },
+        {
+          key: 'x-sp-contexts_com_snowplowanalytics_snowplow_client_session_1..0..previousSessionId',
+          mappedKey: 'data..0..cx..data..1..data..previousSessionId',
+        },
+        {
+          key: 'x-sp-contexts_com_snowplowanalytics_snowplow_client_session_1..0..storageMechanism',
+          mappedKey: 'data..0..cx..data..1..data..storageMechanism',
+        },
+      ],
+
+      additionalRequestData: [
+        {
+          key: 'data..0..e',
+          value: 'ue',
+        },
+        {
+          key: 'schema',
+          value:
+            'iglu:com.snowplowanalytics.snowplow/payload_data/jsonschema/1-0-4',
+        },
+        {
+          key: 'data..0..ue_px..schema',
+          value:
+            'iglu:com.snowplowanalytics.snowplow/unstruct_event/jsonschema/1-0-0',
+        },
+        {
+          key: 'data..0..ue_px..data..schema',
+          value:
+            'iglu:com.snowplowanalytics.snowplow/media_player_event/jsonschema/1-0-0',
+        },
+        {
+          key: 'data..0..cx..schema',
+          value: 'iglu:com.snowplowanalytics.snowplow/contexts/jsonschema/1-0-0',
+        },
+        {
+          key: 'data..0..cx..data..0..schema',
+          value: 'iglu:com.snowplowanalytics.snowplow/web_page/jsonschema/1-0-0',
+        },
+        {
+          key: 'data..0..cx..data..1..schema',
+          value:
+            'iglu:com.snowplowanalytics.snowplow/client_session/jsonschema/1-0-2',
+        },
+      ],
+
+      jsonStringify: [{ path: 'data..0..ue_px' }, { path: 'data..0..cx' }],
+      toBase64: [{ path: 'data..0..ue_px' }, { path: 'data..0..cx' }],
+
+      requestMethod: 'post',
+      requestTimeout: '5000',
+      logType: 'always',
+    };
+
+    const testEvent = mockEventObjectSelfDesc;
+    const expectedBody = {
+      schema: 'iglu:com.snowplowanalytics.snowplow/payload_data/jsonschema/1-0-4',
+      data: [
+        {
+          e: 'ue',
+          p: 'web',
+          tv: 'js-3.5.0',
+          ue_px:
+            'eyJkYXRhIjp7ImRhdGEiOnsidHlwZSI6InBsYXkifSwic2NoZW1hIjoiaWdsdTpjb20uc25vd3Bsb3dhbmFseXRpY3Muc25vd3Bsb3cvbWVkaWFfcGxheWVyX2V2ZW50L2pzb25zY2hlbWEvMS0wLTAifSwic2NoZW1hIjoiaWdsdTpjb20uc25vd3Bsb3dhbmFseXRpY3Muc25vd3Bsb3cvdW5zdHJ1Y3RfZXZlbnQvanNvbnNjaGVtYS8xLTAtMCJ9',
+          cx: 'eyJkYXRhIjpbeyJkYXRhIjp7ImlkIjoiODJmOTNhMDAtMjM0NC00MzY3LTlhMmQtYTJkY2YwMzhkNWUxIn0sInNjaGVtYSI6ImlnbHU6Y29tLnNub3dwbG93YW5hbHl0aWNzLnNub3dwbG93L3dlYl9wYWdlL2pzb25zY2hlbWEvMS0wLTAifSx7ImRhdGEiOnsidXNlcklkIjoiZWU3YjY0ZTctYmVlMi00YjE2LWFhZjUtNTA1N2U2YmI0YWYzIiwic2Vzc2lvbklkIjoiMzM5MDEzYzMtZWM2Yi00OTM1LWI0NmUtNDg3MDY0YmIxY2UwIiwic2Vzc2lvbkluZGV4IjoyLCJwcmV2aW91c1Nlc3Npb25JZCI6IjY2NjA5Y2NmLWM2NjEtNGYxMC05N2NlLWFmMzgyMjBmNWViNSIsInN0b3JhZ2VNZWNoYW5pc20iOiJDT09LSUVfMSJ9LCJzY2hlbWEiOiJpZ2x1OmNvbS5zbm93cGxvd2FuYWx5dGljcy5zbm93cGxvdy9jbGllbnRfc2Vzc2lvbi9qc29uc2NoZW1hLzEtMC0yIn1dLCJzY2hlbWEiOiJpZ2x1OmNvbS5zbm93cGxvd2FuYWx5dGljcy5zbm93cGxvdy9jb250ZXh0cy9qc29uc2NoZW1hLzEtMC0wIn0',
+        },
+      ],
+    };
+
+    // to assert on
+    let argUrl, argCallback, argOptions, argBody;
+
+    // Mocks
+    mock('sendHttpRequest', function () {
+      // mock response
+      const respStatusCode = 200;
+      const respHeaders = { foo: 'bar' };
+      const respBody = 'ok';
+
+      argUrl = arguments[0];
+      argCallback = arguments[1];
+      argOptions = arguments[2];
+      argBody = arguments[3];
+
+      // and call the callback with mock response
+      argCallback(respStatusCode, respHeaders, respBody);
+    });
+
+    mock('getAllEventData', function () {
+      return testEvent;
+    });
+
+    // Call runCode to run the template's code
+    runCode(testMockData);
+
+    // Assert
+    assertApi('sendHttpRequest').wasCalled();
+
+    const body = jsonApi.parse(argBody);
+    assertThat(body).isEqualTo(expectedBody);
 setup: |-
   const jsonApi = require('JSON');
   const getTypeOf = require('getType');
@@ -2771,45 +3528,68 @@ setup: |-
   };
   const mockEventObjectSelfDesc = {
     event_name: 'media_player_event',
-    client_id: 'fd0e5288-e89b-45df-aad5-6d0c6eda6198',
+    client_id: 'ee7b64e7-bee2-4b16-aaf5-5057e6bb4af3',
     language: 'en-US',
-    page_encoding: 'windows-1252',
+    page_encoding: 'UTF-8',
     page_hostname: 'localhost',
-    page_location: 'http://localhost:8000/',
+    page_location: 'http://localhost:8080/',
     page_path: '/',
     screen_resolution: '1920x1080',
     user_id: 'tester',
-    viewport_size: '1044x975',
+    viewport_size: '779x975',
     user_agent: 'curl/7.81.0',
     host: 'host',
     'x-sp-app_id': 'media-test',
     'x-sp-platform': 'web',
-    'x-sp-dvce_created_tstamp': '1658567928426',
-    'x-sp-event_id': 'c2084e30-5e4f-4d9c-86b2-e0bc3781509a',
+    'x-sp-dvce_created_tstamp': '1665409698511',
+    'x-sp-event_id': '2fa64700-fce2-4e81-afdf-1d0660d34025',
     'x-sp-name_tracker': 'spTest',
     'x-sp-v_tracker': 'js-3.5.0',
-    'x-sp-domain_sessionid': '1ab28b79-bfdd-4855-9bf1-5199ce15beac',
-    'x-sp-domain_sessionidx': 1,
+    'x-sp-domain_sessionid': '339013c3-ec6b-4935-b46e-487064bb1ce0',
+    'x-sp-domain_sessionidx': 2,
     'x-sp-br_cookies': '1',
     'x-sp-br_colordepth': '24',
-    'x-sp-br_viewwidth': 1044,
+    'x-sp-br_viewwidth': 779,
     'x-sp-br_viewheight': 975,
     'x-sp-dvce_screenwidth': 1920,
     'x-sp-dvce_screenheight': 1080,
-    'x-sp-doc_charset': 'windows-1252',
-    'x-sp-doc_width': 1044,
-    'x-sp-doc_height': 975,
-    'x-sp-dvce_sent_tstamp': '1658567928427',
+    'x-sp-doc_charset': 'UTF-8',
+    'x-sp-doc_width': 764,
+    'x-sp-doc_height': 1211,
+    'x-sp-dvce_sent_tstamp': '1665409698512',
+    'x-sp-tp2': {
+      e: 'ue',
+      eid: '2fa64700-fce2-4e81-afdf-1d0660d34025',
+      tv: 'js-3.5.0',
+      tna: 'spTest',
+      aid: 'media-test',
+      p: 'web',
+      cookie: '1',
+      cs: 'UTF-8',
+      lang: 'en-US',
+      res: '1920x1080',
+      cd: '24',
+      tz: 'Europe/Athens',
+      dtm: '1665409698511',
+      vp: '779x975',
+      ds: '764x1211',
+      vid: '2',
+      sid: '339013c3-ec6b-4935-b46e-487064bb1ce0',
+      duid: 'ee7b64e7-bee2-4b16-aaf5-5057e6bb4af3',
+      uid: 'tester',
+      url: 'http://localhost:8080/',
+      ue_pr:
+        '{"schema":"iglu:com.snowplowanalytics.snowplow/unstruct_event/jsonschema/1-0-0","data":{"schema":"iglu:com.snowplowanalytics.snowplow/media_player_event/jsonschema/1-0-0","data":{"type":"play"}}}',
+      co: '{"schema":"iglu:com.snowplowanalytics.snowplow/contexts/jsonschema/1-0-0","data":[{"schema":"iglu:com.youtube/youtube/jsonschema/1-0-0","data":{"autoPlay":false,"avaliablePlaybackRates":[0.25,0.5,0.75,1,1.25,1.5,1.75,2],"buffering":false,"controls":true,"cued":false,"loaded":6,"playbackQuality":"medium","playerId":"youtube-song","unstarted":false,"url":"https://www.youtube.com/watch?v=foobarbaz","avaliableQualityLevels":["hd1080","hd720","large","medium","small","tiny","auto"]}},{"schema":"iglu:com.snowplowanalytics.snowplow/media_player/jsonschema/1-0-0","data":{"currentTime":0.04796292752075195,"duration":190.301,"ended":false,"loop":false,"muted":false,"paused":false,"playbackRate":1,"volume":100}},{"schema":"iglu:com.snowplowanalytics.snowplow/web_page/jsonschema/1-0-0","data":{"id":"82f93a00-2344-4367-9a2d-a2dcf038d5e1"}},{"schema":"iglu:com.google.tag-manager.server-side/user_data/jsonschema/1-0-0","data":{"email_address":"foo@test.io"}},{"schema":"iglu:com.snowplowanalytics.snowplow/mobile_context/jsonschema/1-0-2","data":{"osType":"myOsType","osVersion":"myOsVersion","deviceManufacturer":"myDevMan","deviceModel":"myDevModel"}},{"schema":"iglu:com.snowplowanalytics.snowplow/client_session/jsonschema/1-0-2","data":{"userId":"ee7b64e7-bee2-4b16-aaf5-5057e6bb4af3","sessionId":"339013c3-ec6b-4935-b46e-487064bb1ce0","eventIndex":2,"sessionIndex":2,"previousSessionId":"66609ccf-c661-4f10-97ce-af38220f5eb5","storageMechanism":"COOKIE_1","firstEventId":"6bf091b9-db2f-4753-a844-51d72f6d8210","firstEventTimestamp":"2022-10-10T13:48:18.208Z"}}]}',
+      stm: '1665409698512',
+    },
     'x-sp-self_describing_event_com_snowplowanalytics_snowplow_media_player_event_1':
       { type: 'play' },
-    'x-sp-contexts_com_snowplowanalytics_snowplow_mobile_context_1': [
-      {
-        osType: 'myOsType',
-        osVersion: 'myOsVersion',
-        deviceManufacturer: 'myDevMan',
-        deviceModel: 'myDevModel',
-      },
-    ],
+    'x-sp-self_describing_event': {
+      schema:
+        'iglu:com.snowplowanalytics.snowplow/media_player_event/jsonschema/1-0-0',
+      data: { type: 'play' },
+    },
     'x-sp-contexts_com_youtube_youtube_1': [
       {
         autoPlay: false,
@@ -2817,7 +3597,7 @@ setup: |-
         buffering: false,
         controls: true,
         cued: false,
-        loaded: 3,
+        loaded: 6,
         playbackQuality: 'medium',
         playerId: 'youtube-song',
         unstarted: false,
@@ -2835,7 +3615,7 @@ setup: |-
     ],
     'x-sp-contexts_com_snowplowanalytics_snowplow_media_player_1': [
       {
-        currentTime: 0.015303093460083008,
+        currentTime: 0.04796292752075195,
         duration: 190.301,
         ended: false,
         loop: false,
@@ -2846,21 +3626,29 @@ setup: |-
       },
     ],
     'x-sp-contexts_com_snowplowanalytics_snowplow_web_page_1': [
-      { id: '68027aa2-34b1-4018-95e3-7176c62dbc84' },
+      { id: '82f93a00-2344-4367-9a2d-a2dcf038d5e1' },
     ],
     'x-sp-contexts_com_google_tag-manager_server-side_user_data_1': [
       { email_address: 'foo@test.io' },
     ],
+    'x-sp-contexts_com_snowplowanalytics_snowplow_mobile_context_1': [
+      {
+        osType: 'myOsType',
+        osVersion: 'myOsVersion',
+        deviceManufacturer: 'myDevMan',
+        deviceModel: 'myDevModel',
+      },
+    ],
     'x-sp-contexts_com_snowplowanalytics_snowplow_client_session_1': [
       {
-        userId: 'fd0e5288-e89b-45df-aad5-6d0c6eda6198',
-        sessionId: '1ab28b79-bfdd-4855-9bf1-5199ce15beac',
-        eventIndex: 24,
-        sessionIndex: 1,
-        previousSessionId: null,
+        userId: 'ee7b64e7-bee2-4b16-aaf5-5057e6bb4af3',
+        sessionId: '339013c3-ec6b-4935-b46e-487064bb1ce0',
+        eventIndex: 2,
+        sessionIndex: 2,
+        previousSessionId: '66609ccf-c661-4f10-97ce-af38220f5eb5',
         storageMechanism: 'COOKIE_1',
-        firstEventId: '40fbdb30-1b99-42a3-99f7-850dacf5be43',
-        firstEventTimestamp: '2022-07-23T09:08:04.451Z',
+        firstEventId: '6bf091b9-db2f-4753-a844-51d72f6d8210',
+        firstEventTimestamp: '2022-10-10T13:48:18.208Z',
       },
     ],
     'x-sp-contexts': [
@@ -2872,7 +3660,7 @@ setup: |-
           buffering: false,
           controls: true,
           cued: false,
-          loaded: 3,
+          loaded: 6,
           playbackQuality: 'medium',
           playerId: 'youtube-song',
           unstarted: false,
@@ -2892,7 +3680,7 @@ setup: |-
         schema:
           'iglu:com.snowplowanalytics.snowplow/media_player/jsonschema/1-0-0',
         data: {
-          currentTime: 0.015303093460083008,
+          currentTime: 0.04796292752075195,
           duration: 190.301,
           ended: false,
           loop: false,
@@ -2904,7 +3692,7 @@ setup: |-
       },
       {
         schema: 'iglu:com.snowplowanalytics.snowplow/web_page/jsonschema/1-0-0',
-        data: { id: '68027aa2-34b1-4018-95e3-7176c62dbc84' },
+        data: { id: '82f93a00-2344-4367-9a2d-a2dcf038d5e1' },
       },
       {
         schema:
@@ -2913,33 +3701,35 @@ setup: |-
       },
       {
         schema:
+          'iglu:com.snowplowanalytics.snowplow/mobile_context/jsonschema/1-0-2',
+        data: {
+          osType: 'myOsType',
+          osVersion: 'myOsVersion',
+          deviceManufacturer: 'myDevMan',
+          deviceModel: 'myDevModel',
+        },
+      },
+      {
+        schema:
           'iglu:com.snowplowanalytics.snowplow/client_session/jsonschema/1-0-2',
         data: {
-          userId: 'fd0e5288-e89b-45df-aad5-6d0c6eda6198',
-          sessionId: '1ab28b79-bfdd-4855-9bf1-5199ce15beac',
-          eventIndex: 24,
-          sessionIndex: 1,
-          previousSessionId: null,
+          userId: 'ee7b64e7-bee2-4b16-aaf5-5057e6bb4af3',
+          sessionId: '339013c3-ec6b-4935-b46e-487064bb1ce0',
+          eventIndex: 2,
+          sessionIndex: 2,
+          previousSessionId: '66609ccf-c661-4f10-97ce-af38220f5eb5',
           storageMechanism: 'COOKIE_1',
-          firstEventId: '40fbdb30-1b99-42a3-99f7-850dacf5be43',
-          firstEventTimestamp: '2022-07-23T09:08:04.451Z',
+          firstEventId: '6bf091b9-db2f-4753-a844-51d72f6d8210',
+          firstEventTimestamp: '2022-10-10T13:48:18.208Z',
         },
       },
     ],
     user_data: { email_address: 'foo@test.io' },
-    ga_session_id: '1ab28b79-bfdd-4855-9bf1-5199ce15beac',
-    ga_session_number: '1',
+    ga_session_id: '339013c3-ec6b-4935-b46e-487064bb1ce0',
+    ga_session_number: '2',
     'x-ga-mp2-seg': '1',
     'x-ga-protocol_version': '2',
-    'x-ga-page_id': '68027aa2-34b1-4018-95e3-7176c62dbc84',
-  };
-  // Helper for mocking
-  const getFromPath = (path, obj) => {
-    if (getTypeOf(path) === 'string' && getTypeOf(obj) === 'object') {
-      const splitPath = path.split('.').filter((prop) => !!prop);
-      return splitPath.reduce((acc, curr) => acc && acc[curr], obj);
-    }
-    return undefined;
+    'x-ga-page_id': '82f93a00-2344-4367-9a2d-a2dcf038d5e1',
   };
 
 
