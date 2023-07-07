@@ -22,6 +22,8 @@ This Tag reads event data from the "Common Event Data" specified in the [Google 
 
 ## Installation
 
+_The server Docker image must be 2.0.0 or later._
+
 ### Installing from the Google Tag Manager Gallery
 
 1. From the Templates tab in GTM Server Side, click "Search Gallery" in the Tag Templates section
@@ -57,7 +59,7 @@ Feedback and contributions are welcome - if you have identified a bug, please lo
 
 ## Copyright and license
 
-Snowplow HTTP Request Tag for Google Tag Manager Server-side is copyright 2021-2022 Snowplow Analytics Ltd.
+Snowplow HTTP Request Tag for Google Tag Manager Server-side is copyright 2021-2023 Snowplow Analytics Ltd.
 
 Licensed under the **[Apache License, Version 2.0][license]** (the "License");
 you may not use this software except in compliance with the License.
@@ -82,9 +84,9 @@ limitations under the License.
 [snowplow]: https://github.com/snowplow/snowplow
 [discourse]: https://discourse.snowplow.io
 
-[techdocs]: https://docs.snowplow.io/docs/forwarding-events-to-destinations/forwarding-events/google-tag-manager-server-side/
+[techdocs]: https://docs.snowplow.io/docs/destinations/forwarding-events/google-tag-manager-server-side/http-request-tag-for-gtm-ss/http-request-tag-configuration/
 [techdocs-image]: https://d3i6fms1cm1j0i.cloudfront.net/github/images/techdocs.png
-[setup]: https://docs.snowplow.io/docs/forwarding-events-to-destinations/forwarding-events/google-tag-manager-server-side/
+[setup]:https://docs.snowplow.io/docs/destinations/forwarding-events/google-tag-manager-server-side/http-request-tag-for-gtm-ss/
 [setup-image]: https://d3i6fms1cm1j0i.cloudfront.net/github/images/setup.png
 
 [contributing-image]: https://d3i6fms1cm1j0i.cloudfront.net/github/images/contributing.png

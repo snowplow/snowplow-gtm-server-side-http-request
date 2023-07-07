@@ -617,6 +617,7 @@ ___TEMPLATE_PARAMETERS___
 
 ___SANDBOXED_JS_FOR_SERVER___
 
+const createRegex = require('createRegex');
 const getAllEventData = require('getAllEventData');
 const getContainerVersion = require('getContainerVersion');
 const getRequestHeader = require('getRequestHeader');
@@ -659,12 +660,12 @@ const NEST = {
 
 // Helpers
 
-/*
+/**
  * Assumes logType argument is string.
  * Determines if logging is enabled.
  *
- * @param logType {string} - the logType set ('no', 'debug', 'always')
- * @returns - whether logging is enabled (boolean)
+ * @param {string} logType - The logType set ('no', 'debug', 'always')
+ * @returns {boolean} Whether logging is enabled
  */
 const determineIsLoggingEnabled = (logType) => {
   const containerVersion = getContainerVersion();
@@ -686,12 +687,13 @@ const determineIsLoggingEnabled = (logType) => {
   return data.logType === 'always';
 };
 
-/*
+/**
  * Creates the log message and logs it to console.
  *
- * @param typeName {string} - the type of log ('Message', 'Request', 'Response')
- * @param stdInfo {Object} - the standard info for all logs (Name, Type, TraceId, EventName)
- * @param logInfo {Object} - an object including information for the specific log type
+ * @param {string} typeName - The type of log ('Message', 'Request', 'Response')
+ * @param {Object} stdInfo - The standard info for all logs (Name, Type, TraceId, EventName)
+ * @param {Object} logInfo - An object including information for the specific log type
+ * @returns {undefined}
  */
 const doLogging = (typeName, stdInfo, logInfo) => {
   const logMessage = {
@@ -724,13 +726,13 @@ const doLogging = (typeName, stdInfo, logInfo) => {
   log(JSON.stringify(logMessage));
 };
 
-/*
+/**
  * Fails the tag.
  * If logs are enabled, also logs a message before failing.
  *
- * @param logsEnabled {boolean} - whether logs are enabled
- * @param stdInfo {Object} - the standard info for all logs (Name, Type, TraceId, EventName)
- * @param logInfo {Object} - an object including information for the Message
+ * @param {boolean} logsEnabled - Whether logs are enabled
+ * @param {Object} stdInfo - The standard info for all logs (Name, Type, TraceId, EventName)
+ * @param {Object} logInfo - An object including information for the Message
  */
 const fail = (logsEnabled, stdInfo, logInfo) => {
   if (logsEnabled) {
@@ -739,6 +741,12 @@ const fail = (logsEnabled, stdInfo, logInfo) => {
   return data.gtmOnFailure();
 };
 
+/**
+ * Removes equal to null properties from given object.
+ *
+ * @param {Object} obj - The object to clean
+ * @returns {Object}
+ */
 const cleanObject = (obj) => {
   let target = {};
 
@@ -751,42 +759,21 @@ const cleanObject = (obj) => {
   return target;
 };
 
-/*
- * Replaces all occurences of a substring in a string.
- *
- * @param str {string} - the string to replace into
- * @param substr {string} - the substring to replace
- * @param newSubstr {string} - the replacement substring
- * @returns - the string with all occurences of substr replaced with newSubstr
- */
-const replaceAll = (str, substr, newSubstr) => {
-  let finished = false,
-    result = str;
-  while (!finished) {
-    const newStr = result.replace(substr, newSubstr);
-    if (result === newStr) {
-      finished = true;
-    }
-    result = newStr;
-  }
-  return result;
-};
-
-/*
+/**
  * Returns whether a string is upper case.
  *
- * @param value {string} - the string to check
- * @returns - boolean
+ * @param {string} value - The string to check
+ * @returns {boolean}
  */
 const isUpper = (value) => {
   return value === value.toUpperCase() && value !== value.toLowerCase();
 };
 
-/*
+/**
  * Converts a string to snake case.
  *
- * @param value {string} - the string to convert
- * @returns - the converted string
+ * @param {string} value - The string to convert
+ * @returns {string} The converted string
  */
 const toSnakeCase = (value) => {
   let result = '';
@@ -803,11 +790,11 @@ const toSnakeCase = (value) => {
   return result;
 };
 
-/*
+/**
  * Returns whether a string can be parsed as an integer.
  *
- * @param x {string} - the string to check
- * @returns - boolean
+ * @param {string} x - The string to check
+ * @returns {boolean}
  */
 const isInt = (x) => {
   const y = Math.floor(x);
@@ -817,15 +804,15 @@ const isInt = (x) => {
   return !!y;
 };
 
-/*
+/**
  * Splits a string as a path according to configuration.
  * (used by both getFromPath and setFromPath)
  *
- * @param stringPath {string} - the string to split
- * @param cfg {Object} - tag configuration object
- * @param cfg.altSeparator {boolean} - whether use alternative separator
- * @param cfg.separator {string} - the alternative separator to use
- * @returns - the array of path components
+ * @param {string} stringPath - The string to split
+ * @param {Object} cfg - The tag configuration object
+ * @param {boolean} cfg.altSeparator - Whether use alternative separator
+ * @param {string} cfg.separator - The alternative separator to use
+ * @returns {string[]} The array of path components
  */
 const splitStringPath = (stringPath, cfg) => {
   const defaultSep = '.';
@@ -833,15 +820,17 @@ const splitStringPath = (stringPath, cfg) => {
   return stringPath.split(separator).filter((p) => !!p);
 };
 
-/*
+/**
  * Gets the value in obj from path.
- * Path must be a string denoting a (nested) property path.
- *  e.g. getFromPath('a.b', {a: {b: 2}}) => 2
+ * Path must be a string denoting a possibly nested property path.
+ * @example
+ * // returns 2
+ * getFromPath('a.b', {a: {b: 2}})
  *
- * @param path {string} - the string to replace into
- * @param tagConfig {Object} - tag configuration object
- * @param obj {Object} - the object to look into
- * @returns - the corresponding value or undefined
+ * @param {string} path - The path to get the value of
+ * @param {Object} tagConfig - The tag configuration
+ * @param {Object} obj - The object to look into
+ * @returns {*} The corresponding value or undefined
  */
 const getFromPath = (path, tagConfig, obj) => {
   if (getType(path) === 'string') {
@@ -851,21 +840,28 @@ const getFromPath = (path, tagConfig, obj) => {
   return undefined;
 };
 
-/*
+/**
  * Sets the value in obj from path (side-effects).
  * Overwrites if encounters existing properties, and creates nesting if needed.
- * Examples:
- *  e.g. setFromPath('a.b.c', cfg, 3, {a: {b: 0}}) => {a: {b: {c: 3}}}
- *       setFromPath('a.0.x', cfg, 4, {a: {b: 0}}) => {a: [{x: 4}]}
- *       setFromPath('a.0',   cfg, 4, {a: {b: 0}}) => {a: [4]}
- *       setFromPath('a.2',   cfg, 5, {a: [1,1,1]}) => {a: [1,1,5]}
+ * @example
+ * // returns {a: {b: {c: 3}}}
+ * setFromPath('a.b.c', 3, {a: {b: 0}})
+ * @example
+ * // returns {a: [{x: 4}]}
+ * setFromPath('a.0.x', 4, {a: {b: 0}})
+ * @example
+ * // returns {a: [4]}
+ * setFromPath('a.0', 4, {a: {b: 0}})
+ * @example
+ * // returns {a: [1,1,5]}
+ * setFromPath('a.2', 5, {a: [1,1,1]})
  *
- * @param path {string | array} - the string to replace into
- * @param tagConfig {Object} - tag configuration object
- * @param val {string} - the substring to replace
- * @param obj {Object} - the object to mutate
- * @param target {Object} - (optional) the object that the path refers to
- * @returns - the object mutated with the value set
+ * @param {(string|string[])} path - The path where to set the value
+ * @param {Object} tagConfig - The tag configuration
+ * @param {*} val - The value to be set
+ * @param {Object} obj - The object to mutate
+ * @param {Object} [target] - The object that the path refers to
+ * @returns {Object} The object mutated with the value set
  */
 const setFromPath = (path, tagConfig, val, obj, target) => {
   const numAsIdx = true;
@@ -896,46 +892,42 @@ const setFromPath = (path, tagConfig, val, obj, target) => {
   return obj;
 };
 
-/*
+/**
  * Given an array and a configuration object,
  *  returns the element from a single element array or the array itself.
  *
- * @param arr {Array} - the input array
- * @param tagConfig {Object} - the tag configuration object
- *        tagConfig.extractFromArray - whether to extract a single element
- * @returns - the array or its single element
+ * @param {Array} arr - The input array
+ * @param {Object} tagConfig - The tag configuration object
+ * @param {boolean} tagConfig.extractFromArray - Whether to extract a single element
+ * @returns {*} The array or its single element
  */
 const extractFromArrayIfSingleElement = (arr, tagConfig) =>
   arr.length === 1 && tagConfig.extractFromArray ? arr[0] : arr;
 
-/*
+/**
  * Cleans a name from the GTM-SS Snowplow prefix ('x-sp-').
  *
- * @param prop {string} - the property name
- * @returns - the property name with the GTM-SS Snowplow prefix removed.
+ * @param {string} prop - The property name
+ * @returns {string} The property name with the GTM-SS Snowplow prefix removed.
  */
 const cleanPropertyName = (prop) => prop.replace('x-sp-', '');
 
-/*
+/**
  * Parses a Snowplow schema to the expected major version format,
  *  also prefixed so as to match the contexts' output of the Snowplow Client.
  *
- * @param schema {string} - the input schema
- * @returns - the expected output client event property
+ * @param {string} schema - The input schema
+ * @returns {string} The expected output client event property
  */
 const parseSchemaToMajorKeyValue = (schema) => {
   if (schema.indexOf('x-sp-contexts_') === 0) return schema;
   if (schema.indexOf('contexts_') === 0) return 'x-sp-' + schema;
   if (schema.indexOf('iglu:') === 0) {
-    let fixed = replaceAll(
-      replaceAll(
-        schema.replace('iglu:', '').replace('jsonschema/', ''),
-        '.',
-        '_'
-      ),
-      '/',
-      '_'
-    );
+    const rexp = createRegex('[./]', 'g');
+    let fixed = schema
+      .replace('iglu:', '')
+      .replace('jsonschema/', '')
+      .replace(rexp, '_');
 
     for (let i = 0; i < 2; i++) {
       fixed = fixed.substring(0, fixed.lastIndexOf('-'));
@@ -945,8 +937,11 @@ const parseSchemaToMajorKeyValue = (schema) => {
   return schema;
 };
 
-/*
+/**
  * Returns whether a property name is a Snowplow event property.
+ *
+ * @param {string} prop - The property name
+ * @returns {boolean}
  */
 const isSpEventProp = (prop) => {
   const excludeKeys = [
@@ -957,22 +952,31 @@ const isSpEventProp = (prop) => {
   return prop.indexOf('x-sp-') === 0 && excludeKeys.indexOf(prop) < 0;
 };
 
-/*
+/**
  * Returns whether a property name is a Snowplow self-describing event property.
+ *
+ * @param {string} prop - The property name
+ * @returns {boolean}
  */
 const isSpSelfDescProp = (prop) => {
   return prop.indexOf('x-sp-self_describing_event_') === 0;
 };
 
-/*
+/**
  * Returns whether a property name is a Snowplow context/entity property.
+ *
+ * @param {string} prop - The property name
+ * @returns {boolean}
  */
 const isSpContextsProp = (prop) => {
   return prop.indexOf('x-sp-contexts_') === 0;
 };
 
-/*
+/**
  * Returns whether a property name is a Snowplow atomic property.
+ *
+ * @param {string} prop - The property name
+ * @returns {boolean}
  */
 const isSpAtomicProp = (prop) => {
   return (
@@ -980,45 +984,82 @@ const isSpAtomicProp = (prop) => {
   );
 };
 
-/*
+/**
+ * Removes the major version part from a schema reference if exists.
+ * @example
+ * // returns 'com_acme_test'
+ * mkVersionFree('com_acme_test_1')
+ * @example
+ * // returns 'com_acme_test'
+ * mkVersionFree('com_acme_test')
+ *
+ * @param {string} schemaRef - The schema
+ * @returns {string}
+ */
+const mkVersionFree = (schemaRef) => {
+  const versionRexp = createRegex('_[0-9]+$');
+  return schemaRef.replace(versionRexp, '');
+};
+
+/**
  * Given a list of entity references and an entity name,
  * returns the index of a matching reference.
  * Matching reference means whether the entity name starts with ref.
+ * @example
+ * // returns 0
+ * getReferenceIdx('com_test_test_1', ['com_test_test_1']);
+ * @example
+ * // returns 0
+ * getReferenceIdx('com_test_test_1', ['com_test_test']);
+ * @example
+ * // returns -1
+ * getReferenceIdx('com_test_test_1', ['com_test_test_2']);
+ * @example
+ * // returns -1
+ * getReferenceIdx('com_test_test', ['com_test_test_fail']);
+ * @example
+ * // returns -1
+ * getReferenceIdx('com_test_test_fail', ['com_test_test']);
  *
- * @param entity {string} - the entity name to match
- * @param refsList {Array} - an array of strings
+ * @param {string} entity - The entity name to match
+ * @param {string[]} refsList - An array of references
+ * @returns {integer}
  */
 const getReferenceIdx = (entity, refsList) => {
+  const versionFreeEntity = mkVersionFree(entity);
   for (let i = 0; i < refsList.length; i++) {
-    if (entity.indexOf(refsList[i]) === 0) {
+    const okControl = entity.indexOf(refsList[i]) === 0;
+    const okFree = versionFreeEntity === mkVersionFree(refsList[i]);
+    if (okControl && okFree) {
       return i;
     }
   }
   return -1;
 };
 
-/*
+/**
  * Filters out invalid rules to avoid unintended behavior.
  * (e.g. version control being ignored if version num is not included in name)
  * Assumes that a rule contains 'key' and 'version' properties.
+ *
+ * @param {Object[]} rules - The provided rules
+ * @returns {Object[]} The valid rules
  */
 const cleanRules = (rules) => {
+  const lastNumRexp = createRegex('[0-9]$');
   return rules.filter((row) => {
     if (row.version === 'control') {
-      // last char can't be null or empty string so fine for makeNumber
-      const lastCharAsNum = makeNumber(row.key.slice(-1));
-      if (!lastCharAsNum && lastCharAsNum !== 0) {
-        // was not a digit, so invalid rule
-        return false;
-      }
-      return true;
+      return !!row.key.match(lastNumRexp);
     }
     return true;
   });
 };
 
-/*
+/**
  * Parses the entity exclusion rules from the tag configuration.
+ *
+ * @param {Object} tagConfig - The tag configuration
+ * @returns {Object[]}
  */
 const parseEntityExclusionRules = (tagConfig) => {
   const rules = tagConfig.entityExclusionRules;
@@ -1026,9 +1067,8 @@ const parseEntityExclusionRules = (tagConfig) => {
     const validRules = cleanRules(rules);
     const excludedEntities = validRules.map((row) => {
       const entityRef = parseSchemaToMajorKeyValue(row.key);
-      const versionFreeRef = entityRef.slice(0, -2);
       return {
-        ref: row.version === 'control' ? entityRef : versionFreeRef,
+        ref: row.version === 'control' ? entityRef : mkVersionFree(entityRef),
         version: row.version,
       };
     });
@@ -1037,8 +1077,11 @@ const parseEntityExclusionRules = (tagConfig) => {
   return [];
 };
 
-/*
+/**
  * Parses the entity inclusion rules from the tag configuration.
+ *
+ * @param {Object} tagConfig - The tag configuration
+ * @returns {Object[]}
  */
 const parseEntityRules = (tagConfig) => {
   const rules = tagConfig.entityMappingRules;
@@ -1046,9 +1089,8 @@ const parseEntityRules = (tagConfig) => {
     const validRules = cleanRules(rules);
     const parsedRules = validRules.map((row) => {
       const parsedKey = parseSchemaToMajorKeyValue(row.key);
-      const versionFreeKey = parsedKey.slice(0, -2);
       return {
-        ref: row.version === 'control' ? parsedKey : versionFreeKey,
+        ref: row.version === 'control' ? parsedKey : mkVersionFree(parsedKey),
         parsedKey: parsedKey,
         mappedKey: row.mappedKey || cleanPropertyName(parsedKey),
         version: row.version,
@@ -1059,9 +1101,13 @@ const parseEntityRules = (tagConfig) => {
   return [];
 };
 
-/*
+/**
  * Given the inclusion rules and the excluded entity references,
  * returns the final entity mapping rules.
+ *
+ * @param {Object[]} inclusionRules - The rules about entities to include
+ * @param {string[]} excludedRefs - The entity references to be excluded
+ * @returns {Object[]} The final entity rules
  */
 const finalizeEntityRules = (inclusionRules, excludedRefs) => {
   const finalEntities = inclusionRules.filter((row) => {
@@ -1071,11 +1117,17 @@ const finalizeEntityRules = (inclusionRules, excludedRefs) => {
   return finalEntities;
 };
 
-/*
+/**
  * Sets a property of an object to a value. (side effects)
  * It is essentially a wrapper around setFromPath to enable
- *  the "nest under" feature of the tag configuration. See also: NEST constant.
+ *  the "nest under" feature of the tag configuration.
  *
+ * @param {string} prop - The property name to add
+ * @param {*} setVal - The value to be set
+ * @param {Object} tagConfig - The tag configuration
+ * @param {string} nestId - The nest ID (see also: NEST constant)
+ * @param {Object} obj - The object to add the property to
+ * @returns {Object} The object with the property added
  */
 const addProperty = (prop, setVal, tagConfig, nestId, obj) => {
   const setPath = cleanPropertyName(prop);
@@ -1092,14 +1144,14 @@ const addProperty = (prop, setVal, tagConfig, nestId, obj) => {
   return obj;
 };
 
-/*
+/**
  * Parses a Snowplow event in order to add the required properties to the payload
  *  according to the tag configuration. (side effects)
  *
- * @param evData {Object} - the client event data
- * @param tagConfig {Object} - the tag configuration
- * @param payload {Object} - the payload object
- * @returns - the mutated payload with the selected Snowplow properties added
+ * @param {Object} evData - The client event data
+ * @param {Object} tagConfig - The tag configuration
+ * @param {Object} payload - The payload object
+ * @returns {Object} The mutated payload with the selected Snowplow properties added
  */
 const parseSnowplowEvent = (evData, tagConfig, payload) => {
   const inclusionRules = parseEntityRules(tagConfig);
@@ -1144,13 +1196,13 @@ const parseSnowplowEvent = (evData, tagConfig, payload) => {
   return returnObj;
 };
 
-/*
+/**
  * Adds client event properties to the payload according to tag configuration.
  *
- * @param evData {Object} - the client event data
- * @param tagConfig {Object} - the tag configuration
- * @param payload {Object} - the payload object
- * @returns - the mutated payload with the selected event properties added
+ * @param {Object} evData - The client event data
+ * @param {Object} tagConfig- The tag configuration
+ * @param {Object} payload- The payload object
+ * @returns {Object} The mutated payload with the selected event properties added
  */
 const addEventMappings = (evData, tagConfig, payload) => {
   const returnObj = payload;
@@ -1177,13 +1229,12 @@ const addEventMappings = (evData, tagConfig, payload) => {
   return returnObj;
 };
 
-/*
+/**
  * Adds key-value pairs to the payload according to tag configuration.
  *
- * @param evData {Object} - the client event data
- * @param tagConfig {Object} - the tag configuration
- * @param payload {Object} - the payload object
- * @returns - the mutated payload with the selected key-value pairs added
+ * @param {Object} tagConfig - The tag configuration
+ * @param {Object} payload - The payload object
+ * @returns {Object} The mutated payload with the selected key-value pairs added
  */
 const addRequestData = (tagConfig, payload) => {
   const returnObj = payload;
@@ -1195,29 +1246,39 @@ const addRequestData = (tagConfig, payload) => {
   return returnObj;
 };
 
-/*
+/**
  * Given a string value, returns it base64 encoded, else as is.
+ *
+ * @param {*} val - The value to encode
+ * @returns {*}
  */
 const base64urlencode = (val) => {
   if (getType(val) !== 'string') {
     return val;
   }
-  const base64Enc = toBase64(val);
-  const urlBase64Enc = replaceAll(
-    replaceAll(replaceAll(base64Enc, '=', ''), '+', '-'),
-    '/',
-    '_'
-  );
-  return urlBase64Enc;
+
+  const rexp = createRegex('[=+/]', 'g');
+  return toBase64(val).replace(rexp, (match) => {
+    switch (match) {
+      case '=':
+        return '';
+      case '+':
+        return '-';
+      case '/':
+        return '_';
+      default:
+        return match;
+    }
+  });
 };
 
-/*
+/**
  * Fills the post-processing rules with the given applyFunction.
  * [ { path: 'x', applyFunction: f } ]
  *
- * @param bareRules {Object} - "bare" post-processing rules specifying only the path
- * @param applyFunction {function} - the function to apply to the value on given path
- * @returns {Object} - the complete post-processing rules
+ * @param {Object} bareRules - The "bare" post-processing rules specifying only the path
+ * @param {function} applyFunction - The function to apply to the value on given path
+ * @returns {Object[]} The complete post-processing rules
  */
 const initProcessingRules = (bareRules, applyFunction) => {
   const rules = bareRules || [];
@@ -1234,8 +1295,11 @@ const initProcessingRules = (bareRules, applyFunction) => {
   return finalizedRules;
 };
 
-/*
+/**
  * Constructs the final array of post-processing rules.
+ *
+ * @param {Object} tagConfig - The tag configuration
+ * @returns {Object[]} The post-processing rules
  */
 const mkProcessingRules = (tagConfig) => {
   const stringifyRules = initProcessingRules(
@@ -1249,8 +1313,12 @@ const mkProcessingRules = (tagConfig) => {
   return finalProcRules;
 };
 
-/*
+/**
  * Applies post-processing to given payload.
+ *
+ * @param {Object} payload - The constructed payload
+ * @param {Object} tagConfig - The tag configuration
+ * @returns {Object} The payload after applying post-processing
  */
 const applyPostProcessing = (payload, tagConfig) => {
   const procRules = mkProcessingRules(tagConfig);
@@ -1268,8 +1336,12 @@ const applyPostProcessing = (payload, tagConfig) => {
   return payload;
 };
 
-/*
- * Post-processes given payload.
+/**
+ * Returns the final payload.
+ *
+ * @param {Object} payload - The constructed payload
+ * @param {Object} tagConfig - The tag configuration
+ * @returns {Object} The final payload
  */
 const postProcess = (payload, tagConfig) => {
   const finalPayload = applyPostProcessing(payload, tagConfig);
@@ -1277,8 +1349,12 @@ const postProcess = (payload, tagConfig) => {
   return tagConfig.inArray ? [finalPayload] : finalPayload;
 };
 
-/*
- * Given the event data and the tag configuration, constructs the request body.
+/**
+ * Given the event data and the tag configuration, constructs the request body payload.
+ *
+ * @param {Object} evData - The client event object
+ * @param {Object} tagConfig - The tag configuration
+ * @returns {Object} The request body payload
  */
 const mkRequestPayload = (evData, tagConfig) => {
   if (tagConfig.includeAll) {
@@ -1300,8 +1376,11 @@ const mkRequestPayload = (evData, tagConfig) => {
   return postProcess(requestPayload, tagConfig);
 };
 
-/*
+/**
  * Creates the HTTP request options according to the tag configuration.
+ *
+ * @param {Object} tagConfig - The tag configuration
+ * @returns {Object} The HTTP request options
  */
 const mkRequestOptions = (tagConfig) => {
   // requestTimeout input ensured by its validation rules
@@ -1834,6 +1913,12 @@ scenarios:
     assertThat(body).isEqualTo(expectedBody);
 - name: Test entity rules - include none - version control
   code: |
+    const testEvent = jsonApi.parse(jsonApi.stringify(mockEventObjectSelfDesc));
+    testEvent['x-sp-contexts_com_google_tag-manager_server-side_user_data_test_1'] =
+      [{ email_address: 'fail@test.io' }];
+    testEvent['x-sp-contexts_com_youtube_youtube_test_1'] = [
+      { email_address: 'fail@test.io' },
+    ];
     // Tag config data
     const testMockData = {
       url: 'test',
@@ -1872,7 +1957,6 @@ scenarios:
       logType: 'no',
     };
 
-    const testEvent = mockEventObjectSelfDesc;
     const expectedBody = {
       youtube: [testEvent['x-sp-contexts_com_youtube_youtube_1'][0]],
       media_player:
@@ -1907,6 +1991,12 @@ scenarios:
     assertThat(body).isEqualTo(expectedBody);
 - name: Test entity rules - exclude - version control
   code: |
+    const testEvent = jsonApi.parse(jsonApi.stringify(mockEventObjectSelfDesc));
+    testEvent['x-sp-contexts_com_google_tag-manager_server-side_user_data_test_1'] =
+      [{ email_address: 'fail@test.io' }];
+    testEvent['x-sp-contexts_com_youtube_youtube_test_1'] = [
+      { email_address: 'fail@test.io' },
+    ];
     // Tag config data
     const testMockData = {
       url: 'test',
@@ -1949,6 +2039,14 @@ scenarios:
           key: 'x-sp-contexts_com_snowplowanalytics_snowplow_mobile_context_1',
           version: 'control',
         },
+        {
+          key: 'x-sp-contexts_com_youtube_youtube_test_1',
+          version: 'control',
+        },
+        {
+          key: 'x-sp-contexts_com_google_tag-manager_server-side_user_data_test',
+          version: 'free',
+        },
       ],
 
       includeCommonEventProperties: false,
@@ -1959,7 +2057,6 @@ scenarios:
       logType: 'no',
     };
 
-    const testEvent = mockEventObjectSelfDesc;
     const expectedBody = {
       foo: [
         {

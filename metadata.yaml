@@ -2,6 +2,14 @@ homepage: "https://www.snowplow.io"
 documentation: "https://docs.snowplow.io/docs/forwarding-events-to-destinations/forwarding-events/google-tag-manager-server-side/http-request-tag-for-gtm-ss"
 versions:
   # Latest version
+  - sha: 1d0fcf9e7057d7a243fea78edfcd8ef321313782
+    changeNotes: |2
+      Switch to using createRegex (#21)
+      Fix version free entity matching (#17)
+      Make function descriptions consistent with JSDoc (#20)
+      Fix Readme links (#19)
+      Update copyright to 2023 (#18)
+  # Older versions
   - sha: d9c0b2167373a6db8eaac1376774cceffe798e90
     changeNotes: |2
       Support alternative separator to dot notation (#2)
@@ -9,7 +17,6 @@ versions:
       Fix x-sp-self_describing_event parsing (#13)
       Add GitHub Actions (#12)
       Fix inArray wrapping with includeAll option (#11)
-  # Older versions
   - sha: eb6802147e1b8cf19d5aeb9cfe11523f05fc1cf5
     changeNotes: |2
       Add option to include or exclude an entity (#9)
